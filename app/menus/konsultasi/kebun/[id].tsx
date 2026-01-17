@@ -4,7 +4,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 type Kebun = {
   id: string;
@@ -49,6 +49,36 @@ export default function KebunDetail() {
         </View>
 
         <View style={[styles.section, { backgroundColor: cardBg, borderColor: border }]}>
+          <ThemedText type="subtitle" style={{ marginBottom: 8 }}>Peta & Area (Geospasial)</ThemedText>
+          <View style={{ gap: 12 }}>
+            <Pressable
+              style={[styles.geoCard, { backgroundColor: cardBg, borderColor: border }]}
+              onPress={() => Alert.alert('Area Kebun (Dummy)', `Luas terdaftar: ${kebun.areaHa} ha\nPoligon contoh: [(lat1,lng1), (lat2,lng2), ...]`)}>
+              <View style={styles.geoLeft}>
+                <IconSymbol name="leaf.fill" size={20} color={text} />
+              </View>
+              <View style={styles.geoBody}>
+                <ThemedText style={{ color: text, fontWeight: '600' }}>Area Kebun</ThemedText>
+                <ThemedText style={{ color: muted }}>{kebun.areaHa} ha — Poligon dummy tersedia</ThemedText>
+              </View>
+            </Pressable>
+
+            <Pressable
+              style={[styles.geoCard, { backgroundColor: cardBg, borderColor: border }]}
+              onPress={() => Alert.alert('Koordinat (Dummy)', 'Bounding box: [(-7.12,107.62), (-7.11,107.63)]')}
+            >
+              <View style={styles.geoLeft}>
+                <IconSymbol name="book" size={20} color={text} />
+              </View>
+              <View style={styles.geoBody}>
+                <ThemedText style={{ color: text, fontWeight: '600' }}>Koordinat</ThemedText>
+                <ThemedText style={{ color: muted }}>Bounding box & centroid (dummy)</ThemedText>
+              </View>
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={[styles.section, { backgroundColor: cardBg, borderColor: border }]}>
           <ThemedText type="subtitle" style={{ marginBottom: 8 }}>Aksi</ThemedText>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <Pressable style={[styles.actionBtn, { backgroundColor: '#1B5E20' }]} onPress={() => router.push(`./${kebun.id}/edit`)}>
@@ -80,4 +110,7 @@ const styles = StyleSheet.create({
   section: { padding: 12, borderRadius: 10, borderWidth: 1, marginBottom: 12 },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
   actionBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  geoCard: { flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 8, borderWidth: 1 },
+  geoLeft: { width: 44, height: 44, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  geoBody: { flex: 1 },
 });
