@@ -1,122 +1,143 @@
-# Petagri Codebase Guide for AI Agents
+# Petagri - AI Coding Instructions
 
-## Project Architecture
+## Project Overview
 
-**Petagri** is an Expo-based React Native mobile app with web support, built with TypeScript and styled using NativeWind (Tailwind CSS for React Native).
+React Native + Expo mobile app using file-based routing (expo-router), NativeWind for styling, and Supabase for backend services. Supports iOS, Android, and web with the new React Native architecture enabled.
 
-### Tech Stack
+## Tech Stack
 
-- **Framework**: Expo 54+ with React Router v6 for file-based routing
-- **Language**: TypeScript 5.9+ (strict mode enabled)
-- **Styling**: NativeWind 4.2 (Tailwind CSS) + React Navigation theming
-- **Backend**: Supabase (PostgreSQL, Auth, AsyncStorage sync)
-- **State**: React hooks + platform-specific color scheme detection
+- **Framework**: Expo SDK 54 with React 19.1.0 and React Native 0.81.5
+- **Routing**: expo-router v6 with file-based routing and typed routes (experimental)
+- **Styling**: NativeWind v4 (Tailwind CSS for React Native) + theme system for dark/light mode
+- **Backend**: Supabase with AsyncStorage for session persistence
+- **Navigation**: React Navigation v7 with custom haptic feedback tabs
+- **Animation**: react-native-reanimated v4 with React Compiler enabled (experimental)
 
-### Directory Structure
+## Architecture Patterns
 
-- `app/` - Entry point with file-based routing via Expo Router. Root layout wraps all routes with theme provider.
-  - `(tabs)/` - Tab-based navigation (currently Home tab only in `index.tsx`)
-  - `modal.tsx` - Modal presentation example
-- `components/` - Reusable UI components
-  - `ui/` - Base UI components (collapsible, icon-symbol)
-  - `role-dashboards/` - Role-specific dashboard layouts
-  - Theme wrappers: `themed-text.tsx`, `themed-view.tsx`
-- `constants/theme.ts` - Theme colors and fonts (light/dark modes); Colors object used throughout
-- `hooks/` - Custom hooks for color scheme, theme colors; platform-specific variants (`.web.ts`)
-- `utils/supabase.ts` - Supabase client singleton with AsyncStorage auth persistence
+### File-Based Routing
 
-## Key Patterns & Conventions
+- Routes are defined by file structure in `app/` directory
+- `app/_layout.tsx` is the root layout with theme provider
+- `app/(tabs)/` is a route group for tab navigation (parentheses hide from URL)
+- `app/menus.tsx` is the main menu page at `/menus` showing all available features
+- `app/menus/*.tsx` are individual menu pages (e.g., `/menus/core`, `/menus/produk`)
+- `app/modal.tsx` is a modal route accessible via `href="/modal"`
+- The anchor is set to `(tabs)` in root layout via `unstable_settings`
 
-### File-Based Routing (Expo Router)
+### Import Path Aliases
 
-- File structure in `app/` maps directly to routes
-- `_layout.tsx` files define layout wrappers and navigation structure
-- Group folders `(tabs)/` define navigation groups without URL segments
-- Use `@/` path alias (configured in tsconfig) for imports: `import { Colors } from "@/constants/theme"`
+Use `@/*` for absolute imports from project root:
 
-### Styling & Theming
+```tsx
+import { ThemedView } from "@/components/themed-view";
+import { supabase } from "@/utils/supabase";
+```
 
-- **Color System**: Import `Colors` from `constants/theme.ts` for light/dark color objects
-  - Access: `Colors[colorScheme ?? "light"].tint`, `Colors[colorScheme].background`
-- **NativeWind**: Use className strings directly; Tailwind utilities work cross-platform
-- **Platform Detection**: Use `Platform.select()` (react-native) for platform-specific code; see `theme.ts` for Fonts example
-- Use `useColorScheme()` hook to get current scheme ("light" | "dark" | undefined)
+### Theming System
 
-### Component Patterns
+Two theming approaches coexist:
 
-- **Themed Components**: Wrap with `ThemedView`/`ThemedText` for automatic theme color inheritance
-- **Icons**: Use `IconSymbol` component (wraps react-native-heroicons for web, native icons for platforms)
-- **Haptic Feedback**: `HapticTab` component provides haptic feedback on tab press
-- **Layout Components**: `ParallaxScrollView` for scroll animations, `Collapsible` for expandable sections
+1. **Themed Components** (`ThemedView`, `ThemedText`): Use `useThemeColor` hook with color constants from `@/constants/theme`
+2. **NativeWind Classes**: Use Tailwind classes in className prop (global.css imported in root layout)
 
-### Authentication & Data
+Example themed component pattern from [components/themed-view.tsx](components/themed-view.tsx):
 
-- Supabase initialized in `utils/supabase.ts` with AsyncStorage persistence
-- Auto-refresh tokens enabled; session persisted across app restarts
-- Use environment variables: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_KEY`
+```tsx
+export type ThemedViewProps = ViewProps & {
+	lightColor?: string;
+	darkColor?: string;
+};
+```
+
+### Supabase Integration
+
+Client configured in [utils/supabase.ts](utils/supabase.ts) with:
+
+- AsyncStorage for auth persistence
+- Environment variables: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_KEY`
+- `react-native-url-polyfill/auto` imported for URL support
+
+### Platform-Specific Code
+
+- Use `Platform.select()` for conditional values (see [constants/theme.ts](constants/theme.ts) for font examples)
+- Use `process.env.EXPO_OS` for runtime checks (see [components/haptic-tab.tsx](components/haptic-tab.tsx))
+- Haptic feedback only on iOS: `Haptics.impactAsync()` wrapped in iOS check
 
 ## Development Workflows
 
-### Building & Running
+### Running the App
 
 ```bash
-npm run start          # Start dev server (choose target: Android/iOS/web)
-npm run android        # Run on Android emulator
+npm start              # Start Expo dev server
 npm run ios            # Run on iOS simulator
-npm run web            # Run web version (Metro bundler)
-npm run lint           # ESLint check (Expo config preset)
-npm run reset-project  # Reset to blank state (moves example to app-example/)
+npm run android        # Run on Android emulator
+npm run web            # Run in web browser
 ```
 
-### Adding New Routes
+### Developer Tools
 
-1. Create file in `app/` directory (e.g., `app/profile.tsx`)
-2. Export default React component; Expo Router auto-generates route
-3. Use `useRouter()` for programmatic navigation
-4. Grouped routes in `(parentGroup)/` don't add URL segments
+- iOS: `cmd + d` for dev menu
+- Android: `cmd + m` for dev menu
+- Web: `F12` for browser dev tools
 
-### Adding Components
+### Code Quality
 
-- Place reusable components in `components/` with platform-specific variants as needed (`.web.ts`, `.ios.tsx`, etc.)
-- For UI primitives, keep in `components/ui/`; for domain-specific, create subdirectory
-- Import path alias: `@/components/...`
+```bash
+npm run lint           # Run ESLint (expo lint)
+```
 
-### TypeScript & Strict Mode
+## Component Patterns
 
-- Strict mode enabled; all implicit `any` flagged as errors
-- Use `expo-env.d.ts` and `nativewind-env.d.ts` for type augmentation
-- Check errors with `npm run lint` before committing
+### MenuGrid Component
 
-## Important Integration Points
+[components/menu-grid.tsx](components/menu-grid.tsx) renders a 4-column grid of menu tiles:
 
-### Platform Differences
+- Each tile has an icon, label, and onPress handler
+- Default behavior: navigates to `/menus` using `useRouter` if no `onPress` provided
+- Used on Home screen with specific routes and on `/menus` page for all features
+- Example usage:
 
-- Web, iOS, Android have different capabilities (e.g., haptics unavailable on web)
-- Use `Platform.select()` or separate `.web.ts` files for platform-specific implementations
-- NativeWind handles CSS-to-native-style translation automatically
+```tsx
+const items = [
+	{ key: "core", label: "CORE", icon: "house.fill", onPress: () => router.push("/menus/core") },
+	{ key: "all", label: "SEMUA MENU", icon: "chevron.right", onPress: () => router.push("/menus") },
+];
+<MenuGrid items={items} />;
+```
 
-### Expo Constants & System UI
+### Custom Tab Button
 
-- `expo-constants` provides app version, Expo SDK version, notification permissions
-- `expo-system-ui` integrates with platform system UI preferences
-- New Arch enabled in `app.json` (React Compiler experiments on)
+[components/haptic-tab.tsx](components/haptic-tab.tsx) wraps `PlatformPressable` to add iOS haptic feedback on tab press
 
-### React Navigation Integration
+### Icon System
 
-- App uses React Navigation with Expo Router on top
-- Dark/Default themes from `@react-navigation/native` applied at root layout
-- Theme colors synchronized with `useColorScheme()` hook
+- iOS: Uses SF Symbols via `IconSymbol` component ([components/ui/icon-symbol.ios.tsx](components/ui/icon-symbol.ios.tsx))
+- Other platforms: Uses MaterialIcons fallback via [components/ui/icon-symbol.tsx](components/ui/icon-symbol.tsx)
+- SF Symbol names must be mapped to Material Icons in `MAPPING` constant
+- Icons in tab bar: `<IconSymbol size={28} name="house.fill" color={color} />`
+- Menu icons available: `house.fill`, `leaf.fill`, `bag.fill`, `gavel`, `cart.fill`, `truck`, `archivebox.fill`, `dollarsign.circle.fill`, `chart.bar.fill`, `bell.fill`, `gear`, `book`, `chevron.right`, `chevron.left.forwardslash.chevron.right`
 
-## Code Quality Standards
+## Configuration Files
 
-- **Linting**: Runs Expo ESLint config (strict rules)
-- **No implicit returns**: Explicit returns required due to strict TS mode
-- **Path imports**: Always use `@/` alias, never relative imports across directories
-- **Component exports**: Default export required for route files in `app/`
+### app.json
 
-## External Resources for Deep Dives
+- `newArchEnabled: true` - Using new React Native architecture
+- `experiments.typedRoutes: true` - Type-safe routing
+- `experiments.reactCompiler: true` - React Compiler enabled
+- Custom URI scheme: `petagri://`
 
-- [Expo Router Docs](https://docs.expo.dev/router/introduction/) - file-based routing details
-- [NativeWind Docs](https://www.nativewind.dev/) - Tailwind CSS on React Native
-- [Supabase JS SDK](https://supabase.com/docs/reference/javascript) - auth and data operations
-- [React Native Platform Module](https://reactnative.dev/docs/platform-specific-code) - platform detection
+### tsconfig.json
+
+- Strict mode enabled
+- Path alias `@/*` maps to project root
+
+## Conventions
+
+- Use `.tsx` extension for all React components
+- Prefer functional components with hooks
+- Component files use kebab-case: `haptic-tab.tsx`, `themed-view.tsx`, `menu-grid.tsx`
+- Constants use SCREAMING_SNAKE_CASE exports: `Colors`, `Fonts`
+- Environment variables must be prefixed with `EXPO_PUBLIC_` to be accessible in app
+- Navigation: Use `useRouter()` from `expo-router` for programmatic navigation
+- Menu structure: 13 main features (CORE, KONSULTASI & KEBUN, PRODUK & TOKO, TENDER & PENAWARAN, PENJUALAN, DISTRIBUSI & LOGISTIK, GUDANG & STOK, KEUANGAN, LAPORAN & ANALITIK, NOTIFIKASI & SISTEM, PENGATURAN, DEVELOPER TOOLS, DOKUMENTASI)
