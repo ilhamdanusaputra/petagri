@@ -63,12 +63,16 @@ function MenuTile({ item, onPress }: { item: MenuGridItem; onPress: () => void }
 				onPressOut={() => {
 					scale.value = withSpring(1, { damping: 15, mass: 1 });
 				}}>
-				<View style={styles.iconWrap}>
-					<IconSymbol name={item.icon as any} size={28} color="#2563EB" />
+				<View style={styles.iconContainer}>
+					<View style={styles.iconWrap}>
+						<IconSymbol name={item.icon as any} size={28} color="#2563EB" />
+					</View>
 				</View>
-				<ThemedText type="default" style={styles.label} numberOfLines={2}>
-					{item.label}
-				</ThemedText>
+				<View style={styles.labelContainer}>
+					<ThemedText type="default" style={styles.label} numberOfLines={2}>
+						{item.label}
+					</ThemedText>
+				</View>
 			</AnimatedPressable>
 		</View>
 	);
@@ -94,8 +98,8 @@ const styles = StyleSheet.create({
 	},
 	tileContent: {
 		alignItems: "center",
-		justifyContent: "center",
-		paddingVertical: 20,
+		justifyContent: "space-between",
+		paddingVertical: 16,
 		paddingHorizontal: 8,
 		borderRadius: 20,
 		backgroundColor: "#FFFFFF",
@@ -107,7 +111,12 @@ const styles = StyleSheet.create({
 		shadowRadius: 12,
 		elevation: 2,
 		width: "100%",
-		minHeight: 105,
+		height: 105, // Fixed height instead of minHeight
+	},
+	iconContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
 	},
 	iconWrap: {
 		width: 48,
@@ -116,17 +125,21 @@ const styles = StyleSheet.create({
 		backgroundColor: "#EFF6FF",
 		alignItems: "center",
 		justifyContent: "center",
-		marginBottom: 12,
 		borderWidth: 0.5,
 		borderColor: "#DBEAFE",
 	},
+	labelContainer: {
+		height: 32, // Fixed height for label area
+		justifyContent: "center",
+		alignItems: "center",
+		paddingHorizontal: 4,
+	},
 	label: {
 		textAlign: "center",
-		fontSize: 12,
+		fontSize: 11,
 		fontWeight: "600",
-		lineHeight: 15,
+		lineHeight: 13,
 		color: "#1F2937",
 		letterSpacing: 0.1,
-		marginTop: 2,
 	},
 });
