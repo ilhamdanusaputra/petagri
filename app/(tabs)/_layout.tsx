@@ -80,7 +80,7 @@ export default function TabLayout() {
 								</View>
 							);
 						}
-						return <IconSymbol size={28} name="gear" color={focused ? tint : inactive} />;
+						return <IconSymbol size={28} name="person.fill" color={focused ? tint : inactive} />;
 					},
 				}}
 			/>

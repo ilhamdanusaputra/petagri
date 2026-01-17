@@ -28,6 +28,8 @@ const MAPPING = {
   'bell.fill': 'notifications',
   'gear': 'settings',
   'gearshape.fill': 'settings',
+  'person': 'person',
+  'person.fill': 'person',
   'book': 'menu-book',
   'sun.max.fill': 'light-mode',
   'moon.fill': 'dark-mode',
