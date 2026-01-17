@@ -1,6 +1,11 @@
+import { AddProductModal } from "@/components/modals/add-product-modal";
 import { ContractMitraModal } from "@/components/modals/contract-mitra-modal";
+import { InventoryModal } from "@/components/modals/inventory-modal";
+import { ManageCatalogModal } from "@/components/modals/manage-catalog-modal";
 import { ManageMitraModal } from "@/components/modals/manage-mitra-modal";
 import { PerformanceMitraModal } from "@/components/modals/performance-mitra-modal";
+import { PricingModal } from "@/components/modals/pricing-modal";
+import { ProductAnalyticsModal } from "@/components/modals/product-analytics-modal";
 import { RegisterMitraModal } from "@/components/modals/register-mitra-modal";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -12,10 +17,19 @@ type TabType = "produk" | "mitra";
 
 export default function ProdukMenu() {
 	const [activeTab, setActiveTab] = useState<TabType>("produk");
+
+	// Mitra modals
 	const [showRegisterModal, setShowRegisterModal] = useState(false);
 	const [showManageModal, setShowManageModal] = useState(false);
 	const [showPerformanceModal, setShowPerformanceModal] = useState(false);
 	const [showContractModal, setShowContractModal] = useState(false);
+
+	// Product modals
+	const [showAddProductModal, setShowAddProductModal] = useState(false);
+	const [showManageCatalogModal, setShowManageCatalogModal] = useState(false);
+	const [showPricingModal, setShowPricingModal] = useState(false);
+	const [showInventoryModal, setShowInventoryModal] = useState(false);
+	const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
 
 	const mitraFeatures = [
 		{
@@ -70,12 +84,6 @@ export default function ProdukMenu() {
 			icon: "📈",
 			description: "Analisis performa produk",
 		},
-		{
-			key: "store-settings",
-			label: "Pengaturan Toko",
-			icon: "🏪",
-			description: "Kelola pengaturan toko online",
-		},
 	];
 
 	return (
@@ -124,7 +132,29 @@ export default function ProdukMenu() {
 				{activeTab === "produk" && (
 					<View className="px-5 pb-5 gap-3">
 						{produkFeatures.map((feature) => (
-							<FeatureCard key={feature.key} feature={feature} />
+							<FeatureCard
+								key={feature.key}
+								feature={feature}
+								onPress={() => {
+									switch (feature.key) {
+										case "add-product":
+											setShowAddProductModal(true);
+											break;
+										case "manage-catalog":
+											setShowManageCatalogModal(true);
+											break;
+										case "pricing":
+											setShowPricingModal(true);
+											break;
+										case "inventory":
+											setShowInventoryModal(true);
+											break;
+										case "product-analytics":
+											setShowAnalyticsModal(true);
+											break;
+									}
+								}}
+							/>
 						))}
 					</View>
 				)}
@@ -165,6 +195,22 @@ export default function ProdukMenu() {
 				onClose={() => setShowPerformanceModal(false)}
 			/>
 			<ContractMitraModal visible={showContractModal} onClose={() => setShowContractModal(false)} />
+
+			{/* All Product Modals */}
+			<AddProductModal
+				visible={showAddProductModal}
+				onClose={() => setShowAddProductModal(false)}
+			/>
+			<ManageCatalogModal
+				visible={showManageCatalogModal}
+				onClose={() => setShowManageCatalogModal(false)}
+			/>
+			<PricingModal visible={showPricingModal} onClose={() => setShowPricingModal(false)} />
+			<InventoryModal visible={showInventoryModal} onClose={() => setShowInventoryModal(false)} />
+			<ProductAnalyticsModal
+				visible={showAnalyticsModal}
+				onClose={() => setShowAnalyticsModal(false)}
+			/>
 		</ThemedView>
 	);
 }
