@@ -2,12 +2,27 @@ import { Image } from 'expo-image';
 import { Platform, StyleSheet } from 'react-native';
 
 import { HelloWave } from '@/components/hello-wave';
+import { MenuGrid } from '@/components/menu-grid';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 
 export default function HomeScreen() {
+  const router = useRouter();
+
+  const menuItems = [
+    { key: 'core', label: 'CORE', icon: 'house.fill', onPress: () => router.push('/menus/core') },
+    { key: 'konsultasi', label: 'KONSULTASI & KEBUN', icon: 'leaf.fill', onPress: () => router.push('/menus/konsultasi') },
+    { key: 'produk', label: 'PRODUK & TOKO', icon: 'bag.fill', onPress: () => router.push('/menus/produk') },
+    { key: 'tender', label: 'TENDER & PENAWARAN', icon: 'gavel', onPress: () => router.push('/menus/tender') },
+    { key: 'penjualan', label: 'PENJUALAN', icon: 'cart.fill', onPress: () => router.push('/menus/penjualan') },
+    { key: 'distribusi', label: 'DISTRIBUSI & LOGISTIK', icon: 'truck', onPress: () => router.push('/menus/distribusi') },
+    { key: 'gudang', label: 'GUDANG & STOK', icon: 'archivebox.fill', onPress: () => router.push('/menus/gudang') },
+    // last tile is a catch-all "Semua Menu"
+    { key: 'all', label: 'SEMUA MENU', icon: 'chevron.right', onPress: () => router.push('/menus') },
+  ];
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -20,6 +35,10 @@ export default function HomeScreen() {
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />
+      </ThemedView>
+
+      <ThemedView style={{ marginTop: 12, marginBottom: 12 }}>
+        <MenuGrid items={menuItems} />
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
