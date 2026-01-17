@@ -108,19 +108,25 @@ export default function KebunDetail() {
                                         <ThemedText style={{ color: muted }}>Menampilkan {upcoming.length} jadwal terdekat</ThemedText>
                                         <View style={{ flexDirection: 'row', gap: 8 }}>
                                             <Pressable
+                                                accessibilityLabel="Tambah Jadwal"
                                                 style={[styles.actionBtn, { backgroundColor: tint, marginRight: 8 }]}
                                                 onPress={() => router.push(`./${kebun.id}/schedule/new`)}
                                             >
-                                                <ThemedText style={{ color: '#fff', fontWeight: '600' }}>Tambah Jadwal</ThemedText>
+                                                <IconSymbol name="plus" size={18} color="#fff" />
                                             </Pressable>
                                             <Pressable
+                                                accessibilityLabel={showCalendar ? 'Tampilkan daftar' : 'Tampilkan kalender'}
                                                 style={[
                                                     styles.actionBtn,
                                                     showCalendar ? { backgroundColor: tint } : { backgroundColor: cardBg, borderWidth: 1, borderColor: border },
                                                 ]}
                                                 onPress={() => setShowCalendar((s) => !s)}
                                             >
-                                                <ThemedText style={{ color: showCalendar ? '#fff' : text, fontWeight: '600' }}>{showCalendar ? 'List' : 'Kalender'}</ThemedText>
+                                                {showCalendar ? (
+                                                    <IconSymbol name="list.bullet" size={18} color="#fff" />
+                                                ) : (
+                                                    <IconSymbol name="calendar" size={18} color={text} />
+                                                )}
                                             </Pressable>
                                         </View>
                                     </View>

@@ -31,6 +31,9 @@ const MAPPING = {
   'person': 'person',
   'person.fill': 'person',
   'book': 'menu-book',
+  'plus': 'add',
+  'calendar': 'calendar-today',
+  'list.bullet': 'format-list-bulleted',
   'sun.max.fill': 'light-mode',
   'moon.fill': 'dark-mode',
 } as const satisfies Partial<Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>>;
