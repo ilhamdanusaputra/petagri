@@ -1,10 +1,11 @@
 import MapAreaView from '@/components/map-area-view';
+import ScheduleCalendar from '@/components/schedule-calendar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 type Kebun = {
@@ -90,51 +91,64 @@ export default function KebunDetail() {
                 <View style={[styles.section, { backgroundColor: cardBg, borderColor: border }]}>
                     <ThemedText type="subtitle" style={{ marginBottom: 8 }}>Jadwal Kunjungan</ThemedText>
 
-                    {(() => {
-                        const upcoming = [
-                            { id: 's1', date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), note: 'Pemeriksaan umum' },
-                            { id: 's2', date: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000), note: 'Pemupukan' },
-                            { id: 's3', date: new Date(Date.now() + 35 * 24 * 60 * 60 * 1000), note: 'Panen kecil' },
-                        ];
-                        return (
-                            <View style={{ gap: 10 }}>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <ThemedText style={{ color: muted }}>Menampilkan {upcoming.length} jadwal terdekat</ThemedText>
-                                    <Pressable
-                                        style={[styles.actionBtn, { backgroundColor: '#0a84ff' }]}
-                                        onPress={() => router.push(`./${kebun.id}/schedule/new`)}
-                                    >
-                                        <ThemedText style={{ color: '#fff', fontWeight: '600' }}>Tambah Jadwal</ThemedText>
-                                    </Pressable>
-                                </View>
+                        {(() => {
+                            const upcoming = [
+                                { id: 's1', date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), note: 'Pemeriksaan umum' },
+                                { id: 's2', date: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000), note: 'Pemupukan' },
+                                { id: 's3', date: new Date(Date.now() + 35 * 24 * 60 * 60 * 1000), note: 'Panen kecil' },
+                            ];
+                            const [showCalendar, setShowCalendar] = useState(false);
+                            return (
+                                <View style={{ gap: 10 }}>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <ThemedText style={{ color: muted }}>Menampilkan {upcoming.length} jadwal terdekat</ThemedText>
+                                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                                            <Pressable
+                                                style={[styles.actionBtn, { backgroundColor: '#0a84ff', marginRight: 8 }]}
+                                                onPress={() => router.push(`./${kebun.id}/schedule/new`)}
+                                            >
+                                                <ThemedText style={{ color: '#fff', fontWeight: '600' }}>Tambah Jadwal</ThemedText>
+                                            </Pressable>
+                                            <Pressable
+                                                style={[styles.actionBtn, { backgroundColor: showCalendar ? '#0b84ff' : '#e5e7eb' }]}
+                                                onPress={() => setShowCalendar((s) => !s)}
+                                            >
+                                                <ThemedText style={{ color: showCalendar ? '#fff' : '#111', fontWeight: '600' }}>{showCalendar ? 'List' : 'Kalender'}</ThemedText>
+                                            </Pressable>
+                                        </View>
+                                    </View>
 
-                                {upcoming.map((s) => (
-                                    <Pressable
-                                        key={s.id}
-                                        style={[{ flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 8, borderWidth: 1 }, { backgroundColor: cardBg, borderColor: border }]}
-                                        onPress={() =>
-                                            Alert.alert(
-                                                'Detail Jadwal',
-                                                `${s.note}\nTanggal: ${s.date.toLocaleDateString('id-ID')}\nKebun: ${kebun.name}`,
-                                                [{ text: 'Tutup' }]
-                                            )
-                                        }
-                                    >
-                                        <View style={{ width: 44, height: 44, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
-                                            <IconSymbol name="book" size={18} color={text} />
-                                        </View>
-                                        <View style={{ flex: 1 }}>
-                                            <ThemedText style={{ color: text, fontWeight: '600' }}>{s.date.toLocaleDateString('id-ID')}</ThemedText>
-                                            <ThemedText style={{ color: muted }}>{s.note}</ThemedText>
-                                        </View>
-                                        <Pressable onPress={() => Alert.alert('Aksi', 'Edit / Hapus (dummy)')} style={{ padding: 6 }}>
-                                            <IconSymbol name="chevron.right" size={18} color={muted} />
-                                        </Pressable>
-                                    </Pressable>
-                                ))}
-                            </View>
-                        );
-                    })()}
+                                    {showCalendar ? (
+                                        <ScheduleCalendar events={upcoming.map((s) => ({ id: s.id, date: s.date, note: s.note }))} />
+                                    ) : (
+                                        upcoming.map((s) => (
+                                            <Pressable
+                                                key={s.id}
+                                                style={[{ flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 8, borderWidth: 1 }, { backgroundColor: cardBg, borderColor: border }]}
+                                                onPress={() =>
+                                                    Alert.alert(
+                                                        'Detail Jadwal',
+                                                        `${s.note}\nTanggal: ${s.date.toLocaleDateString('id-ID')}\nKebun: ${kebun.name}`,
+                                                        [{ text: 'Tutup' }]
+                                                    )
+                                                }
+                                            >
+                                                <View style={{ width: 44, height: 44, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                                                    <IconSymbol name="book" size={18} color={text} />
+                                                </View>
+                                                <View style={{ flex: 1 }}>
+                                                    <ThemedText style={{ color: text, fontWeight: '600' }}>{s.date.toLocaleDateString('id-ID')}</ThemedText>
+                                                    <ThemedText style={{ color: muted }}>{s.note}</ThemedText>
+                                                </View>
+                                                <Pressable onPress={() => Alert.alert('Aksi', 'Edit / Hapus (dummy)')} style={{ padding: 6 }}>
+                                                    <IconSymbol name="chevron.right" size={18} color={muted} />
+                                                </Pressable>
+                                            </Pressable>
+                                        ))
+                                    )}
+                                </View>
+                            );
+                        })()}
                 </View>
                 <View style={[styles.section, { backgroundColor: cardBg, borderColor: border }]}>
                     <ThemedText type="subtitle" style={{ marginBottom: 8 }}>Aksi</ThemedText>
