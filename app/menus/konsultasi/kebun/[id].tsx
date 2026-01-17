@@ -30,8 +30,8 @@ export default function KebunDetail() {
     const kebun = SAMPLE.find((k) => k.id === id) ?? SAMPLE[0];
 
     const bg = useThemeColor({ light: '#F9FAFB', dark: '#111827' }, 'background');
-    const cardBg = useThemeColor({ light: '#FFFFFF', dark: '#1F2937' }, 'card');
-    const border = useThemeColor({ light: '#E5E7EB', dark: '#374151' }, 'cardBorder');
+    const cardBg = useThemeColor({}, 'card');
+    const border = useThemeColor({}, 'cardBorder');
     const text = useThemeColor({ light: '#1F2937', dark: '#F3F4F6' }, 'text');
     const muted = useThemeColor({ light: '#6B7280', dark: '#9CA3AF' }, 'icon');
     const tint = useThemeColor({}, 'tint');

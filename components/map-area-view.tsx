@@ -13,8 +13,8 @@ type Props = {
 };
 
 export default function MapAreaView({ coordinates, height = 220 }: Props) {
-  const cardBg = useThemeColor({ light: '#FFFFFF', dark: '#0f1724' }, 'card');
-  const borderColor = useThemeColor({ light: '#E5E7EB', dark: '#374151' }, 'cardBorder');
+  const cardBg = useThemeColor({}, 'card');
+  const borderColor = useThemeColor({}, 'cardBorder');
   const tint = useThemeColor({}, 'tint');
   const center = useMemo(() => {
     if (!coordinates || coordinates.length === 0) return [0, 0];

@@ -26,8 +26,9 @@ export const Colors = {
     icon: '#6B7280', // Subtle gray icon
     tabIconDefault: '#9CA3AF',
     tabIconSelected: primaryGreen,
-    card: '#FFFFFF',
-    cardBorder: borderGray,
+    // Softer card surface to avoid stark white
+    card: '#F3F6F9',
+    cardBorder: '#E6E9EE',
     success: successGreen,
     warning: warningAmber,
     danger: dangerRed,

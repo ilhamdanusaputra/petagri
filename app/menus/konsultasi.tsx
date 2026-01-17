@@ -8,8 +8,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 export default function KonsultasiMenu() {
   const router = useRouter();
-  const cardBg = useThemeColor({ light: '#FFFFFF', dark: '#1F2937' }, 'card');
-  const borderColor = useThemeColor({ light: '#E5E7EB', dark: '#374151' }, 'cardBorder');
+  const cardBg = useThemeColor({}, 'card');
+  const borderColor = useThemeColor({}, 'cardBorder');
   const textColor = useThemeColor({ light: '#1F2937', dark: '#F3F4F6' }, 'text');
   const iconTint = useThemeColor({}, 'tint');
 

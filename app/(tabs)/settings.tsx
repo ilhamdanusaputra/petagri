@@ -10,7 +10,7 @@ export default function SettingsScreen() {
   const { colorScheme, userPreference, toggleTheme, setTheme, isLoading } = useThemePreference();
   
   const bgColor = useThemeColor({ light: '#F9FAFB', dark: '#111827' }, 'background');
-  const cardBg = useThemeColor({ light: '#FFFFFF', dark: '#1F2937' }, 'background');
+  const cardBg = useThemeColor({}, 'background');
   const borderColor = useThemeColor({ light: '#E5E7EB', dark: '#374151' }, 'card');
   const primaryGreen = useThemeColor({ light: '#1B5E20', dark: '#81C784' }, 'tint');
   const textColor = useThemeColor({ light: '#1F2937', dark: '#F3F4F6' }, 'text');

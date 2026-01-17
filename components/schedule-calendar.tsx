@@ -25,9 +25,9 @@ export default function ScheduleCalendar({ events, year, month }: Props) {
   const [currentMonth, setCurrentMonth] = useState(displayMonth);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
-  const cardBg = useThemeColor({ light: '#FFFFFF', dark: '#0b1220' }, 'card');
-  const border = useThemeColor({ light: '#E5E7EB', dark: '#273449' }, 'cardBorder');
-  const text = useThemeColor({ light: '#111827', dark: '#F3F4F6' }, 'text');
+  const cardBg = useThemeColor({}, 'card');
+  const border = useThemeColor({}, 'cardBorder');
+  const text = useThemeColor({}, 'text');
   const tint = useThemeColor({}, 'tint');
   const accent = useThemeColor({}, 'accent');
 
