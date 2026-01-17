@@ -28,6 +28,8 @@ export default function ScheduleCalendar({ events, year, month }: Props) {
   const cardBg = useThemeColor({ light: '#FFFFFF', dark: '#0b1220' }, 'card');
   const border = useThemeColor({ light: '#E5E7EB', dark: '#273449' }, 'cardBorder');
   const text = useThemeColor({ light: '#111827', dark: '#F3F4F6' }, 'text');
+  const tint = useThemeColor({}, 'tint');
+  const accent = useThemeColor({}, 'accent');
 
   const eventsByDay = useMemo(() => {
     const map = new Map<number, Event[]>();
@@ -76,9 +78,16 @@ export default function ScheduleCalendar({ events, year, month }: Props) {
           const has = eventsByDay.has(day);
           const isSelected = selectedDay === day;
           return (
-            <Pressable key={day} style={[styles.cell, isSelected && styles.cellSelected]} onPress={() => setSelectedDay(day)}>
+            <Pressable
+              key={day}
+              style={[
+                styles.cell,
+                isSelected && { backgroundColor: tint + '22', borderRadius: 6 },
+              ]}
+              onPress={() => setSelectedDay(day)}
+            >
               <Text style={[styles.cellText, { color: text }]}>{day}</Text>
-              {has && <View style={styles.dot} />}
+              {has && <View style={[styles.dot, { backgroundColor: accent }]} />}
             </Pressable>
           );
         })}
@@ -90,7 +99,11 @@ export default function ScheduleCalendar({ events, year, month }: Props) {
       {selectedDay && (
         <View style={styles.eventList}>
           {selectedEvents.map((e) => (
-            <Pressable key={e.id} onPress={() => Alert.alert('Event', `${e.note ?? ''}\n${new Date(e.date).toLocaleString()}`)} style={[styles.eventItem, { borderColor }] }>
+            <Pressable
+              key={e.id}
+              onPress={() => Alert.alert('Event', `${e.note ?? ''}\n${new Date(e.date).toLocaleString()}`)}
+              style={[styles.eventItem, { borderColor: border, backgroundColor: cardBg }]}
+            >
               <Text style={{ color: text, fontWeight: '600' }}>{new Date(e.date).toLocaleDateString('id-ID')}</Text>
               <Text style={{ color: text }}>{e.note}</Text>
             </Pressable>

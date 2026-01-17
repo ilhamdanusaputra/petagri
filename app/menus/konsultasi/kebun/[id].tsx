@@ -34,13 +34,17 @@ export default function KebunDetail() {
     const border = useThemeColor({ light: '#E5E7EB', dark: '#374151' }, 'cardBorder');
     const text = useThemeColor({ light: '#1F2937', dark: '#F3F4F6' }, 'text');
     const muted = useThemeColor({ light: '#6B7280', dark: '#9CA3AF' }, 'icon');
+    const tint = useThemeColor({}, 'tint');
+    const accent = useThemeColor({}, 'accent');
+    const success = useThemeColor({}, 'success');
+    const danger = useThemeColor({}, 'danger');
 
     return (
         <ThemedView style={[styles.container, { backgroundColor: bg }]}>
             <ScrollView contentContainerStyle={{ padding: 16 }}>
                 <View style={[styles.header, { backgroundColor: cardBg, borderColor: border }]}>
                     <ThemedText type="title" style={{ marginBottom: 6 }}>{kebun.name}</ThemedText>
-                    <ThemedText style={{ color: kebun.status === 'Aktif' ? '#10B981' : '#EF4444' }}>{kebun.status}</ThemedText>
+                    <ThemedText style={{ color: kebun.status === 'Aktif' ? success : danger }}>{kebun.status}</ThemedText>
                 </View>
 
                 <View style={[styles.section, { backgroundColor: cardBg, borderColor: border }]}>
@@ -104,16 +108,19 @@ export default function KebunDetail() {
                                         <ThemedText style={{ color: muted }}>Menampilkan {upcoming.length} jadwal terdekat</ThemedText>
                                         <View style={{ flexDirection: 'row', gap: 8 }}>
                                             <Pressable
-                                                style={[styles.actionBtn, { backgroundColor: '#0a84ff', marginRight: 8 }]}
+                                                style={[styles.actionBtn, { backgroundColor: tint, marginRight: 8 }]}
                                                 onPress={() => router.push(`./${kebun.id}/schedule/new`)}
                                             >
                                                 <ThemedText style={{ color: '#fff', fontWeight: '600' }}>Tambah Jadwal</ThemedText>
                                             </Pressable>
                                             <Pressable
-                                                style={[styles.actionBtn, { backgroundColor: showCalendar ? '#0b84ff' : '#e5e7eb' }]}
+                                                style={[
+                                                    styles.actionBtn,
+                                                    showCalendar ? { backgroundColor: tint } : { backgroundColor: cardBg, borderWidth: 1, borderColor: border },
+                                                ]}
                                                 onPress={() => setShowCalendar((s) => !s)}
                                             >
-                                                <ThemedText style={{ color: showCalendar ? '#fff' : '#111', fontWeight: '600' }}>{showCalendar ? 'List' : 'Kalender'}</ThemedText>
+                                                <ThemedText style={{ color: showCalendar ? '#fff' : text, fontWeight: '600' }}>{showCalendar ? 'List' : 'Kalender'}</ThemedText>
                                             </Pressable>
                                         </View>
                                     </View>
@@ -153,13 +160,13 @@ export default function KebunDetail() {
                 <View style={[styles.section, { backgroundColor: cardBg, borderColor: border }]}>
                     <ThemedText type="subtitle" style={{ marginBottom: 8 }}>Aksi</ThemedText>
                     <View style={{ flexDirection: 'row', gap: 8 }}>
-                        <Pressable style={[styles.actionBtn, { backgroundColor: '#1B5E20' }]} onPress={() => router.push(`./${kebun.id}/edit`)}>
+                        <Pressable style={[styles.actionBtn, { backgroundColor: tint }]} onPress={() => router.push(`./${kebun.id}/edit`)}>
                             <IconSymbol name="gear" size={16} color="#fff" />
                         </Pressable>
-                        <Pressable style={[styles.actionBtn, { backgroundColor: '#0a7ea4' }]} onPress={() => router.push(`./${kebun.id}/visits`)}>
+                        <Pressable style={[styles.actionBtn, { backgroundColor: accent }]} onPress={() => router.push(`./${kebun.id}/visits`)}>
                             <IconSymbol name="book" size={16} color="#fff" />
                         </Pressable>
-                        <Pressable style={[styles.actionBtn, { backgroundColor: kebun.status === 'Aktif' ? '#EF4444' : '#10B981' }]} onPress={() => { /* toggle */ }}>
+                        <Pressable style={[styles.actionBtn, { backgroundColor: kebun.status === 'Aktif' ? danger : success }]} onPress={() => { /* toggle */ }}>
                             <ThemedText style={{ color: '#fff', fontWeight: '600' }}>{kebun.status === 'Aktif' ? 'Nonaktifkan' : 'Aktifkan'}</ThemedText>
                         </Pressable>
                     </View>
@@ -178,11 +185,34 @@ export default function KebunDetail() {
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
-    header: { padding: 12, borderRadius: 10, borderWidth: 1, marginBottom: 12 },
-    section: { padding: 12, borderRadius: 10, borderWidth: 1, marginBottom: 12 },
+    header: {
+        padding: 14,
+        borderRadius: 10,
+        borderWidth: 1,
+        marginBottom: 12,
+        // subtle elevation
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+        elevation: 1,
+    },
+    section: {
+        padding: 12,
+        borderRadius: 10,
+        borderWidth: 1,
+        marginBottom: 12,
+        backgroundColor: 'transparent',
+        // soft separation
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 3,
+        elevation: 1,
+    },
     row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
     actionBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-    geoCard: { flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 8, borderWidth: 1 },
+    geoCard: { flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 8, borderWidth: 1, backgroundColor: 'transparent' },
     geoLeft: { width: 44, height: 44, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
     geoBody: { flex: 1 },
 });
