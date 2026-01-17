@@ -1,10 +1,11 @@
 import { Tabs } from "expo-router";
 import React, { useMemo } from "react";
-import { Platform } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
+import { useAuth } from '@/hooks/use-auth';
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export default function TabLayout() {
@@ -19,6 +20,8 @@ export default function TabLayout() {
 
 	// Debug: log runtime values to help diagnose theming issues
 	console.log('TabLayout colorScheme:', colorScheme, 'activeTint:', activeTint);
+
+	const { user } = useAuth();
 
 	return (
 		<Tabs
@@ -68,6 +71,15 @@ export default function TabLayout() {
 					tabBarIcon: ({ focused }) => {
 						const tint = colorScheme === 'light' || colorScheme == null ? Colors.light.text : Colors.dark.tabIconSelected;
 						const inactive = Colors[colorScheme ?? 'light'].tabIconDefault;
+						const initials = user?.name ? user.name.split(' ').map(s => s[0]).join('').slice(0,2).toUpperCase() : null;
+						if (initials) {
+							const avatarBg = focused ? Colors[colorScheme ?? 'light'].tint : inactive;
+							return (
+								<View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: avatarBg, alignItems: 'center', justifyContent: 'center' }}>
+									<Text style={{ color: '#fff', fontWeight: '600' }}>{initials}</Text>
+								</View>
+							);
+						}
 						return <IconSymbol size={28} name="gear" color={focused ? tint : inactive} />;
 					},
 				}}

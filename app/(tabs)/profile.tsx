@@ -1,6 +1,8 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/hooks/use-auth';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { useThemePreference } from '@/hooks/use-theme-preference';
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput } from 'react-native';
 
@@ -22,32 +24,39 @@ export default function ProfileScreen() {
     setPassword('');
   };
 
+  const { colorScheme } = useThemePreference();
+
+  const bgColor = useThemeColor({ light: '#F9FAFB', dark: '#111827' }, 'background');
+  const cardBg = useThemeColor({ light: '#FFFFFF', dark: '#1F2937' }, 'card');
+  const borderColor = useThemeColor({ light: '#E5E7EB', dark: '#374151' }, 'cardBorder');
+  const primaryGreen = useThemeColor({ light: '#1B5E20', dark: '#81C784' }, 'tint');
+  const textColor = useThemeColor({ light: '#1F2937', dark: '#F3F4F6' }, 'text');
+  const dangerColor = useThemeColor({ light: '#EF4444', dark: '#EF4444' }, 'danger');
+
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title" style={styles.title}>
+    <ThemedView style={[styles.container, { backgroundColor: bgColor }]}> 
+      <ThemedText type="title" style={[styles.title, { color: primaryGreen }]}> 
         Profile
       </ThemedText>
 
       {isLoggedIn ? (
-        <ThemedView style={styles.profileCard}>
-          <ThemedText type="subtitle">Selamat datang!</ThemedText>
-          <ThemedText style={styles.userName}>{user?.name}</ThemedText>
-          <ThemedText style={styles.userEmail}>{user?.email}</ThemedText>
+        <ThemedView style={[styles.profileCard, { backgroundColor: cardBg, borderColor }] }>
+          <ThemedText type="subtitle" style={{ color: textColor }}>Selamat datang!</ThemedText>
+          <ThemedText style={[styles.userName, { color: textColor }]}>{user?.name}</ThemedText>
+          <ThemedText style={[styles.userEmail, { color: textColor }]}>{user?.email}</ThemedText>
 
-          <Pressable style={styles.logoutButton} onPress={handleLogout}>
+          <Pressable style={[styles.logoutButton, { backgroundColor: dangerColor }]} onPress={handleLogout}>
             <ThemedText style={styles.logoutButtonText}>Logout</ThemedText>
           </Pressable>
         </ThemedView>
       ) : (
-        <ThemedView style={styles.loginCard}>
-          <ThemedText type="subtitle" style={styles.loginTitle}>
-            Login
-          </ThemedText>
+        <ThemedView style={[styles.loginCard, { backgroundColor: cardBg, borderColor }] }>
+          <ThemedText type="subtitle" style={[styles.loginTitle, { color: textColor }]}>Login</ThemedText>
 
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: textColor, borderColor, backgroundColor: cardBg }]}
             placeholder="Email"
-            placeholderTextColor="#999"
+            placeholderTextColor={colorScheme === 'light' ? '#999' : '#9CA3AF'}
             value={email}
             onChangeText={setEmail}
             editable={!isLoading}
@@ -56,9 +65,9 @@ export default function ProfileScreen() {
           />
 
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: textColor, borderColor, backgroundColor: cardBg }]}
             placeholder="Password"
-            placeholderTextColor="#999"
+            placeholderTextColor={colorScheme === 'light' ? '#999' : '#9CA3AF'}
             value={password}
             onChangeText={setPassword}
             editable={!isLoading}
@@ -66,7 +75,7 @@ export default function ProfileScreen() {
           />
 
           <Pressable
-            style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+            style={[styles.loginButton, isLoading && styles.loginButtonDisabled, { backgroundColor: primaryGreen }]}
             onPress={handleLogin}
             disabled={isLoading}
           >
@@ -77,9 +86,7 @@ export default function ProfileScreen() {
             )}
           </Pressable>
 
-          <ThemedText style={styles.dummyText}>
-            💡 Tip: Gunakan email apapun (contoh: demo@example.com)
-          </ThemedText>
+          <ThemedText style={[styles.dummyText, { color: textColor }]}>💡 Tip: Gunakan email apapun (contoh: demo@example.com)</ThemedText>
         </ThemedView>
       )}
     </ThemedView>
