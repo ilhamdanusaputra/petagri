@@ -4,14 +4,14 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import "../global.css";
 
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useThemePreference } from "@/hooks/use-theme-preference";
 
 export const unstable_settings = {
 	anchor: "(tabs)",
 };
 
 export default function RootLayout() {
-	const colorScheme = useColorScheme();
+	const { colorScheme } = useThemePreference();
 
 	return (
 		<ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>

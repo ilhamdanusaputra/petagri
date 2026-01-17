@@ -5,25 +5,47 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+// Enterprise Agribusiness Color Palette
+const primaryGreen = '#1B5E20'; // Dark forest green
+const primaryGreenLight = '#2E7D32'; // Lighter forest green for hover
+const accentYellow = '#F9A825'; // Soft yellow for highlights
+const accentGreen = '#81C784'; // Light green for secondary highlights
+const earthBrown = '#6D4C41'; // Soil brown
+const textDark = '#1F2937'; // Dark text for light mode
+const textLight = '#F3F4F6'; // Light text for dark mode
+const borderGray = '#E5E7EB'; // Subtle borders
+const successGreen = '#10B981'; // Status green
+const warningAmber = '#F59E0B'; // Status amber
+const dangerRed = '#EF4444'; // Status red
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: textDark,
+    background: '#F9FAFB', // Off-white background
+    tint: primaryGreen,
+    icon: '#6B7280', // Subtle gray icon
+    tabIconDefault: '#9CA3AF',
+    tabIconSelected: primaryGreen,
+    card: '#FFFFFF',
+    cardBorder: borderGray,
+    success: successGreen,
+    warning: warningAmber,
+    danger: dangerRed,
+    accent: accentYellow,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: textLight,
+    background: '#111827', // Very dark background
+    tint: accentGreen,
+    icon: '#D1D5DB',
+    tabIconDefault: '#9CA3AF',
+    tabIconSelected: accentGreen,
+    card: '#1F2937',
+    cardBorder: '#374151',
+    success: successGreen,
+    warning: warningAmber,
+    danger: dangerRed,
+    accent: accentYellow,
   },
 };
 
