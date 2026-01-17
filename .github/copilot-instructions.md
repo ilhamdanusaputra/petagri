@@ -17,6 +17,8 @@ React Native + Expo mobile app using file-based routing (expo-router), NativeWin
 - Routes are defined by file structure in `app/` directory
 - `app/_layout.tsx` is the root layout with theme provider
 - `app/(tabs)/` is a route group for tab navigation (parentheses hide from URL)
+- `app/menus.tsx` is the main menu page at `/menus` showing all available features
+- `app/menus/*.tsx` are individual menu pages (e.g., `/menus/core`, `/menus/produk`)
 - `app/modal.tsx` is a modal route accessible via `href="/modal"`
 - The anchor is set to `(tabs)` in root layout via `unstable_settings`
 
@@ -73,13 +75,29 @@ npm run lint           # Run ESLint (expo lint)
 
 ## Component Patterns
 
+### MenuGrid Component
+[components/menu-grid.tsx](components/menu-grid.tsx) renders a 4-column grid of menu tiles:
+- Each tile has an icon, label, and onPress handler
+- Default behavior: navigates to `/menus` using `useRouter` if no `onPress` provided
+- Used on Home screen with specific routes and on `/menus` page for all features
+- Example usage:
+```tsx
+const items = [
+  { key: 'core', label: 'CORE', icon: 'house.fill', onPress: () => router.push('/menus/core') },
+  { key: 'all', label: 'SEMUA MENU', icon: 'chevron.right', onPress: () => router.push('/menus') },
+];
+<MenuGrid items={items} />
+```
+
 ### Custom Tab Button
 [components/haptic-tab.tsx](components/haptic-tab.tsx) wraps `PlatformPressable` to add iOS haptic feedback on tab press
 
 ### Icon System
 - iOS: Uses SF Symbols via `IconSymbol` component ([components/ui/icon-symbol.ios.tsx](components/ui/icon-symbol.ios.tsx))
-- Other platforms: Uses fallback implementation
+- Other platforms: Uses MaterialIcons fallback via [components/ui/icon-symbol.tsx](components/ui/icon-symbol.tsx)
+- SF Symbol names must be mapped to Material Icons in `MAPPING` constant
 - Icons in tab bar: `<IconSymbol size={28} name="house.fill" color={color} />`
+- Menu icons available: `house.fill`, `leaf.fill`, `bag.fill`, `gavel`, `cart.fill`, `truck`, `archivebox.fill`, `dollarsign.circle.fill`, `chart.bar.fill`, `bell.fill`, `gear`, `book`, `chevron.right`, `chevron.left.forwardslash.chevron.right`
 
 ## Configuration Files
 
@@ -96,6 +114,8 @@ npm run lint           # Run ESLint (expo lint)
 ## Conventions
 - Use `.tsx` extension for all React components
 - Prefer functional components with hooks
-- Component files use kebab-case: `haptic-tab.tsx`, `themed-view.tsx`
+- Component files use kebab-case: `haptic-tab.tsx`, `themed-view.tsx`, `menu-grid.tsx`
 - Constants use SCREAMING_SNAKE_CASE exports: `Colors`, `Fonts`
 - Environment variables must be prefixed with `EXPO_PUBLIC_` to be accessible in app
+- Navigation: Use `useRouter()` from `expo-router` for programmatic navigation
+- Menu structure: 13 main features (CORE, KONSULTASI & KEBUN, PRODUK & TOKO, TENDER & PENAWARAN, PENJUALAN, DISTRIBUSI & LOGISTIK, GUDANG & STOK, KEUANGAN, LAPORAN & ANALITIK, NOTIFIKASI & SISTEM, PENGATURAN, DEVELOPER TOOLS, DOKUMENTASI)
