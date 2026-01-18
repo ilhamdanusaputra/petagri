@@ -3,6 +3,7 @@
 // Description: Modal for managing product catalog with search and filters
 // ================================================
 
+import { EditProductModal } from "@/components/modals/edit-product-modal";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -42,6 +43,7 @@ export function ManageCatalogModal({ visible, onClose }: ManageCatalogModalProps
 	const [showFilters, setShowFilters] = useState(false);
 	const [totalPages, setTotalPages] = useState(1);
 	const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+	const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
 	const loadData = useCallback(async () => {
 		setLoading(true);
@@ -119,9 +121,9 @@ export function ManageCatalogModal({ visible, onClose }: ManageCatalogModalProps
 		if (selectedProducts.size === 0) return;
 
 		const actionText = {
-			publish: "mempublikasikan",
+			publish: "mengaktifkan",
 			unpublish: "membuat draft",
-			archive: "mengarsipkan",
+			archive: "menonaktifkan",
 			delete: "menghapus",
 		}[action];
 
@@ -141,10 +143,10 @@ export function ManageCatalogModal({ visible, onClose }: ManageCatalogModalProps
 									return await ProductService.deleteProduct(productId);
 								} else {
 									const status = {
-										publish: "published",
+										publish: "active",
 										unpublish: "draft",
-										archive: "archived",
-									}[action] as "published" | "draft" | "archived";
+										archive: "inactive",
+									}[action] as "active" | "draft" | "inactive";
 
 									return await ProductService.updateProduct(productId, { status });
 								}
@@ -168,18 +170,19 @@ export function ManageCatalogModal({ visible, onClose }: ManageCatalogModalProps
 	};
 
 	const handleEditProduct = (product: Product) => {
-		// In a real app, this would open an edit modal
-		Alert.alert("Info", `Edit ${product.name} - Fitur akan ditambahkan`);
+		setEditingProduct(product);
 	};
 
 	const getStatusColor = (status: string) => {
 		switch (status) {
-			case "published":
+			case "active":
 				return "text-green-400";
 			case "draft":
 				return "text-yellow-400";
-			case "archived":
+			case "inactive":
 				return "text-red-400";
+			case "discontinued":
+				return "text-gray-400";
 			default:
 				return "text-gray-400";
 		}
@@ -187,12 +190,14 @@ export function ManageCatalogModal({ visible, onClose }: ManageCatalogModalProps
 
 	const getStatusText = (status: string) => {
 		switch (status) {
-			case "published":
-				return "Terpublikasi";
+			case "active":
+				return "Aktif";
 			case "draft":
 				return "Draft";
-			case "archived":
-				return "Diarsipkan";
+			case "inactive":
+				return "Non-aktif";
+			case "discontinued":
+				return "Dihentikan";
 			default:
 				return status;
 		}
@@ -295,7 +300,7 @@ export function ManageCatalogModal({ visible, onClose }: ManageCatalogModalProps
 							<View className="mb-3">
 								<ThemedText className="text-sm font-medium text-gray-300 mb-2">Status</ThemedText>
 								<View className="flex-row gap-2">
-									{["published", "draft", "archived"].map((status) => (
+									{["active", "draft", "inactive"].map((status) => (
 										<Pressable
 											key={status}
 											onPress={() => handleStatusFilter(status)}
@@ -366,7 +371,7 @@ export function ManageCatalogModal({ visible, onClose }: ManageCatalogModalProps
 							<Pressable
 								onPress={() => handleBulkAction("publish")}
 								className="bg-green-600 px-3 py-2 rounded-lg">
-								<ThemedText className="text-white text-sm">Publikasi</ThemedText>
+								<ThemedText className="text-white text-sm">Aktifkan</ThemedText>
 							</Pressable>
 							<Pressable
 								onPress={() => handleBulkAction("unpublish")}
@@ -376,7 +381,7 @@ export function ManageCatalogModal({ visible, onClose }: ManageCatalogModalProps
 							<Pressable
 								onPress={() => handleBulkAction("archive")}
 								className="bg-orange-600 px-3 py-2 rounded-lg">
-								<ThemedText className="text-white text-sm">Arsip</ThemedText>
+								<ThemedText className="text-white text-sm">Non-aktif</ThemedText>
 							</Pressable>
 							<Pressable
 								onPress={() => handleBulkAction("delete")}
@@ -464,6 +469,14 @@ export function ManageCatalogModal({ visible, onClose }: ManageCatalogModalProps
 					</ScrollView>
 				)}
 			</ThemedView>
+
+			{/* Edit Product Modal */}
+			<EditProductModal
+				visible={!!editingProduct}
+				onClose={() => setEditingProduct(null)}
+				product={editingProduct}
+				onProductUpdated={loadData}
+			/>
 		</Modal>
 	);
 }
@@ -526,23 +539,21 @@ function ProductItem({
 					<View className="flex-row items-center justify-between">
 						<View className="flex-row items-center gap-4">
 							<ThemedText className="text-blue-400 font-semibold">
-								{formatPrice(product.price)}
+								{formatPrice(product.selling_price)}
 							</ThemedText>
-							{product.track_inventory && (
-								<ThemedText
-									className={`text-sm ${
-										product.stock_quantity <= 0
-											? "text-red-400"
-											: product.stock_quantity <= product.low_stock_threshold
-												? "text-yellow-400"
-												: "text-green-400"
-									}`}>
-									Stok: {product.stock_quantity}
-								</ThemedText>
-							)}
+							<ThemedText
+								className={`text-sm ${
+									product.stock_quantity <= 0
+										? "text-red-400"
+										: product.stock_quantity <= product.min_stock_level
+											? "text-yellow-400"
+											: "text-green-400"
+								}`}>
+								Stok: {product.stock_quantity}
+							</ThemedText>
 						</View>
 
-						{product.featured && (
+						{product.is_featured && (
 							<View className="bg-yellow-600/20 px-2 py-1 rounded">
 								<ThemedText className="text-yellow-400 text-xs">Unggulan</ThemedText>
 							</View>

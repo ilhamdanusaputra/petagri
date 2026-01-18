@@ -1,9 +1,8 @@
-import { AddCategoryModal } from "@/components/modals/add-category-modal";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { ProductCategory, ProductFormData } from "@/types/product";
-import { supabase } from "@/utils/supabase";
+import { ProductService } from "@/services/product";
+import { Product, ProductCategory } from "@/types/product";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -12,20 +11,40 @@ import {
 	Modal,
 	Pressable,
 	ScrollView,
+	Switch,
 	TextInput,
 	View,
 } from "react-native";
 
-interface AddProductModalProps {
+interface EditProductModalProps {
 	visible: boolean;
 	onClose: () => void;
-	onProductAdded?: () => void;
+	product: Product | null;
+	onProductUpdated?: () => void;
 }
 
-export function AddProductModal({ visible, onClose, onProductAdded }: AddProductModalProps) {
+interface EditProductFormData {
+	name: string;
+	description?: string;
+	sku: string;
+	category_id?: string;
+	selling_price: string;
+	base_price?: string;
+	stock_quantity: string;
+	min_stock_level: string;
+	weight?: string;
+	status: "active" | "inactive" | "draft" | "discontinued";
+	is_featured: boolean;
+}
+
+export function EditProductModal({
+	visible,
+	onClose,
+	product,
+	onProductUpdated,
+}: EditProductModalProps) {
 	const [loading, setLoading] = useState(false);
 	const [categories, setCategories] = useState<ProductCategory[]>([]);
-	const [showCategoryModal, setShowCategoryModal] = useState(false);
 
 	const {
 		control,
@@ -34,117 +53,91 @@ export function AddProductModal({ visible, onClose, onProductAdded }: AddProduct
 		reset,
 		watch,
 		formState: { errors },
-	} = useForm<ProductFormData>({
-		defaultValues: {
-			name: "",
-			description: "",
-			sku: "",
-			category_id: "",
-			tags: [],
-			price: "",
-			cost_price: "",
-			stock_quantity: "0",
-			low_stock_threshold: "5",
-			weight: "",
-			dimensions: {
-				length: "",
-				width: "",
-				height: "",
-				unit: "cm",
-			},
-			status: "active",
-			featured: false,
-		},
-	});
+	} = useForm<EditProductFormData>();
 
 	const category_id = watch("category_id");
 
 	useEffect(() => {
-		if (visible) loadCategories();
-	}, [visible]);
+		if (visible && product) {
+			loadCategories();
+			// Reset form with product data
+			reset({
+				name: product.name,
+				description: product.description || "",
+				sku: product.sku,
+				category_id: product.category_id || "",
+				selling_price: product.selling_price.toString(),
+				base_price: product.base_price.toString(),
+				stock_quantity: product.stock_quantity.toString(),
+				min_stock_level: product.min_stock_level.toString(),
+				weight: product.weight?.toString() || "",
+				status: product.status,
+				is_featured: product.is_featured,
+			});
+		}
+	}, [visible, product, reset]);
 
 	const loadCategories = async () => {
-		const { data, error } = await supabase.from("product_categories").select("*").order("name");
-
-		if (error) {
-			console.error(error);
-			return;
+		try {
+			const response = await ProductService.getCategories();
+			setCategories(response.data || []);
+		} catch (error) {
+			console.error("Error loading categories:", error);
 		}
-
-		setCategories(data || []);
 	};
 
-	const generateSKU = () => {
-		const name = watch("name");
-		const prefix = name
-			.slice(0, 3)
-			.toUpperCase()
-			.replace(/[^A-Z]/g, "");
-		const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-		setValue("sku", `${prefix}-${random}`);
-	};
+	const onSubmit = async (formData: EditProductFormData) => {
+		if (!product) return;
 
-	const onSubmit = async (formData: ProductFormData) => {
 		setLoading(true);
 
 		try {
-			const payload = {
+			const updateData = {
 				name: formData.name,
 				description: formData.description,
 				sku: formData.sku,
 				category_id: formData.category_id || null,
-				base_price: formData.cost_price ? Number(formData.cost_price) : 0,
-				selling_price: Number(formData.price),
+				base_price: formData.base_price ? Number(formData.base_price) : 0,
+				selling_price: Number(formData.selling_price),
 				stock_quantity: Number(formData.stock_quantity),
-				min_stock_level: Number(formData.low_stock_threshold),
+				min_stock_level: Number(formData.min_stock_level),
 				weight: formData.weight ? Number(formData.weight) : null,
-				dimensions: formData.dimensions,
 				status: formData.status,
-				is_featured: formData.featured,
-				tags: formData.tags,
+				is_featured: formData.is_featured,
 			};
 
-			console.log("Inserting product with payload:", payload);
+			console.log("Updating product with data:", updateData);
 
-			const { data, error } = await supabase.from("products").insert(payload).select();
+			await ProductService.updateProduct(product.id, updateData);
 
-			if (error) {
-				console.error("Supabase error:", error);
-				Alert.alert("Error", `Gagal menambahkan produk: ${error.message}`);
-				setLoading(false);
-				return;
-			}
-
-			console.log("Product inserted successfully:", data);
-
-			Alert.alert("Sukses", "Produk berhasil ditambahkan", [
+			Alert.alert("Sukses", "Produk berhasil diperbarui", [
 				{
 					text: "OK",
 					onPress: () => {
-						onProductAdded?.();
+						onProductUpdated?.();
 						onClose();
-						reset();
 					},
 				},
 			]);
 		} catch (error) {
-			console.error("Unexpected error:", error);
-			Alert.alert("Error", "Terjadi kesalahan yang tidak terduga");
+			console.error("Error updating product:", error);
+			Alert.alert(
+				"Error",
+				`Gagal memperbarui produk: ${error instanceof Error ? error.message : "Unknown error"}`,
+			);
 		} finally {
 			setLoading(false);
 		}
 	};
 
-	const handleCategoryAdded = () => {
-		loadCategories(); // Reload categories after new one is added
-	};
+	if (!product) return null;
 
 	return (
 		<Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
 			<ThemedView className="flex-1 bg-black">
 				<View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-800">
 					<ThemedText type="title" className="text-xl font-bold text-white">
-						Tambah Produk Baru
+						Edit Produk
 					</ThemedText>
 					<Pressable
 						onPress={onClose}
@@ -199,36 +192,23 @@ export function AddProductModal({ visible, onClose, onProductAdded }: AddProduct
 
 						<View className="mb-4">
 							<ThemedText className="text-sm text-gray-300 mb-2">SKU *</ThemedText>
-							<View className="flex-row gap-3">
-								<Controller
-									control={control}
-									name="sku"
-									rules={{ required: "SKU wajib diisi" }}
-									render={({ field }) => (
-										<TextInput
-											{...field}
-											className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white"
-										/>
-									)}
-								/>
-								<Pressable onPress={generateSKU} className="bg-blue-600 px-4 py-3 rounded-xl">
-									<ThemedText className="text-white">Generate</ThemedText>
-								</Pressable>
-							</View>{" "}
-							{errors.sku && (
-								<ThemedText className="text-red-400 text-sm mt-1">{errors.sku.message}</ThemedText>
-							)}{" "}
+							<Controller
+								control={control}
+								name="sku"
+								rules={{ required: "SKU wajib diisi" }}
+								render={({ field }) => (
+									<TextInput
+										{...field}
+										placeholder="SKU produk"
+										placeholderTextColor="#6B7280"
+										className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white"
+									/>
+								)}
+							/>
 						</View>
 
 						<View className="mb-4">
-							<View className="flex-row items-center justify-between mb-2">
-								<ThemedText className="text-sm text-gray-300">Kategori</ThemedText>
-								<Pressable
-									onPress={() => setShowCategoryModal(true)}
-									className="bg-green-600 px-3 py-1 rounded-lg">
-									<ThemedText className="text-white text-sm">Tambah Kategori</ThemedText>
-								</Pressable>
-							</View>
+							<ThemedText className="text-sm text-gray-300 mb-2">Kategori</ThemedText>
 							<ScrollView horizontal>
 								<View className="flex-row gap-2">
 									<Pressable
@@ -236,7 +216,7 @@ export function AddProductModal({ visible, onClose, onProductAdded }: AddProduct
 										className={`px-3 py-2 rounded-lg ${
 											!category_id ? "bg-blue-600" : "bg-gray-700"
 										}`}>
-										<ThemedText className="text-white">Tanpa Kategori</ThemedText>
+										<ThemedText className="text-white">Tanpa</ThemedText>
 									</Pressable>
 
 									{categories.map((c) => (
@@ -263,7 +243,7 @@ export function AddProductModal({ visible, onClose, onProductAdded }: AddProduct
 								<ThemedText className="text-sm text-gray-300 mb-2">Harga Jual *</ThemedText>
 								<Controller
 									control={control}
-									name="price"
+									name="selling_price"
 									rules={{
 										required: "Harga jual wajib diisi",
 										validate: (value) => {
@@ -289,7 +269,7 @@ export function AddProductModal({ visible, onClose, onProductAdded }: AddProduct
 								<ThemedText className="text-sm text-gray-300 mb-2">Harga Dasar</ThemedText>
 								<Controller
 									control={control}
-									name="cost_price"
+									name="base_price"
 									render={({ field }) => (
 										<TextInput
 											{...field}
@@ -324,7 +304,7 @@ export function AddProductModal({ visible, onClose, onProductAdded }: AddProduct
 								<ThemedText className="text-sm text-gray-300 mb-2">Minimum Stok</ThemedText>
 								<Controller
 									control={control}
-									name="low_stock_threshold"
+									name="min_stock_level"
 									render={({ field }) => (
 										<TextInput
 											{...field}
@@ -354,6 +334,48 @@ export function AddProductModal({ visible, onClose, onProductAdded }: AddProduct
 								)}
 							/>
 						</View>
+
+						<View className="mb-4">
+							<View className="flex-row items-center justify-between">
+								<ThemedText className="text-sm text-gray-300">Produk Unggulan</ThemedText>
+								<Controller
+									control={control}
+									name="is_featured"
+									render={({ field }) => (
+										<Switch
+											value={field.value}
+											onValueChange={field.onChange}
+											trackColor={{ false: "#374151", true: "#3B82F6" }}
+											thumbColor={field.value ? "#ffffff" : "#9CA3AF"}
+										/>
+									)}
+								/>
+							</View>
+						</View>
+
+						<View className="mb-4">
+							<ThemedText className="text-sm text-gray-300 mb-2">Status</ThemedText>
+							<View className="flex-row gap-2">
+								{(["active", "draft", "inactive", "discontinued"] as const).map((status) => (
+									<Pressable
+										key={status}
+										onPress={() => setValue("status", status)}
+										className={`px-3 py-2 rounded-lg ${
+											watch("status") === status ? "bg-blue-600" : "bg-gray-700"
+										}`}>
+										<ThemedText className="text-white text-sm">
+											{status === "active"
+												? "Aktif"
+												: status === "draft"
+													? "Draft"
+													: status === "inactive"
+														? "Non-aktif"
+														: "Dihentikan"}
+										</ThemedText>
+									</Pressable>
+								))}
+							</View>
+						</View>
 					</View>
 
 					<View className="pb-10">
@@ -364,19 +386,12 @@ export function AddProductModal({ visible, onClose, onProductAdded }: AddProduct
 							{loading ? (
 								<ActivityIndicator color="#fff" />
 							) : (
-								<ThemedText className="text-white font-semibold">Tambah Produk</ThemedText>
+								<ThemedText className="text-white font-semibold">Perbarui Produk</ThemedText>
 							)}
 						</Pressable>
 					</View>
 				</ScrollView>
 			</ThemedView>
-
-			{/* Add Category Modal */}
-			<AddCategoryModal
-				visible={showCategoryModal}
-				onClose={() => setShowCategoryModal(false)}
-				onCategoryAdded={handleCategoryAdded}
-			/>
 		</Modal>
 	);
 }

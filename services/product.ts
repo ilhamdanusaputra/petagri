@@ -35,33 +35,17 @@ export class ProductService {
 					.replace(/[^a-z0-9]+/g, "-")
 					.replace(/(^-|-$)/g, ""),
 				description: data.description,
-				short_description: data.short_description,
 				sku: data.sku,
 				category_id: data.category_id || null,
 				tags: data.tags,
-				price: parseFloat(data.price),
-				sale_price: data.sale_price ? parseFloat(data.sale_price) : null,
-				cost_price: data.cost_price ? parseFloat(data.cost_price) : null,
-				stock_quantity: parseInt(data.stock_quantity),
-				track_inventory: data.track_inventory,
-				allow_backorders: data.allow_backorders,
-				low_stock_threshold: parseInt(data.low_stock_threshold),
-				weight: data.weight ? parseFloat(data.weight) : null,
-				dimensions: data.dimensions
-					? {
-							length: data.dimensions.length ? parseFloat(data.dimensions.length) : null,
-							width: data.dimensions.width ? parseFloat(data.dimensions.width) : null,
-							height: data.dimensions.height ? parseFloat(data.dimensions.height) : null,
-							unit: data.dimensions.unit,
-						}
-					: null,
+				base_price: data.cost_price ? Number(data.cost_price) : 0,
+				selling_price: Number(data.price),
+				stock_quantity: Number(data.stock_quantity),
+				min_stock_level: Number(data.low_stock_threshold),
+				weight: data.weight ? Number(data.weight) : null,
+				dimensions: data.dimensions,
 				status: data.status,
-				visibility: data.visibility,
-				featured: data.featured,
-				meta_title: data.meta_title,
-				meta_description: data.meta_description,
-				meta_keywords: data.meta_keywords,
-				images: [], // Will be updated separately
+				is_featured: data.featured,
 			};
 
 			const { data: product, error } = await supabase
@@ -72,8 +56,8 @@ export class ProductService {
 
 			if (error) throw error;
 
-			// Create initial inventory transaction if tracking inventory
-			if (data.track_inventory && parseInt(data.stock_quantity) > 0) {
+			// Create initial inventory transaction
+			if (parseInt(data.stock_quantity) > 0) {
 				await this.createInventoryTransaction({
 					product_id: product.id,
 					transaction_type: "stock_in",
@@ -202,7 +186,7 @@ export class ProductService {
 		}
 	}
 
-	static async updateProduct(id: string, data: Partial<ProductFormData>): Promise<Product> {
+	static async updateProduct(id: string, data: any): Promise<Product> {
 		try {
 			const updateData: any = {};
 
@@ -216,21 +200,17 @@ export class ProductService {
 			}
 
 			if (data.description !== undefined) updateData.description = data.description;
-			if (data.short_description !== undefined)
-				updateData.short_description = data.short_description;
 			if (data.sku) updateData.sku = data.sku;
 			if (data.category_id !== undefined) updateData.category_id = data.category_id || null;
-			if (data.tags) updateData.tags = data.tags;
-			if (data.price) updateData.price = parseFloat(data.price);
-			if (data.sale_price !== undefined)
-				updateData.sale_price = data.sale_price ? parseFloat(data.sale_price) : null;
-			if (data.cost_price !== undefined)
-				updateData.cost_price = data.cost_price ? parseFloat(data.cost_price) : null;
+
+			// Pricing fields
+			if (data.base_price !== undefined) updateData.base_price = Number(data.base_price);
+			if (data.selling_price !== undefined) updateData.selling_price = Number(data.selling_price);
 
 			// Handle inventory changes
 			if (data.stock_quantity !== undefined) {
 				const oldQuantity = await this.getProductStock(id);
-				const newQuantity = parseInt(data.stock_quantity);
+				const newQuantity = Number(data.stock_quantity);
 				updateData.stock_quantity = newQuantity;
 
 				// Create inventory transaction for stock adjustment
@@ -247,30 +227,12 @@ export class ProductService {
 				}
 			}
 
-			if (data.track_inventory !== undefined) updateData.track_inventory = data.track_inventory;
-			if (data.allow_backorders !== undefined) updateData.allow_backorders = data.allow_backorders;
-			if (data.low_stock_threshold)
-				updateData.low_stock_threshold = parseInt(data.low_stock_threshold);
-			if (data.weight !== undefined)
-				updateData.weight = data.weight ? parseFloat(data.weight) : null;
-
-			if (data.dimensions !== undefined) {
-				updateData.dimensions = data.dimensions
-					? {
-							length: data.dimensions.length ? parseFloat(data.dimensions.length) : null,
-							width: data.dimensions.width ? parseFloat(data.dimensions.width) : null,
-							height: data.dimensions.height ? parseFloat(data.dimensions.height) : null,
-							unit: data.dimensions.unit,
-						}
-					: null;
-			}
-
+			if (data.min_stock_level !== undefined)
+				updateData.min_stock_level = Number(data.min_stock_level);
+			if (data.weight !== undefined) updateData.weight = data.weight ? Number(data.weight) : null;
+			if (data.dimensions !== undefined) updateData.dimensions = data.dimensions;
 			if (data.status) updateData.status = data.status;
-			if (data.visibility) updateData.visibility = data.visibility;
-			if (data.featured !== undefined) updateData.featured = data.featured;
-			if (data.meta_title !== undefined) updateData.meta_title = data.meta_title;
-			if (data.meta_description !== undefined) updateData.meta_description = data.meta_description;
-			if (data.meta_keywords !== undefined) updateData.meta_keywords = data.meta_keywords;
+			if (data.is_featured !== undefined) updateData.is_featured = data.is_featured;
 
 			const { data: product, error } = await supabase
 				.from("products")
@@ -313,7 +275,7 @@ export class ProductService {
 				description: data.description,
 				parent_id: data.parent_id || null,
 				sort_order: parseInt(data.sort_order),
-				is_active: data.is_active,
+				status: data.status,
 			};
 
 			const { data: category, error } = await supabase

@@ -8,47 +8,44 @@ export interface Product {
 	name: string;
 	slug: string;
 	description?: string;
-	short_description?: string;
+	sku: string;
+	barcode?: string;
 
 	// Classification
-	sku: string;
 	category_id?: string;
 	category?: ProductCategory;
-	tags: string[];
+	subcategory?: string;
+	brand?: string;
 
 	// Pricing
-	price: number;
-	sale_price?: number;
-	cost_price?: number;
-	currency: string;
-	price_history?: PriceHistory[];
+	base_price: number;
+	selling_price: number;
+	discount_percentage?: number;
+	discount_amount?: number;
 
 	// Inventory
 	stock_quantity: number;
-	track_inventory: boolean;
-	allow_backorders: boolean;
-	low_stock_threshold: number;
-	inventory_transactions?: InventoryTransaction[];
-
-	// Physical attributes
+	min_stock_level: number;
+	max_stock_level?: number;
+	unit_type: string;
 	weight?: number;
-	dimensions?: ProductDimensions;
+	dimensions?: any; // JSONB
 
-	// Media
-	images: ProductImage[];
-	featured_image?: string;
+	// Product status
+	status: "active" | "inactive" | "draft" | "discontinued";
+	is_featured: boolean;
+	is_digital: boolean;
 
-	// Status
-	status: "draft" | "published" | "archived";
-	visibility: "public" | "private" | "hidden";
-	featured: boolean;
-
-	// SEO
+	// SEO and media
 	meta_title?: string;
 	meta_description?: string;
-	meta_keywords?: string;
+	images?: any; // JSONB array
 
-	// Timestamps
+	// Additional
+	attributes?: any; // JSONB
+	tags?: string[]; // TEXT array
+
+	// Audit fields
 	created_at: string;
 	updated_at: string;
 	created_by?: string;
@@ -67,7 +64,8 @@ export interface ProductCategory {
 	path: string;
 	level: number;
 	sort_order: number;
-	is_active: boolean;
+	status: "active" | "inactive";
+	is_featured: boolean;
 	created_at: string;
 	updated_at: string;
 }
@@ -276,17 +274,13 @@ export interface NotificationSettings {
 export interface ProductFormData {
 	name: string;
 	description?: string;
-	short_description?: string;
 	sku: string;
 	category_id?: string;
 	tags: string[];
-	price: string;
-	sale_price?: string;
-	cost_price?: string;
+	price: string; // maps to selling_price in DB
+	cost_price?: string; // maps to base_price in DB
 	stock_quantity: string;
-	track_inventory: boolean;
-	allow_backorders: boolean;
-	low_stock_threshold: string;
+	low_stock_threshold: string; // maps to min_stock_level in DB
 	weight?: string;
 	dimensions?: {
 		length?: string;
@@ -294,12 +288,8 @@ export interface ProductFormData {
 		height?: string;
 		unit: "cm" | "inch";
 	};
-	status: "draft" | "published" | "archived";
-	visibility: "public" | "private" | "hidden";
-	featured: boolean;
-	meta_title?: string;
-	meta_description?: string;
-	meta_keywords?: string;
+	status: "active" | "inactive" | "draft" | "discontinued";
+	featured: boolean; // maps to is_featured in DB
 }
 
 export interface CategoryFormData {
@@ -307,7 +297,7 @@ export interface CategoryFormData {
 	description?: string;
 	parent_id?: string;
 	sort_order: string;
-	is_active: boolean;
+	status: "active" | "inactive";
 }
 
 export interface StoreSettingsFormData {
