@@ -530,7 +530,7 @@ export function ContractMitraModal({ visible, onClose }: ContractModalProps) {
 							<Pressable
 								onPress={onClose}
 								className="w-10 h-10 items-center justify-center rounded-full bg-gray-700">
-								<IconSymbol name="chevron.left" size={16} color="#9CA3AF" />
+								<IconSymbol name="xmark" size={16} color="#9CA3AF" />
 							</Pressable>
 						</View>
 					</View>
