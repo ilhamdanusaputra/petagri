@@ -8,7 +8,7 @@ import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { ProductService } from "@/services/product";
 import { Product, ProductCategory } from "@/types/product";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
 	ActivityIndicator,
@@ -50,6 +50,7 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 	const [bulkUpdateMode, setBulkUpdateMode] = useState(false);
 	const [bulkDiscountType, setBulkDiscountType] = useState<"percentage" | "fixed">("percentage");
 	const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+	const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	// Form for search and bulk operations
 	const { control, watch, setValue } = useForm<PricingFilterForm>({
@@ -73,10 +74,9 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 				ProductService.getProducts({
 					search: searchQuery,
 					category_id: selectedCategory,
-					status: ["published", "draft"],
 					sort_by: "name",
 					sort_direction: "asc",
-					per_page: 100,
+					per_page: 200, // Increased limit
 				}),
 				ProductService.getCategories(),
 			]);
@@ -93,6 +93,16 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 	useEffect(() => {
 		if (visible) {
 			loadData();
+		} else {
+			// Clear timeout when modal closes
+			if (searchTimeoutRef.current) {
+				clearTimeout(searchTimeoutRef.current);
+				searchTimeoutRef.current = null;
+			}
+			// Reset form and state
+			setPricingUpdates(new Map());
+			setSelectedProducts(new Set());
+			setBulkUpdateMode(false);
 		}
 	}, [visible, loadData]);
 
@@ -107,6 +117,10 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 		field: "price" | "salePrice" | "costPrice",
 		value: string,
 	) => {
+		if (value && !/^\d*\.?\d*$/.test(value)) {
+			return;
+		}
+
 		const updates = new Map(pricingUpdates);
 		const currentUpdate = updates.get(productId) || {
 			productId,
@@ -118,6 +132,16 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 
 		currentUpdate[field] = value;
 		currentUpdate.hasChanges = true;
+
+		// Additional validation for sale price vs regular price
+		if (field === "salePrice" || field === "price") {
+			const price = parseFloat(field === "price" ? value : currentUpdate.price) || 0;
+			const salePrice = parseFloat(field === "salePrice" ? value : currentUpdate.salePrice) || 0;
+
+			if (salePrice > price && price > 0) {
+				Alert.alert("Peringatan", "Harga diskon tidak boleh lebih tinggi dari harga regular");
+			}
+		}
 
 		updates.set(productId, currentUpdate);
 		setPricingUpdates(updates);
@@ -143,29 +167,48 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 	};
 
 	const applyBulkDiscount = () => {
-		if (!bulkDiscount || selectedProducts.size === 0) return;
+		if (!bulkDiscount || selectedProducts.size === 0) {
+			Alert.alert("Info", "Pilih produk dan masukkan nilai diskon terlebih dahulu");
+			return;
+		}
 
 		const discount = parseFloat(bulkDiscount);
-		if (isNaN(discount)) {
-			Alert.alert("Error", "Nilai diskon tidak valid");
+		if (isNaN(discount) || discount < 0) {
+			Alert.alert("Error", "Nilai diskon tidak valid. Masukkan angka positif.");
+			return;
+		}
+
+		if (bulkDiscountType === "percentage" && discount > 100) {
+			Alert.alert("Error", "Persentase diskon tidak boleh lebih dari 100%");
 			return;
 		}
 
 		const updates = new Map(pricingUpdates);
+		let successCount = 0;
+		let errorCount = 0;
 
 		selectedProducts.forEach((productId) => {
 			const product = products.find((p) => p.id === productId);
-			if (!product) return;
+			if (!product) {
+				errorCount++;
+				return;
+			}
 
 			const currentUpdate = updates.get(productId) || {
 				productId,
-				price: product.price.toString(),
-				salePrice: product.sale_price?.toString() || "",
-				costPrice: product.cost_price?.toString() || "",
+				price: product.selling_price.toString(),
+				salePrice: product.discount_amount?.toString() || "",
+				costPrice: product.base_price?.toString() || "",
 				hasChanges: false,
 			};
 
-			const originalPrice = parseFloat(currentUpdate.price || product.price.toString());
+			const originalPrice = parseFloat(currentUpdate.price || product.selling_price.toString());
+
+			if (originalPrice <= 0) {
+				errorCount++;
+				return;
+			}
+
 			let newSalePrice: number;
 
 			if (bulkDiscountType === "percentage") {
@@ -175,16 +218,26 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 			}
 
 			// Ensure sale price is not negative or higher than original price
-			newSalePrice = Math.max(0, Math.min(newSalePrice, originalPrice));
+			newSalePrice = Math.max(0, Math.min(newSalePrice, originalPrice - 0.01));
 
-			currentUpdate.salePrice = newSalePrice.toString();
+			currentUpdate.salePrice = newSalePrice.toFixed(2);
 			currentUpdate.hasChanges = true;
 
 			updates.set(productId, currentUpdate);
+			successCount++;
 		});
 
 		setPricingUpdates(updates);
-		Alert.alert("Sukses", `Diskon diterapkan ke ${selectedProducts.size} produk`);
+
+		if (successCount > 0) {
+			Alert.alert(
+				"Sukses",
+				`Diskon diterapkan ke ${successCount} produk` +
+					(errorCount > 0 ? `. ${errorCount} produk gagal diproses.` : ""),
+			);
+		} else {
+			Alert.alert("Error", "Tidak ada produk yang berhasil diproses");
+		}
 	};
 
 	const clearBulkDiscount = () => {
@@ -196,9 +249,9 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 
 			const currentUpdate = updates.get(productId) || {
 				productId,
-				price: product.price.toString(),
-				salePrice: product.sale_price?.toString() || "",
-				costPrice: product.cost_price?.toString() || "",
+				price: product.selling_price.toString(),
+				salePrice: product.discount_amount?.toString() || "",
+				costPrice: product.base_price?.toString() || "",
 				hasChanges: false,
 			};
 
@@ -210,6 +263,30 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 
 		setPricingUpdates(updates);
 		Alert.alert("Sukses", `Diskon dihapus dari ${selectedProducts.size} produk`);
+	};
+
+	const clearAllChanges = () => {
+		if (pricingUpdates.size === 0) {
+			Alert.alert("Info", "Tidak ada perubahan untuk dihapus");
+			return;
+		}
+
+		Alert.alert(
+			"Konfirmasi",
+			"Apakah Anda yakin ingin menghapus semua perubahan yang belum disimpan?",
+			[
+				{ text: "Batal", style: "cancel" },
+				{
+					text: "Hapus",
+					style: "destructive",
+					onPress: () => {
+						setPricingUpdates(new Map());
+						setSelectedProducts(new Set());
+						Alert.alert("Sukses", "Semua perubahan berhasil dihapus");
+					},
+				},
+			],
+		);
 	};
 
 	const saveChanges = async () => {
@@ -232,22 +309,51 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 					onPress: async () => {
 						setLoading(true);
 						try {
-							const promises = changedUpdates.map(async (update) => {
-								const updateData: any = {};
+							let successCount = 0;
+							let errorCount = 0;
+							const errors: string[] = [];
 
-								if (update.price) updateData.price = update.price;
-								if (update.salePrice) updateData.sale_price = update.salePrice;
-								if (update.costPrice) updateData.cost_price = update.costPrice;
+							for (const update of changedUpdates) {
+								try {
+									const updateData: any = {};
 
-								return await ProductService.updateProduct(update.productId, updateData);
-							});
+									if (update.price) {
+										const price = parseFloat(update.price);
+										if (price > 0) updateData.selling_price = price;
+									}
+									if (update.salePrice) {
+										const salePrice = parseFloat(update.salePrice);
+										if (salePrice >= 0) updateData.discount_amount = salePrice;
+									}
+									if (update.costPrice) {
+										const costPrice = parseFloat(update.costPrice);
+										if (costPrice >= 0) updateData.base_price = costPrice;
+									}
 
-							await Promise.all(promises);
+									if (Object.keys(updateData).length > 0) {
+										await ProductService.updateProduct(update.productId, updateData);
+										successCount++;
+									}
+								} catch (error) {
+									errorCount++;
+									const product = products.find((p) => p.id === update.productId);
+									errors.push(`${product?.name || update.productId}: ${error}`);
+								}
+							}
+
 							setPricingUpdates(new Map());
 							setSelectedProducts(new Set());
 							await loadData();
 
-							Alert.alert("Sukses", `${changedUpdates.length} produk berhasil diperbarui`);
+							if (successCount > 0) {
+								let message = `${successCount} produk berhasil diperbarui`;
+								if (errorCount > 0) {
+									message += `. ${errorCount} produk gagal diperbarui.`;
+								}
+								Alert.alert("Sukses", message);
+							} else {
+								Alert.alert("Error", "Tidak ada produk yang berhasil diperbarui");
+							}
 						} catch (error) {
 							console.error("Error saving changes:", error);
 							Alert.alert("Error", "Gagal menyimpan perubahan. Silakan coba lagi.");
@@ -312,7 +418,7 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 				<View className="px-6 py-4 border-b border-gray-800">
 					{/* Search Bar */}
 					<View className="flex-row items-center bg-gray-800 rounded-xl px-4 py-3 mb-3">
-						<IconSymbol name="house.fill" size={20} color="#6B7280" />
+						<IconSymbol name="magnifyingglass" size={20} color="#6B7280" />
 						<Controller
 							control={control}
 							render={({
@@ -324,8 +430,14 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 									value={value}
 									onChangeText={(text: string) => {
 										onChange(text);
-										// Debounce search in real app
-										setTimeout(loadData, 500);
+										// Clear existing timeout
+										if (searchTimeoutRef.current) {
+											clearTimeout(searchTimeoutRef.current);
+										}
+										// Set new timeout
+										searchTimeoutRef.current = setTimeout(() => {
+											loadData();
+										}, 500);
 									}}
 									placeholder="Cari produk..."
 									placeholderTextColor="#6B7280"
@@ -375,6 +487,13 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 						</View>
 					</ScrollView>
 
+					{/* Status Filter Toggle */}
+					<View className="flex-row items-center justify-between mb-3">
+						<ThemedText className="text-xs text-gray-500">
+							{products.length} produk ditemukan
+						</ThemedText>
+					</View>
+
 					{/* Bulk Update Toggle */}
 					<View className="flex-row items-center justify-between">
 						<View className="flex-row items-center gap-3">
@@ -387,11 +506,20 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 							/>
 						</View>
 
-						{changedCount > 0 && (
-							<Pressable onPress={saveChanges} className="bg-green-600 px-4 py-2 rounded-lg">
-								<ThemedText className="text-white font-medium">Simpan ({changedCount})</ThemedText>
-							</Pressable>
-						)}
+						<View className="flex-row gap-2">
+							{changedCount > 0 && (
+								<>
+									<Pressable onPress={clearAllChanges} className="bg-gray-600 px-3 py-2 rounded-lg">
+										<ThemedText className="text-white text-sm font-medium">Hapus Semua</ThemedText>
+									</Pressable>
+									<Pressable onPress={saveChanges} className="bg-green-600 px-4 py-2 rounded-lg">
+										<ThemedText className="text-white font-medium">
+											Simpan ({changedCount})
+										</ThemedText>
+									</Pressable>
+								</>
+							)}
+						</View>
 					</View>
 				</View>
 
@@ -411,8 +539,13 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 									}) => (
 										<TextInput
 											value={value}
-											onChangeText={onChange}
-											placeholder="Nilai diskon"
+											onChangeText={(text) => {
+												// Allow only numbers and decimal point
+												if (text === "" || /^\d*\.?\d*$/.test(text)) {
+													onChange(text);
+												}
+											}}
+											placeholder={bulkDiscountType === "percentage" ? "0-100" : "0"}
 											placeholderTextColor="#6B7280"
 											keyboardType="numeric"
 											className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
@@ -553,9 +686,9 @@ function ProductPricingItem({
 	formatPrice,
 	calculateProfitMargin,
 }: ProductPricingItemProps) {
-	const currentPrice = update?.price || product.price.toString();
-	const currentSalePrice = update?.salePrice || product.sale_price?.toString() || "";
-	const currentCostPrice = update?.costPrice || product.cost_price?.toString() || "";
+	const currentPrice = update?.price || product.selling_price.toString();
+	const currentSalePrice = update?.salePrice || product.discount_amount?.toString() || "";
+	const currentCostPrice = update?.costPrice || product.base_price?.toString() || "";
 
 	const profitMargin = calculateProfitMargin(currentPrice, currentCostPrice);
 	const isOnSale =
