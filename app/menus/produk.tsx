@@ -1,6 +1,5 @@
 import { AddProductModal } from "@/components/modals/add-product-modal";
 import { ContractMitraModal } from "@/components/modals/contract-mitra-modal";
-import { InventoryModal } from "@/components/modals/inventory-modal";
 import { ManageCatalogModal } from "@/components/modals/manage-catalog-modal";
 import { ManageMitraModal } from "@/components/modals/manage-mitra-modal";
 import { PerformanceMitraModal } from "@/components/modals/performance-mitra-modal";
@@ -28,7 +27,6 @@ export default function ProdukMenu() {
 	const [showAddProductModal, setShowAddProductModal] = useState(false);
 	const [showManageCatalogModal, setShowManageCatalogModal] = useState(false);
 	const [showPricingModal, setShowPricingModal] = useState(false);
-	const [showInventoryModal, setShowInventoryModal] = useState(false);
 	const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
 
 	const mitraFeatures = [
@@ -72,12 +70,6 @@ export default function ProdukMenu() {
 			description: "Manajemen katalog produk",
 		},
 		{ key: "pricing", label: "Atur Harga", icon: "💰", description: "Kelola harga dan promosi" },
-		{
-			key: "inventory",
-			label: "Stok Produk",
-			icon: "📊",
-			description: "Monitor stok dan ketersediaan",
-		},
 		{
 			key: "product-analytics",
 			label: "Analitik Produk",
@@ -146,9 +138,6 @@ export default function ProdukMenu() {
 										case "pricing":
 											setShowPricingModal(true);
 											break;
-										case "inventory":
-											setShowInventoryModal(true);
-											break;
 										case "product-analytics":
 											setShowAnalyticsModal(true);
 											break;
@@ -206,7 +195,6 @@ export default function ProdukMenu() {
 				onClose={() => setShowManageCatalogModal(false)}
 			/>
 			<PricingModal visible={showPricingModal} onClose={() => setShowPricingModal(false)} />
-			<InventoryModal visible={showInventoryModal} onClose={() => setShowInventoryModal(false)} />
 			<ProductAnalyticsModal
 				visible={showAnalyticsModal}
 				onClose={() => setShowAnalyticsModal(false)}
