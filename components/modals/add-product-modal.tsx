@@ -152,22 +152,6 @@ export function AddProductModal({ visible, onClose, onProductAdded }: AddProduct
 		});
 	};
 
-	const addTag = (tag: string) => {
-		if (tag.trim() && !formData.tags.includes(tag.trim())) {
-			setFormData({
-				...formData,
-				tags: [...formData.tags, tag.trim()],
-			});
-		}
-	};
-
-	const removeTag = (tagToRemove: string) => {
-		setFormData({
-			...formData,
-			tags: formData.tags.filter((tag) => tag !== tagToRemove),
-		});
-	};
-
 	return (
 		<Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
 			<ThemedView className="flex-1 bg-black">

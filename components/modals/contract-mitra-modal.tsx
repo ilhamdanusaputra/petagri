@@ -1,123 +1,495 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import React, { useState } from "react";
-import { FlatList, Modal, Pressable, ScrollView, TextInput, View } from "react-native";
+import { ContractService } from "@/services/contract";
+import { MitraService } from "@/services/mitra";
+import {
+	CONTRACT_STATUSES,
+	CONTRACT_TYPES,
+	ContractFilterForm,
+	ContractFormData,
+	ContractSummary,
+	ContractWithMitra,
+} from "@/types/contract";
+import { Mitra } from "@/types/mitra";
+import React, { useCallback, useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import {
+	ActivityIndicator,
+	Alert,
+	FlatList,
+	Modal,
+	Pressable,
+	RefreshControl,
+	ScrollView,
+	TextInput,
+	View,
+} from "react-native";
 
 interface ContractModalProps {
 	visible: boolean;
 	onClose: () => void;
 }
 
-// Mock contract data
-const mockContracts = [
-	{
-		id: "1",
-		contractNumber: "CTR-2024-001",
-		partnerName: "PT Agro Mandiri Sejahtera",
-		contractType: "Distribusi Eksklusif",
-		status: "active",
-		startDate: "2024-01-15",
-		endDate: "2025-01-14",
-		value: 500000000,
-		description: "Kontrak distribusi eksklusif untuk wilayah Jakarta dan sekitarnya",
-	},
-	{
-		id: "2",
-		contractNumber: "CTR-2024-002",
-		partnerName: "CV Tani Makmur Bersama",
-		contractType: "Supply Agreement",
-		status: "pending",
-		startDate: "2024-03-01",
-		endDate: "2025-02-28",
-		value: 350000000,
-		description: "Kontrak pasokan pupuk organik dan pestisida alami",
-	},
-	{
-		id: "3",
-		contractNumber: "CTR-2024-003",
-		partnerName: "UD Berkah Tani Nusantara",
-		contractType: "Retail Partnership",
-		status: "expired",
-		startDate: "2023-06-01",
-		endDate: "2024-05-31",
-		value: 200000000,
-		description: "Kontrak kemitraan retail untuk distribusi produk pertanian",
-	},
-	{
-		id: "4",
-		contractNumber: "CTR-2024-004",
-		partnerName: "PT Sumber Rejeki Pertanian",
-		contractType: "Technology License",
-		status: "draft",
-		startDate: "2024-04-01",
-		endDate: "2026-03-31",
-		value: 750000000,
-		description: "Kontrak lisensi teknologi smart farming dan IoT monitoring",
-	},
-];
+interface CreateContractFormProps {
+	visible: boolean;
+	onClose: () => void;
+	onSuccess: () => void;
+}
 
-const contractTypes = [
-	"Distribusi Eksklusif",
-	"Supply Agreement",
-	"Retail Partnership",
-	"Technology License",
-	"Joint Venture",
-	"Franchise Agreement",
-];
+function CreateContractForm({ visible, onClose, onSuccess }: CreateContractFormProps) {
+	const [loading, setLoading] = useState(false);
+	const [mitras, setMitras] = useState<Mitra[]>([]);
 
-export function ContractMitraModal({ visible, onClose }: ContractModalProps) {
-	const [searchQuery, setSearchQuery] = useState("");
-	const [selectedStatus, setSelectedStatus] = useState<
-		"all" | "active" | "pending" | "expired" | "draft"
-	>("all");
-	const [showCreateForm, setShowCreateForm] = useState(false);
-	const [newContract, setNewContract] = useState({
-		partnerName: "",
-		contractType: "",
-		startDate: "",
-		endDate: "",
-		value: "",
-		description: "",
+	const {
+		control,
+		handleSubmit,
+		reset,
+		formState: { errors },
+	} = useForm<ContractFormData>({
+		defaultValues: {
+			mitra_id: "",
+			contract_type: "",
+			title: "",
+			description: "",
+			value: "",
+			start_date: "",
+			end_date: "",
+			payment_terms: "",
+			delivery_terms: "",
+		},
 	});
 
-	const filteredContracts = mockContracts.filter((contract) => {
-		const matchesSearch =
-			contract.contractNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			contract.partnerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			contract.contractType.toLowerCase().includes(searchQuery.toLowerCase());
-		const matchesStatus = selectedStatus === "all" || contract.status === selectedStatus;
-		return matchesSearch && matchesStatus;
-	});
+	// Load mitras for selection
+	const loadMitras = useCallback(async () => {
+		try {
+			const { data: mitrasData } = await MitraService.getMitraList();
+			setMitras(mitrasData);
+		} catch (error) {
+			console.error("Error loading mitras:", error);
+		}
+	}, []);
 
-	const getStatusColor = (status: string) => {
-		switch (status) {
-			case "active":
-				return "bg-green-600";
-			case "pending":
-				return "bg-yellow-600";
-			case "expired":
-				return "bg-red-600";
-			case "draft":
-				return "bg-gray-600";
-			default:
-				return "bg-gray-600";
+	useEffect(() => {
+		if (visible) {
+			loadMitras();
+		}
+	}, [visible, loadMitras]);
+
+	const onSubmit = async (data: ContractFormData) => {
+		try {
+			setLoading(true);
+			await ContractService.createContract(data);
+			Alert.alert("Berhasil", "Kontrak berhasil dibuat");
+			reset();
+			onClose();
+			onSuccess();
+		} catch (error) {
+			console.error("Error creating contract:", error);
+			Alert.alert("Error", "Gagal membuat kontrak");
+		} finally {
+			setLoading(false);
 		}
 	};
 
-	const getStatusText = (status: string) => {
-		switch (status) {
-			case "active":
-				return "Aktif";
-			case "pending":
-				return "Pending";
-			case "expired":
-				return "Kadaluarsa";
-			case "draft":
-				return "Draft";
-			default:
-				return status;
+	return (
+		<Modal visible={visible} animationType="slide" presentationStyle="formSheet">
+			<ThemedView className="flex-1 bg-gray-900">
+				<View className="flex-row items-center justify-between p-5 border-b border-gray-700">
+					<View className="flex-1">
+						<ThemedText type="title" className="text-xl font-bold text-white">
+							Buat Kontrak Baru
+						</ThemedText>
+					</View>
+					<Pressable
+						onPress={onClose}
+						className="w-10 h-10 items-center justify-center rounded-full bg-gray-700">
+						<IconSymbol name="chevron.left" size={16} color="#9CA3AF" />
+					</Pressable>
+				</View>
+
+				<ScrollView className="flex-1 p-5" showsVerticalScrollIndicator={false}>
+					{/* Mitra Selection */}
+					<View className="mb-4">
+						<ThemedText className="text-white font-medium mb-2">Pilih Mitra *</ThemedText>
+						<Controller
+							control={control}
+							render={({ field: { onChange, value } }) => (
+								<View className="bg-gray-800 rounded-xl border border-gray-700">
+									<ScrollView horizontal showsHorizontalScrollIndicator={false}>
+										<View className="flex-row p-2 gap-2">
+											{mitras.map((mitra) => (
+												<Pressable
+													key={mitra.id}
+													onPress={() => onChange(mitra.id)}
+													className={`px-4 py-2 rounded-full border ${
+														value === mitra.id ? "bg-blue-600 border-blue-600" : "border-gray-600"
+													}`}>
+													<ThemedText
+														className={`text-sm font-medium ${
+															value === mitra.id ? "text-white" : "text-gray-400"
+														}`}>
+														{mitra.company_name}
+													</ThemedText>
+												</Pressable>
+											))}
+										</View>
+									</ScrollView>
+								</View>
+							)}
+							name="mitra_id"
+							rules={{ required: "Mitra harus dipilih" }}
+						/>
+						{errors.mitra_id && (
+							<ThemedText className="text-red-400 text-sm mt-1">
+								{errors.mitra_id.message}
+							</ThemedText>
+						)}
+					</View>
+
+					{/* Contract Type */}
+					<View className="mb-4">
+						<ThemedText className="text-white font-medium mb-2">Tipe Kontrak *</ThemedText>
+						<Controller
+							control={control}
+							render={({ field: { onChange, value } }) => (
+								<View className="bg-gray-800 rounded-xl border border-gray-700">
+									<ScrollView horizontal showsHorizontalScrollIndicator={false}>
+										<View className="flex-row p-2 gap-2">
+											{CONTRACT_TYPES.map((type) => (
+												<Pressable
+													key={type}
+													onPress={() => onChange(type)}
+													className={`px-4 py-2 rounded-full border ${
+														value === type ? "bg-blue-600 border-blue-600" : "border-gray-600"
+													}`}>
+													<ThemedText
+														className={`text-sm font-medium ${
+															value === type ? "text-white" : "text-gray-400"
+														}`}>
+														{type}
+													</ThemedText>
+												</Pressable>
+											))}
+										</View>
+									</ScrollView>
+								</View>
+							)}
+							name="contract_type"
+							rules={{ required: "Tipe kontrak harus dipilih" }}
+						/>
+						{errors.contract_type && (
+							<ThemedText className="text-red-400 text-sm mt-1">
+								{errors.contract_type.message}
+							</ThemedText>
+						)}
+					</View>
+
+					{/* Title */}
+					<View className="mb-4">
+						<ThemedText className="text-white font-medium mb-2">Judul Kontrak *</ThemedText>
+						<Controller
+							control={control}
+							render={({ field: { onChange, value } }) => (
+								<TextInput
+									value={value}
+									onChangeText={onChange}
+									placeholder="Masukkan judul kontrak..."
+									placeholderTextColor="#6B7280"
+									className="bg-gray-800 text-white p-4 rounded-xl border border-gray-700"
+								/>
+							)}
+							name="title"
+							rules={{ required: "Judul kontrak harus diisi" }}
+						/>
+						{errors.title && (
+							<ThemedText className="text-red-400 text-sm mt-1">{errors.title.message}</ThemedText>
+						)}
+					</View>
+
+					{/* Value */}
+					<View className="mb-4">
+						<ThemedText className="text-white font-medium mb-2">Nilai Kontrak (IDR) *</ThemedText>
+						<Controller
+							control={control}
+							render={({ field: { onChange, value } }) => (
+								<TextInput
+									value={value}
+									onChangeText={onChange}
+									placeholder="500000000"
+									placeholderTextColor="#6B7280"
+									keyboardType="numeric"
+									className="bg-gray-800 text-white p-4 rounded-xl border border-gray-700"
+								/>
+							)}
+							name="value"
+							rules={{
+								required: "Nilai kontrak harus diisi",
+								min: { value: 1, message: "Nilai harus lebih dari 0" },
+							}}
+						/>
+						{errors.value && (
+							<ThemedText className="text-red-400 text-sm mt-1">{errors.value.message}</ThemedText>
+						)}
+					</View>
+
+					{/* Date Range */}
+					<View className="flex-row gap-4 mb-4">
+						<View className="flex-1">
+							<ThemedText className="text-white font-medium mb-2">Tanggal Mulai *</ThemedText>
+							<Controller
+								control={control}
+								render={({ field: { onChange, value } }) => (
+									<TextInput
+										value={value}
+										onChangeText={onChange}
+										placeholder="YYYY-MM-DD"
+										placeholderTextColor="#6B7280"
+										className="bg-gray-800 text-white p-4 rounded-xl border border-gray-700"
+									/>
+								)}
+								name="start_date"
+								rules={{ required: "Tanggal mulai harus diisi" }}
+							/>
+							{errors.start_date && (
+								<ThemedText className="text-red-400 text-sm mt-1">
+									{errors.start_date.message}
+								</ThemedText>
+							)}
+						</View>
+						<View className="flex-1">
+							<ThemedText className="text-white font-medium mb-2">Tanggal Berakhir *</ThemedText>
+							<Controller
+								control={control}
+								render={({ field: { onChange, value } }) => (
+									<TextInput
+										value={value}
+										onChangeText={onChange}
+										placeholder="YYYY-MM-DD"
+										placeholderTextColor="#6B7280"
+										className="bg-gray-800 text-white p-4 rounded-xl border border-gray-700"
+									/>
+								)}
+								name="end_date"
+								rules={{ required: "Tanggal berakhir harus diisi" }}
+							/>
+							{errors.end_date && (
+								<ThemedText className="text-red-400 text-sm mt-1">
+									{errors.end_date.message}
+								</ThemedText>
+							)}
+						</View>
+					</View>
+
+					{/* Description */}
+					<View className="mb-4">
+						<ThemedText className="text-white font-medium mb-2">Deskripsi</ThemedText>
+						<Controller
+							control={control}
+							render={({ field: { onChange, value } }) => (
+								<TextInput
+									value={value}
+									onChangeText={onChange}
+									placeholder="Deskripsi kontrak..."
+									placeholderTextColor="#6B7280"
+									multiline
+									numberOfLines={3}
+									textAlignVertical="top"
+									className="bg-gray-800 text-white p-4 rounded-xl border border-gray-700"
+								/>
+							)}
+							name="description"
+						/>
+					</View>
+
+					{/* Payment Terms */}
+					<View className="mb-4">
+						<ThemedText className="text-white font-medium mb-2">Syarat Pembayaran</ThemedText>
+						<Controller
+							control={control}
+							render={({ field: { onChange, value } }) => (
+								<TextInput
+									value={value}
+									onChangeText={onChange}
+									placeholder="Misalnya: 30% DP, 70% setelah delivery..."
+									placeholderTextColor="#6B7280"
+									multiline
+									numberOfLines={2}
+									textAlignVertical="top"
+									className="bg-gray-800 text-white p-4 rounded-xl border border-gray-700"
+								/>
+							)}
+							name="payment_terms"
+						/>
+					</View>
+
+					{/* Delivery Terms */}
+					<View className="mb-6">
+						<ThemedText className="text-white font-medium mb-2">Syarat Pengiriman</ThemedText>
+						<Controller
+							control={control}
+							render={({ field: { onChange, value } }) => (
+								<TextInput
+									value={value}
+									onChangeText={onChange}
+									placeholder="Misalnya: FOB Jakarta, maksimal 14 hari..."
+									placeholderTextColor="#6B7280"
+									multiline
+									numberOfLines={2}
+									textAlignVertical="top"
+									className="bg-gray-800 text-white p-4 rounded-xl border border-gray-700"
+								/>
+							)}
+							name="delivery_terms"
+						/>
+					</View>
+
+					{/* Submit Button */}
+					<Pressable
+						onPress={handleSubmit(onSubmit as any)}
+						disabled={loading}
+						className={`py-4 rounded-xl ${loading ? "bg-gray-600" : "bg-blue-600"}`}>
+						{loading ? (
+							<ActivityIndicator color="#FFFFFF" />
+						) : (
+							<ThemedText className="text-center text-white font-bold text-lg">
+								Buat Kontrak
+							</ThemedText>
+						)}
+					</Pressable>
+				</ScrollView>
+			</ThemedView>
+		</Modal>
+	);
+}
+
+export function ContractMitraModal({ visible, onClose }: ContractModalProps) {
+	const [loading, setLoading] = useState(false);
+	const [refreshing, setRefreshing] = useState(false);
+	const [contracts, setContracts] = useState<ContractWithMitra[]>([]);
+	const [summary, setSummary] = useState<ContractSummary | null>(null);
+	const [showCreateForm, setShowCreateForm] = useState(false);
+
+	// Form for filtering contracts
+	const { control, watch, setValue } = useForm<ContractFilterForm>({
+		defaultValues: {
+			searchQuery: "",
+			status: "all",
+			contract_type: "all",
+			date_range: "all",
+		},
+		mode: "onChange",
+	});
+
+	// Watch form values for reactive filtering
+	const searchQuery = watch("searchQuery");
+	const selectedStatus = watch("status");
+	const selectedType = watch("contract_type");
+	const selectedDateRange = watch("date_range");
+
+	// Load contracts data
+	const loadContractsData = useCallback(async () => {
+		try {
+			setLoading(true);
+			console.log("Loading contracts data with filters:", {
+				searchQuery,
+				status: selectedStatus,
+				contract_type: selectedType,
+				date_range: selectedDateRange,
+			});
+
+			const [contractsData, summaryData] = await Promise.all([
+				ContractService.getContracts({
+					searchQuery,
+					status: selectedStatus,
+					contract_type: selectedType === "all" ? undefined : selectedType,
+					date_range: selectedDateRange,
+				}),
+				ContractService.getContractSummary(),
+			]);
+
+			setContracts(contractsData);
+			setSummary(summaryData);
+			console.log("Contracts data loaded:", { contractsData, summaryData });
+		} catch (error) {
+			console.error("Error loading contracts data:", error);
+			Alert.alert("Error", "Gagal memuat data kontrak");
+		} finally {
+			setLoading(false);
 		}
+	}, [searchQuery, selectedStatus, selectedType, selectedDateRange]);
+
+	// Refresh data
+	const onRefresh = async () => {
+		setRefreshing(true);
+		await loadContractsData();
+		setRefreshing(false);
+	};
+
+	// Load data when modal opens or filters change
+	useEffect(() => {
+		if (visible) {
+			loadContractsData();
+		}
+	}, [visible, loadContractsData]);
+
+	// Update contract status
+	const updateContractStatus = async (
+		contractId: string,
+		newStatus: ContractWithMitra["status"],
+	) => {
+		try {
+			await ContractService.updateContractStatus(contractId, newStatus);
+
+			// Update local state
+			setContracts((prev) =>
+				prev.map((contract) =>
+					contract.id === contractId ? { ...contract, status: newStatus } : contract,
+				),
+			);
+
+			Alert.alert("Berhasil", "Status kontrak berhasil diupdate");
+			await loadContractsData(); // Refresh to get updated summary
+		} catch (error) {
+			console.error("Error updating contract status:", error);
+			Alert.alert("Error", "Gagal mengupdate status kontrak");
+		}
+	};
+
+	// Delete contract
+	const deleteContract = async (contractId: string, contractNumber: string) => {
+		Alert.alert(
+			"Konfirmasi Hapus",
+			`Yakin ingin menghapus kontrak ${contractNumber}? Tindakan ini tidak dapat dibatalkan.`,
+			[
+				{ text: "Batal", style: "cancel" },
+				{
+					text: "Hapus",
+					style: "destructive",
+					onPress: async () => {
+						try {
+							await ContractService.deleteContract(contractId);
+							setContracts((prev) => prev.filter((contract) => contract.id !== contractId));
+							Alert.alert("Berhasil", "Kontrak berhasil dihapus");
+							await loadContractsData(); // Refresh summary
+						} catch (error) {
+							console.error("Error deleting contract:", error);
+							Alert.alert("Error", "Gagal menghapus kontrak");
+						}
+					},
+				},
+			],
+		);
+	};
+
+	const getStatusColor = (status: string) => {
+		const statusConfig = CONTRACT_STATUSES.find((s) => s.value === status);
+		return statusConfig?.color || "bg-gray-600";
+	};
+
+	const getStatusText = (status: string) => {
+		const statusConfig = CONTRACT_STATUSES.find((s) => s.value === status);
+		return statusConfig?.label || status;
 	};
 
 	const formatCurrency = (amount: number) => {
@@ -129,321 +501,221 @@ export function ContractMitraModal({ visible, onClose }: ContractModalProps) {
 	};
 
 	const formatDate = (dateString: string) => {
-		return new Date(dateString).toLocaleDateString("id-ID", {
-			day: "2-digit",
-			month: "short",
-			year: "numeric",
-		});
+		return new Date(dateString).toLocaleDateString("id-ID");
 	};
 
-	const handleCreateContract = () => {
-		// Here you would typically save to database
-		console.log("Creating contract:", newContract);
-		setNewContract({
-			partnerName: "",
-			contractType: "",
-			startDate: "",
-			endDate: "",
-			value: "",
-			description: "",
-		});
-		setShowCreateForm(false);
-	};
-
-	if (showCreateForm) {
-		return (
-			<Modal
-				visible={visible}
-				animationType="slide"
-				presentationStyle="pageSheet"
-				onRequestClose={onClose}>
+	return (
+		<>
+			<Modal visible={visible} animationType="slide" presentationStyle="fullScreen">
 				<ThemedView className="flex-1 bg-gray-900">
 					{/* Header */}
 					<View className="flex-row items-center justify-between p-5 border-b border-gray-700">
 						<View className="flex-1">
 							<ThemedText type="title" className="text-xl font-bold text-white">
-								Buat Kontrak Baru
+								Kontrak Kemitraan
 							</ThemedText>
+							{summary && (
+								<ThemedText className="text-sm text-gray-400 mt-1">
+									{summary.total_contracts} kontrak • {summary.active_contracts} aktif •{" "}
+									{formatCurrency(summary.total_value)}
+								</ThemedText>
+							)}
 						</View>
-						<Pressable
-							onPress={() => setShowCreateForm(false)}
-							className="w-8 h-8 items-center justify-center rounded-full bg-gray-700">
-							<IconSymbol name="xmark" size={16} color="#9CA3AF" />
-						</Pressable>
+						<View className="flex-row gap-2">
+							<Pressable
+								onPress={() => setShowCreateForm(true)}
+								className="w-10 h-10 items-center justify-center rounded-full bg-blue-600">
+								<IconSymbol name="plus" size={16} color="#FFFFFF" />
+							</Pressable>
+							<Pressable
+								onPress={onClose}
+								className="w-10 h-10 items-center justify-center rounded-full bg-gray-700">
+								<IconSymbol name="chevron.left" size={16} color="#9CA3AF" />
+							</Pressable>
+						</View>
 					</View>
 
-					<ScrollView className="flex-1 p-5" showsVerticalScrollIndicator={false}>
-						<View className="gap-4">
-							{/* Partner Name */}
-							<View>
-								<ThemedText className="text-sm font-semibold text-gray-300 mb-2">
-									Nama Mitra *
-								</ThemedText>
-								<TextInput
-									className="bg-gray-800 border border-gray-600 rounded-xl p-4 text-white text-base"
-									placeholder="Pilih atau masukkan nama mitra"
-									placeholderTextColor="#6B7280"
-									value={newContract.partnerName}
-									onChangeText={(value) =>
-										setNewContract((prev) => ({ ...prev, partnerName: value }))
-									}
+					<ScrollView
+						className="flex-1"
+						showsVerticalScrollIndicator={false}
+						refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+						{/* Filters */}
+						<View className="p-5 gap-4">
+							{/* Search */}
+							<View className="flex-row items-center bg-gray-800 rounded-xl px-4 py-3">
+								<IconSymbol name="house.fill" size={20} color="#6B7280" />
+								<Controller
+									control={control}
+									render={({
+										field: { onChange, value },
+									}: {
+										field: { onChange: (value: string) => void; value: string };
+									}) => (
+										<TextInput
+											value={value}
+											onChangeText={onChange}
+											placeholder="Cari kontrak, mitra, atau tipe..."
+											placeholderTextColor="#6B7280"
+											className="flex-1 text-white ml-3"
+										/>
+									)}
+									name="searchQuery"
 								/>
 							</View>
 
-							{/* Contract Type */}
-							<View>
-								<ThemedText className="text-sm font-semibold text-gray-300 mb-2">
-									Jenis Kontrak *
-								</ThemedText>
-								<View className="flex-row flex-wrap gap-2">
-									{contractTypes.map((type) => (
+							{/* Status Filter */}
+							<ScrollView horizontal showsHorizontalScrollIndicator={false}>
+								<View className="flex-row gap-2">
+									<Pressable
+										onPress={() => setValue("status", "all")}
+										className={`px-4 py-2 rounded-full border ${
+											selectedStatus === "all" ? "bg-blue-600 border-blue-600" : "border-gray-600"
+										}`}>
+										<ThemedText
+											className={`text-sm font-medium ${
+												selectedStatus === "all" ? "text-white" : "text-gray-400"
+											}`}>
+											Semua
+										</ThemedText>
+									</Pressable>
+									{CONTRACT_STATUSES.map((status) => (
 										<Pressable
-											key={type}
-											className={`px-3 py-2 rounded-lg border ${
-												newContract.contractType === type
+											key={status.value}
+											onPress={() => setValue("status", status.value as any)}
+											className={`px-4 py-2 rounded-full border ${
+												selectedStatus === status.value
 													? "bg-blue-600 border-blue-600"
-													: "bg-gray-800 border-gray-600"
-											}`}
-											onPress={() => setNewContract((prev) => ({ ...prev, contractType: type }))}>
+													: "border-gray-600"
+											}`}>
 											<ThemedText
-												className={`text-sm ${
-													newContract.contractType === type ? "text-white" : "text-gray-400"
+												className={`text-sm font-medium ${
+													selectedStatus === status.value ? "text-white" : "text-gray-400"
 												}`}>
-												{type}
+												{status.label}
 											</ThemedText>
 										</Pressable>
 									))}
 								</View>
-							</View>
-
-							{/* Date Range */}
-							<View className="flex-row gap-3">
-								<View className="flex-1">
-									<ThemedText className="text-sm font-semibold text-gray-300 mb-2">
-										Tanggal Mulai *
-									</ThemedText>
-									<TextInput
-										className="bg-gray-800 border border-gray-600 rounded-xl p-4 text-white text-base"
-										placeholder="YYYY-MM-DD"
-										placeholderTextColor="#6B7280"
-										value={newContract.startDate}
-										onChangeText={(value) =>
-											setNewContract((prev) => ({ ...prev, startDate: value }))
-										}
-									/>
-								</View>
-								<View className="flex-1">
-									<ThemedText className="text-sm font-semibold text-gray-300 mb-2">
-										Tanggal Berakhir *
-									</ThemedText>
-									<TextInput
-										className="bg-gray-800 border border-gray-600 rounded-xl p-4 text-white text-base"
-										placeholder="YYYY-MM-DD"
-										placeholderTextColor="#6B7280"
-										value={newContract.endDate}
-										onChangeText={(value) =>
-											setNewContract((prev) => ({ ...prev, endDate: value }))
-										}
-									/>
-								</View>
-							</View>
-
-							{/* Contract Value */}
-							<View>
-								<ThemedText className="text-sm font-semibold text-gray-300 mb-2">
-									Nilai Kontrak (IDR)
-								</ThemedText>
-								<TextInput
-									className="bg-gray-800 border border-gray-600 rounded-xl p-4 text-white text-base"
-									placeholder="500000000"
-									placeholderTextColor="#6B7280"
-									keyboardType="numeric"
-									value={newContract.value}
-									onChangeText={(value) => setNewContract((prev) => ({ ...prev, value: value }))}
-								/>
-							</View>
-
-							{/* Description */}
-							<View>
-								<ThemedText className="text-sm font-semibold text-gray-300 mb-2">
-									Deskripsi Kontrak
-								</ThemedText>
-								<TextInput
-									className="bg-gray-800 border border-gray-600 rounded-xl p-4 text-white text-base"
-									placeholder="Jelaskan detail kontrak..."
-									placeholderTextColor="#6B7280"
-									multiline
-									numberOfLines={4}
-									style={{ minHeight: 100, textAlignVertical: "top" }}
-									value={newContract.description}
-									onChangeText={(value) =>
-										setNewContract((prev) => ({ ...prev, description: value }))
-									}
-								/>
-							</View>
+							</ScrollView>
 						</View>
-					</ScrollView>
 
-					{/* Footer */}
-					<View className="p-5 border-t border-gray-700 gap-3">
-						<Pressable
-							className="bg-blue-600 rounded-xl p-4 items-center"
-							onPress={handleCreateContract}>
-							<ThemedText className="text-white font-semibold text-base">Buat Kontrak</ThemedText>
-						</Pressable>
-						<Pressable
-							className="bg-gray-700 rounded-xl p-4 items-center"
-							onPress={() => setShowCreateForm(false)}>
-							<ThemedText className="text-gray-300 font-semibold text-base">Batal</ThemedText>
-						</Pressable>
-					</View>
+						{/* Loading State */}
+						{loading && (
+							<View className="flex-1 items-center justify-center py-20">
+								<ActivityIndicator size="large" color="#3B82F6" />
+								<ThemedText className="text-gray-400 mt-2">Memuat data kontrak...</ThemedText>
+							</View>
+						)}
+
+						{/* Contracts List */}
+						{!loading && (
+							<FlatList
+								data={contracts}
+								keyExtractor={(item) => item.id}
+								contentContainerStyle={{ padding: 20 }}
+								showsVerticalScrollIndicator={false}
+								ListEmptyComponent={
+									<View className="items-center justify-center py-20">
+										<IconSymbol name="archivebox.fill" size={64} color="#6B7280" />
+										<ThemedText className="text-gray-400 text-lg mt-4">
+											Tidak ada kontrak ditemukan
+										</ThemedText>
+										<ThemedText className="text-gray-500 text-sm mt-2 text-center">
+											Coba ubah filter pencarian atau buat kontrak baru
+										</ThemedText>
+									</View>
+								}
+								renderItem={({ item }) => (
+									<View className="bg-gray-800 p-4 rounded-2xl border border-gray-700 mb-4">
+										<View className="flex-row justify-between items-start mb-3">
+											<View className="flex-1">
+												<ThemedText className="text-lg font-bold text-white mb-1">
+													{item.contract_number}
+												</ThemedText>
+												<ThemedText className="text-sm text-gray-400">
+													{item.mitra.company_name} • {item.contract_type}
+												</ThemedText>
+											</View>
+											<View className={`px-3 py-1 rounded-full ${getStatusColor(item.status)}`}>
+												<ThemedText className="text-xs font-medium text-white">
+													{getStatusText(item.status)}
+												</ThemedText>
+											</View>
+										</View>
+
+										<ThemedText className="text-white font-medium mb-2">{item.title}</ThemedText>
+
+										{item.description && (
+											<ThemedText className="text-gray-400 text-sm mb-3" numberOfLines={2}>
+												{item.description}
+											</ThemedText>
+										)}
+
+										<View className="flex-row justify-between items-center mb-3">
+											<View>
+												<ThemedText className="text-gray-400 text-xs">Nilai Kontrak</ThemedText>
+												<ThemedText className="text-white font-semibold">
+													{formatCurrency(item.value)}
+												</ThemedText>
+											</View>
+											<View>
+												<ThemedText className="text-gray-400 text-xs">Periode</ThemedText>
+												<ThemedText className="text-white font-semibold">
+													{formatDate(item.start_date)} - {formatDate(item.end_date)}
+												</ThemedText>
+											</View>
+										</View>
+
+										<View className="flex-row gap-2">
+											{item.status === "draft" && (
+												<Pressable
+													className="flex-1 bg-green-600 py-3 rounded-xl"
+													onPress={() => updateContractStatus(item.id, "active")}>
+													<ThemedText className="text-center text-white font-medium text-sm">
+														Aktifkan
+													</ThemedText>
+												</Pressable>
+											)}
+											{item.status === "pending" && (
+												<Pressable
+													className="flex-1 bg-blue-600 py-3 rounded-xl"
+													onPress={() => updateContractStatus(item.id, "active")}>
+													<ThemedText className="text-center text-white font-medium text-sm">
+														Approve
+													</ThemedText>
+												</Pressable>
+											)}
+											{item.status === "active" && (
+												<Pressable
+													className="flex-1 bg-orange-600 py-3 rounded-xl"
+													onPress={() => updateContractStatus(item.id, "suspended")}>
+													<ThemedText className="text-center text-white font-medium text-sm">
+														Suspend
+													</ThemedText>
+												</Pressable>
+											)}
+											<Pressable
+												className="flex-1 bg-gray-700 py-3 rounded-xl"
+												onPress={() => deleteContract(item.id, item.contract_number)}>
+												<ThemedText className="text-center text-gray-300 font-medium text-sm">
+													Hapus
+												</ThemedText>
+											</Pressable>
+										</View>
+									</View>
+								)}
+							/>
+						)}
+					</ScrollView>
 				</ThemedView>
 			</Modal>
-		);
-	}
 
-	return (
-		<Modal
-			visible={visible}
-			animationType="slide"
-			presentationStyle="pageSheet"
-			onRequestClose={onClose}>
-			<ThemedView className="flex-1 bg-gray-900">
-				{/* Header */}
-				<View className="flex-row items-center justify-between p-5 border-b border-gray-700">
-					<View className="flex-1">
-						<ThemedText type="title" className="text-xl font-bold text-white">
-							Kontrak Kemitraan
-						</ThemedText>
-						<ThemedText className="text-sm text-gray-400 mt-1">
-							{filteredContracts.length} kontrak ditemukan
-						</ThemedText>
-					</View>
-					<View className="flex-row gap-2">
-						<Pressable
-							onPress={() => setShowCreateForm(true)}
-							className="w-8 h-8 items-center justify-center rounded-full bg-blue-600">
-							<IconSymbol name="plus" size={16} color="#FFFFFF" />
-						</Pressable>
-						<Pressable
-							onPress={onClose}
-							className="w-8 h-8 items-center justify-center rounded-full bg-gray-700">
-							<IconSymbol name="xmark" size={16} color="#9CA3AF" />
-						</Pressable>
-					</View>
-				</View>
-
-				{/* Search and Filter */}
-				<View className="p-5 gap-4">
-					{/* Search Bar */}
-					<View>
-						<TextInput
-							className="bg-gray-800 border border-gray-600 rounded-xl p-4 text-white text-base"
-							placeholder="Cari nomor kontrak, mitra, atau jenis kontrak..."
-							placeholderTextColor="#6B7280"
-							value={searchQuery}
-							onChangeText={setSearchQuery}
-						/>
-					</View>
-
-					{/* Status Filter */}
-					<ScrollView horizontal showsHorizontalScrollIndicator={false}>
-						<View className="flex-row gap-2">
-							{[
-								{ key: "all", label: "Semua" },
-								{ key: "active", label: "Aktif" },
-								{ key: "pending", label: "Pending" },
-								{ key: "draft", label: "Draft" },
-								{ key: "expired", label: "Kadaluarsa" },
-							].map((filter) => (
-								<Pressable
-									key={filter.key}
-									className={`px-4 py-2 rounded-full border ${
-										selectedStatus === filter.key
-											? "bg-blue-600 border-blue-600"
-											: "bg-gray-800 border-gray-600"
-									}`}
-									onPress={() => setSelectedStatus(filter.key as any)}>
-									<ThemedText
-										className={`text-sm font-medium ${
-											selectedStatus === filter.key ? "text-white" : "text-gray-400"
-										}`}>
-										{filter.label}
-									</ThemedText>
-								</Pressable>
-							))}
-						</View>
-					</ScrollView>
-				</View>
-
-				{/* Contract List */}
-				<FlatList
-					data={filteredContracts}
-					keyExtractor={(item) => item.id}
-					contentContainerStyle={{ padding: 20 }}
-					showsVerticalScrollIndicator={false}
-					renderItem={({ item }) => (
-						<View className="bg-gray-800 p-4 rounded-2xl border border-gray-700 mb-4">
-							<View className="flex-row justify-between items-start mb-3">
-								<View className="flex-1">
-									<ThemedText className="text-lg font-bold text-white mb-1">
-										{item.contractNumber}
-									</ThemedText>
-									<ThemedText className="text-sm text-gray-400 mb-1">{item.partnerName}</ThemedText>
-									<ThemedText className="text-sm text-blue-400">{item.contractType}</ThemedText>
-								</View>
-								<View className={`px-3 py-1 rounded-full ${getStatusColor(item.status)}`}>
-									<ThemedText className="text-xs font-medium text-white">
-										{getStatusText(item.status)}
-									</ThemedText>
-								</View>
-							</View>
-
-							<View className="gap-2 mb-4">
-								<View className="flex-row justify-between">
-									<ThemedText className="text-sm text-gray-400">Periode:</ThemedText>
-									<ThemedText className="text-sm text-white">
-										{formatDate(item.startDate)} - {formatDate(item.endDate)}
-									</ThemedText>
-								</View>
-								<View className="flex-row justify-between">
-									<ThemedText className="text-sm text-gray-400">Nilai:</ThemedText>
-									<ThemedText className="text-sm text-white font-semibold">
-										{formatCurrency(item.value)}
-									</ThemedText>
-								</View>
-							</View>
-
-							<ThemedText className="text-sm text-gray-400 mb-4" numberOfLines={2}>
-								{item.description}
-							</ThemedText>
-
-							<View className="flex-row gap-2">
-								<Pressable className="flex-1 bg-blue-600 py-3 rounded-xl">
-									<ThemedText className="text-center text-white font-medium text-sm">
-										Edit
-									</ThemedText>
-								</Pressable>
-								<Pressable className="flex-1 bg-gray-700 py-3 rounded-xl">
-									<ThemedText className="text-center text-gray-300 font-medium text-sm">
-										Detail
-									</ThemedText>
-								</Pressable>
-								<Pressable className="px-4 py-3 bg-gray-700 rounded-xl">
-									<IconSymbol name="doc.fill" size={16} color="#9CA3AF" />
-								</Pressable>
-							</View>
-						</View>
-					)}
-					ListEmptyComponent={() => (
-						<View className="items-center justify-center py-20">
-							<ThemedText className="text-gray-400 text-center">
-								Tidak ada kontrak yang ditemukan
-							</ThemedText>
-						</View>
-					)}
-				/>
-			</ThemedView>
-		</Modal>
+			{/* Create Contract Form Modal */}
+			<CreateContractForm
+				visible={showCreateForm}
+				onClose={() => setShowCreateForm(false)}
+				onSuccess={loadContractsData}
+			/>
+		</>
 	);
 }

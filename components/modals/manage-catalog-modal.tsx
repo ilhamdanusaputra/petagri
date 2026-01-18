@@ -8,7 +8,7 @@ import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { ProductService } from "@/services/product";
 import { Product, ProductCategory, ProductFilters } from "@/types/product";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
 	ActivityIndicator,
 	Alert,
@@ -43,13 +43,7 @@ export function ManageCatalogModal({ visible, onClose }: ManageCatalogModalProps
 	const [totalPages, setTotalPages] = useState(1);
 	const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
 
-	useEffect(() => {
-		if (visible) {
-			loadData();
-		}
-	}, [visible, filters]);
-
-	const loadData = async () => {
+	const loadData = useCallback(async () => {
 		setLoading(true);
 		try {
 			const [productsResponse, categoriesResponse] = await Promise.all([
@@ -66,7 +60,13 @@ export function ManageCatalogModal({ visible, onClose }: ManageCatalogModalProps
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [filters]);
+
+	useEffect(() => {
+		if (visible) {
+			loadData();
+		}
+	}, [visible, filters, loadData]);
 
 	const handleRefresh = async () => {
 		setRefreshing(true);

@@ -8,7 +8,7 @@ import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { ProductService } from "@/services/product";
 import { CurrentStock, InventoryAlert, StockMovement } from "@/types/product";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
 	ActivityIndicator,
 	Alert,
@@ -42,13 +42,7 @@ export function InventoryModal({ visible, onClose }: InventoryModalProps) {
 		notes: "",
 	});
 
-	useEffect(() => {
-		if (visible) {
-			loadData();
-		}
-	}, [visible]);
-
-	const loadData = async () => {
+	const loadData = useCallback(async () => {
 		setLoading(true);
 		try {
 			await Promise.all([loadCurrentStock(), loadStockMovements(), loadInventoryAlerts()]);
@@ -58,7 +52,13 @@ export function InventoryModal({ visible, onClose }: InventoryModalProps) {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
+
+	useEffect(() => {
+		if (visible) {
+			loadData();
+		}
+	}, [visible, loadData]);
 
 	const loadCurrentStock = async () => {
 		try {

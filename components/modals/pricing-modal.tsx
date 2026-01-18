@@ -8,7 +8,8 @@ import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { ProductService } from "@/services/product";
 import { Product, ProductCategory } from "@/types/product";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
 	ActivityIndicator,
 	Alert,
@@ -34,26 +35,38 @@ interface PricingUpdate {
 	hasChanges: boolean;
 }
 
+interface PricingFilterForm {
+	searchQuery: string;
+	selectedCategory: string;
+	bulkDiscount: string;
+}
+
 export function PricingModal({ visible, onClose }: PricingModalProps) {
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
 	const [products, setProducts] = useState<Product[]>([]);
 	const [categories, setCategories] = useState<ProductCategory[]>([]);
-	const [searchQuery, setSearchQuery] = useState("");
-	const [selectedCategory, setSelectedCategory] = useState("");
 	const [pricingUpdates, setPricingUpdates] = useState<Map<string, PricingUpdate>>(new Map());
 	const [bulkUpdateMode, setBulkUpdateMode] = useState(false);
-	const [bulkDiscount, setBulkDiscount] = useState("");
 	const [bulkDiscountType, setBulkDiscountType] = useState<"percentage" | "fixed">("percentage");
 	const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
 
-	useEffect(() => {
-		if (visible) {
-			loadData();
-		}
-	}, [visible]);
+	// Form for search and bulk operations
+	const { control, watch, setValue } = useForm<PricingFilterForm>({
+		defaultValues: {
+			searchQuery: "",
+			selectedCategory: "",
+			bulkDiscount: "",
+		},
+		mode: "onChange",
+	});
 
-	const loadData = async () => {
+	// Watch form values
+	const searchQuery = watch("searchQuery");
+	const selectedCategory = watch("selectedCategory");
+	const bulkDiscount = watch("bulkDiscount");
+
+	const loadData = useCallback(async () => {
 		setLoading(true);
 		try {
 			const [productsResponse, categoriesResponse] = await Promise.all([
@@ -67,7 +80,6 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 				}),
 				ProductService.getCategories(),
 			]);
-
 			setProducts(productsResponse.data);
 			setCategories(categoriesResponse.data);
 		} catch (error) {
@@ -76,7 +88,13 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [searchQuery, selectedCategory]);
+
+	useEffect(() => {
+		if (visible) {
+			loadData();
+		}
+	}, [visible, loadData]);
 
 	const handleRefresh = async () => {
 		setRefreshing(true);
@@ -294,17 +312,27 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 				<View className="px-6 py-4 border-b border-gray-800">
 					{/* Search Bar */}
 					<View className="flex-row items-center bg-gray-800 rounded-xl px-4 py-3 mb-3">
-						<IconSymbol name="magnifyingglass" size={20} color="#6B7280" />
-						<TextInput
-							value={searchQuery}
-							onChangeText={(text) => {
-								setSearchQuery(text);
-								// Debounce search in real app
-								setTimeout(loadData, 500);
-							}}
-							placeholder="Cari produk..."
-							placeholderTextColor="#6B7280"
-							className="flex-1 text-white ml-3"
+						<IconSymbol name="house.fill" size={20} color="#6B7280" />
+						<Controller
+							control={control}
+							render={({
+								field: { onChange, value },
+							}: {
+								field: { onChange: (value: string) => void; value: string };
+							}) => (
+								<TextInput
+									value={value}
+									onChangeText={(text: string) => {
+										onChange(text);
+										// Debounce search in real app
+										setTimeout(loadData, 500);
+									}}
+									placeholder="Cari produk..."
+									placeholderTextColor="#6B7280"
+									className="flex-1 text-white ml-3"
+								/>
+							)}
+							name="searchQuery"
 						/>
 					</View>
 
@@ -313,7 +341,7 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 						<View className="flex-row gap-2">
 							<Pressable
 								onPress={() => {
-									setSelectedCategory("");
+									setValue("selectedCategory", "");
 									loadData();
 								}}
 								className={`px-3 py-2 rounded-lg border ${
@@ -328,7 +356,7 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 								<Pressable
 									key={category.id}
 									onPress={() => {
-										setSelectedCategory(category.id);
+										setValue("selectedCategory", category.id);
 										loadData();
 									}}
 									className={`px-3 py-2 rounded-lg border ${
@@ -374,13 +402,23 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 
 						<View className="flex-row items-center gap-3 mb-3">
 							<View className="flex-1 flex-row gap-2">
-								<TextInput
-									value={bulkDiscount}
-									onChangeText={setBulkDiscount}
-									placeholder="Nilai diskon"
-									placeholderTextColor="#6B7280"
-									keyboardType="numeric"
-									className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
+								<Controller
+									control={control}
+									render={({
+										field: { onChange, value },
+									}: {
+										field: { onChange: (value: string) => void; value: string };
+									}) => (
+										<TextInput
+											value={value}
+											onChangeText={onChange}
+											placeholder="Nilai diskon"
+											placeholderTextColor="#6B7280"
+											keyboardType="numeric"
+											className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
+										/>
+									)}
+									name="bulkDiscount"
 								/>
 
 								<Pressable
