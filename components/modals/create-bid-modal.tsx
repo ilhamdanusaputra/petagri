@@ -115,13 +115,12 @@ export default function CreateBidModal({
 			} else {
 				// Create new bid
 				await createBid(formData);
-				Alert.alert("Success", "Bid submitted successfully");
+				console.log("Bid submitted successfully");
 			}
 			onSuccess();
 			onClose();
 		} catch (error) {
 			console.error("Error submitting bid:", error);
-			Alert.alert("Error", "Failed to submit bid. Please try again.");
 		} finally {
 			setIsLoading(false);
 		}

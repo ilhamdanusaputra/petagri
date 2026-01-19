@@ -1,7 +1,6 @@
 import { supabase } from "@/utils/supabase";
 import type { Session, User } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
-import { Alert } from "react-native";
 
 export interface AuthUser extends User {
 	email: string;
@@ -123,7 +122,7 @@ export function useAuth() {
 				return { success: false, error };
 			}
 
-			Alert.alert("Success", "Password reset link sent to your email!");
+			console.log("Password reset link sent successfully");
 			return { success: true };
 		} catch (error: any) {
 			Alert.alert("Error", error.message || "An unexpected error occurred");
@@ -145,7 +144,7 @@ export function useAuth() {
 				return { success: false, error };
 			}
 
-			Alert.alert("Success", "Profile updated successfully!");
+			console.log("Profile updated successfully");
 			return { success: true };
 		} catch (error: any) {
 			Alert.alert("Error", error.message || "An unexpected error occurred");

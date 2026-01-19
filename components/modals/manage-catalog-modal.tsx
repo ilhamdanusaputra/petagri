@@ -12,7 +12,6 @@ import { Product, ProductCategory, ProductFilters } from "@/types/product";
 import React, { useCallback, useEffect, useState } from "react";
 import {
 	ActivityIndicator,
-	Alert,
 	Modal,
 	Pressable,
 	RefreshControl,
@@ -58,7 +57,7 @@ export function ManageCatalogModal({ visible, onClose }: ManageCatalogModalProps
 			setCategories(categoriesResponse.data);
 		} catch (error) {
 			console.error("Error loading data:", error);
-			Alert.alert("Error", "Gagal memuat data. Silakan coba lagi.");
+			console.error("Gagal memuat data. Silakan coba lagi.");
 		} finally {
 			setLoading(false);
 		}
@@ -127,46 +126,30 @@ export function ManageCatalogModal({ visible, onClose }: ManageCatalogModalProps
 			delete: "menghapus",
 		}[action];
 
-		Alert.alert(
-			"Konfirmasi",
-			`Apakah Anda yakin ingin ${actionText} ${selectedProducts.size} produk yang dipilih?`,
-			[
-				{ text: "Batal", style: "cancel" },
-				{
-					text: "Ya",
-					style: action === "delete" ? "destructive" : "default",
-					onPress: async () => {
-						setLoading(true);
-						try {
-							const promises = Array.from(selectedProducts).map(async (productId) => {
-								if (action === "delete") {
-									return await ProductService.deleteProduct(productId);
-								} else {
-									const status = {
-										publish: "active",
-										unpublish: "draft",
-										archive: "inactive",
-									}[action] as "active" | "draft" | "inactive";
-
-									return await ProductService.updateProduct(productId, { status });
-								}
-							});
-
-							await Promise.all(promises);
-							setSelectedProducts(new Set());
-							await loadData();
-
-							Alert.alert("Sukses", `${selectedProducts.size} produk berhasil ${actionText}`);
-						} catch (error) {
-							console.error("Error performing bulk action:", error);
-							Alert.alert("Error", `Gagal ${actionText} produk. Silakan coba lagi.`);
-						} finally {
-							setLoading(false);
-						}
-					},
-				},
-			],
-		);
+		setLoading(true);
+		try {
+			const promises = Array.from(selectedProducts).map(async (productId) => {
+				if (action === "delete") {
+					return await ProductService.deleteProduct(productId);
+				} else {
+					const status = {
+						publish: "active",
+						unpublish: "draft",
+						archive: "inactive",
+					}[action] as "active" | "draft" | "inactive";
+					return await ProductService.updateProduct(productId, { status });
+				}
+			});
+			await Promise.all(promises);
+			setSelectedProducts(new Set());
+			await loadData();
+			console.log(`${selectedProducts.size} produk berhasil ${actionText}`);
+		} catch (error) {
+			console.error("Error performing bulk action:", error);
+			console.error(`Gagal ${actionText} produk. Silakan coba lagi.`);
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	const handleEditProduct = (product: Product) => {

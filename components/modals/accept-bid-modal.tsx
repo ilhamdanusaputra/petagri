@@ -3,7 +3,7 @@ import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import type { TenderBidWithDetails } from "@/types/tender";
 import React, { useState } from "react";
-import { Alert, Modal, Pressable, ScrollView, View } from "react-native";
+import { Modal, Pressable, ScrollView, View } from "react-native";
 
 interface AcceptBidModalProps {
 	visible: boolean;
@@ -24,60 +24,32 @@ export default function AcceptBidModal({
 
 	const handleAccept = async () => {
 		if (!bid) return;
-
-		Alert.alert(
-			"Accept Bid",
-			`Are you sure you want to accept this bid from ${bid.mitra?.company_name || "this bidder"}?`,
-			[
-				{ text: "Cancel", style: "cancel" },
-				{
-					text: "Accept",
-					style: "default",
-					onPress: async () => {
-						setIsLoading(true);
-						try {
-							await onAccept(bid.id);
-							Alert.alert("Success", "Bid accepted successfully");
-							onClose();
-						} catch (error) {
-							console.error("Error accepting bid:", error);
-							Alert.alert("Error", "Failed to accept bid. Please try again.");
-						} finally {
-							setIsLoading(false);
-						}
-					},
-				},
-			],
-		);
+		setIsLoading(true);
+		try {
+			await onAccept(bid.id);
+			console.info("Bid accepted successfully");
+			onClose();
+		} catch (error) {
+			console.error("Error accepting bid:", error);
+			// Optionally show a toast or silent fail
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	const handleReject = async () => {
 		if (!bid) return;
-
-		Alert.alert(
-			"Reject Bid",
-			`Are you sure you want to reject this bid from ${bid.mitra?.company_name || "this bidder"}?`,
-			[
-				{ text: "Cancel", style: "cancel" },
-				{
-					text: "Reject",
-					style: "destructive",
-					onPress: async () => {
-						setIsLoading(true);
-						try {
-							await onReject(bid.id);
-							Alert.alert("Success", "Bid rejected successfully");
-							onClose();
-						} catch (error) {
-							console.error("Error rejecting bid:", error);
-							Alert.alert("Error", "Failed to reject bid. Please try again.");
-						} finally {
-							setIsLoading(false);
-						}
-					},
-				},
-			],
-		);
+		setIsLoading(true);
+		try {
+			await onReject(bid.id);
+			console.info("Bid rejected successfully");
+			onClose();
+		} catch (error) {
+			console.error("Error rejecting bid:", error);
+			// Optionally show a toast or silent fail
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	if (!bid) {

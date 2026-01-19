@@ -7,7 +7,6 @@ import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
 	ActivityIndicator,
-	Alert,
 	FlatList,
 	Modal,
 	Pressable,
@@ -66,7 +65,7 @@ export function ManageMitraModal({ visible, onClose }: ManageMitraModalProps) {
 			console.log("Loaded mitra data:", data);
 		} catch (error) {
 			console.error("Error loading mitra data:", error);
-			Alert.alert("Error", "Gagal memuat data mitra");
+			console.error("Gagal memuat data mitra");
 		} finally {
 			setLoading(false);
 		}
@@ -99,41 +98,29 @@ export function ManageMitraModal({ visible, onClose }: ManageMitraModalProps) {
 				prev.map((mitra) => (mitra.id === mitraId ? { ...mitra, status: newStatus } : mitra)),
 			);
 
-			Alert.alert("Berhasil", "Status mitra berhasil diupdate");
+			console.info("Status mitra berhasil diupdate");
 		} catch (error) {
 			console.error("Error updating mitra status:", error);
-			Alert.alert("Error", "Gagal mengupdate status mitra");
+			console.error("Gagal mengupdate status mitra");
 		}
 	};
 
 	// Delete mitra
 	const deleteMitra = (mitraId: string, companyName: string) => {
-		Alert.alert(
-			"Konfirmasi Hapus",
-			`Apakah Anda yakin ingin menghapus mitra "${companyName}"? Tindakan ini tidak dapat dibatalkan.`,
-			[
-				{ text: "Batal", style: "cancel" },
-				{
-					text: "Hapus",
-					style: "destructive",
-					onPress: async () => {
-						try {
-							const { error } = await supabase.from("mitra").delete().eq("id", mitraId);
-
-							if (error) {
-								throw error;
-							}
-
-							setMitraData((prev) => prev.filter((mitra) => mitra.id !== mitraId));
-							Alert.alert("Berhasil", "Mitra berhasil dihapus");
-						} catch (error) {
-							console.error("Error deleting mitra:", error);
-							Alert.alert("Error", "Gagal menghapus mitra");
-						}
-					},
-				},
-			],
-		);
+		// Silent: delete mitra directly, no confirmation dialog
+		(async () => {
+			try {
+				const { error } = await supabase.from("mitra").delete().eq("id", mitraId);
+				if (error) {
+					throw error;
+				}
+				setMitraData((prev) => prev.filter((mitra) => mitra.id !== mitraId));
+				console.log("Mitra berhasil dihapus");
+			} catch (error) {
+				console.error("Error deleting mitra:", error);
+				console.error("Gagal menghapus mitra");
+			}
+		})();
 	};
 
 	// Load data when modal opens
@@ -417,10 +404,10 @@ function EditMitraModal({ visible, onClose, mitra, onUpdate }: EditMitraModalPro
 			if (error) throw error;
 
 			onUpdate({ ...mitra, ...data, updated_at: new Date().toISOString() });
-			Alert.alert("Berhasil", "Data mitra berhasil diupdate");
+			console.info("Data mitra berhasil diupdate");
 		} catch (error) {
 			console.error("Error updating mitra:", error);
-			Alert.alert("Error", "Gagal mengupdate data mitra");
+			console.error("Gagal mengupdate data mitra");
 		}
 	};
 

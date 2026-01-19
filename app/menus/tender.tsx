@@ -9,7 +9,6 @@ import type { TenderBidWithDetails, TenderWithDetails } from "@/types/tender";
 import React, { useCallback, useEffect, useState } from "react";
 import {
 	ActivityIndicator,
-	Alert,
 	Modal,
 	Pressable,
 	RefreshControl,
@@ -43,7 +42,6 @@ export default function TenderMenu() {
 			setTenders(data);
 		} catch (error) {
 			console.error("Error fetching tenders:", error);
-			Alert.alert("Error", "Failed to fetch tenders");
 		} finally {
 			setLoading(false);
 		}
@@ -59,7 +57,6 @@ export default function TenderMenu() {
 			setBids(data);
 		} catch (error) {
 			console.error("Error fetching bids:", error);
-			Alert.alert("Error", "Failed to fetch bids");
 		}
 	};
 
@@ -88,30 +85,17 @@ export default function TenderMenu() {
 	};
 
 	const handleWithdrawBid = async (bidId: string) => {
-		Alert.alert(
-			"Withdraw Bid",
-			"Are you sure you want to withdraw this bid? This action cannot be undone.",
-			[
-				{ text: "Cancel", style: "cancel" },
-				{
-					text: "Withdraw",
-					style: "destructive",
-					onPress: async () => {
-						try {
-							await withdrawBid(bidId);
-							Alert.alert("Success", "Bid withdrawn successfully");
-							await fetchTenders();
-							if (selectedTender) {
-								await fetchBidsForTender(selectedTender.id);
-							}
-						} catch (error) {
-							console.error("Error withdrawing bid:", error);
-							Alert.alert("Error", "Failed to withdraw bid");
-						}
-					},
-				},
-			],
-		);
+		if (!confirm("Are you sure you want to withdraw this bid?")) return;
+		try {
+			await withdrawBid(bidId);
+			console.log("Bid withdrawn successfully");
+			await fetchTenders();
+			if (selectedTender) {
+				await fetchBidsForTender(selectedTender.id);
+			}
+		} catch (error) {
+			console.error("Error withdrawing bid:", error);
+		}
 	};
 
 	const getUserBidForTender = (tenderId: string): TenderBidWithDetails | undefined => {
@@ -156,8 +140,6 @@ export default function TenderMenu() {
 				return "text-red-500";
 			case "locked":
 				return "text-yellow-500";
-			case "awarded":
-				return "text-purple-500";
 			case "completed":
 				return "text-blue-500";
 			default:
@@ -173,8 +155,6 @@ export default function TenderMenu() {
 				return "bg-red-500/20";
 			case "locked":
 				return "bg-yellow-500/20";
-			case "awarded":
-				return "bg-purple-500/20";
 			case "completed":
 				return "bg-blue-500/20";
 			default:

@@ -6,13 +6,12 @@ import { PerformanceMetrics, TopMitraPerformance } from "@/types/performance";
 import React, { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-	ActivityIndicator,
-	Alert,
-	Modal,
-	Pressable,
-	RefreshControl,
-	ScrollView,
-	View,
+    ActivityIndicator,
+    Modal,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    View,
 } from "react-native";
 
 interface PerformanceMitraModalProps {
@@ -56,7 +55,7 @@ export function PerformanceMitraModal({ visible, onClose }: PerformanceMitraModa
 			console.log("Performance data loaded:", { metricsData, topMitraData });
 		} catch (error) {
 			console.error("Error loading performance data:", error);
-			Alert.alert("Error", "Gagal memuat data performa mitra");
+			console.error("Gagal memuat data performa mitra");
 		} finally {
 			setLoading(false);
 		}

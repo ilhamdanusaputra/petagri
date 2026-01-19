@@ -3,7 +3,7 @@ import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 
 // Import modals
 import AddConsultantModal from "@/components/modals/add-consultant-modal";
@@ -74,7 +74,7 @@ export default function KonsultasiMenu() {
 			setVisits(visitData);
 		} catch (error) {
 			console.error("Error loading dashboard data:", error);
-			Alert.alert("Error", "Failed to load dashboard data");
+			console.error("Failed to load dashboard data");
 		} finally {
 			setIsLoading(false);
 		}
@@ -83,11 +83,11 @@ export default function KonsultasiMenu() {
 	const handleStartVisit = async (visitId: string) => {
 		try {
 			await updateVisitStatus(visitId, "in_progress");
-			Alert.alert("Success", "Visit started successfully");
+			console.log("Visit started successfully");
 			loadDashboardData();
 		} catch (error) {
 			console.error("Error starting visit:", error);
-			Alert.alert("Error", "Failed to start visit");
+			console.error("Failed to start visit");
 		}
 	};
 

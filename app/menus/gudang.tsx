@@ -6,7 +6,6 @@ import { CurrentStock, InventoryAlert, Product, StockMovement } from "@/types/pr
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
 	ActivityIndicator,
-	Alert,
 	Pressable,
 	RefreshControl,
 	ScrollView,
@@ -49,7 +48,6 @@ export default function GudangMenu() {
 			]);
 		} catch (error) {
 			console.error("Error loading inventory data:", error);
-			Alert.alert("Error", "Gagal memuat data inventaris. Silakan coba lagi.");
 		} finally {
 			setLoading(false);
 		}
@@ -149,10 +147,10 @@ export default function GudangMenu() {
 			// Remove alert from local state
 			setInventoryAlerts((prev) => prev.filter((alert) => alert.id !== alertId));
 
-			Alert.alert("Sukses", "Alert berhasil dikonfirmasi");
+			console.info("Alert berhasil dikonfirmasi");
 		} catch (error) {
 			console.error("Error acknowledging alert:", error);
-			Alert.alert("Error", "Gagal mengkonfirmasi alert. Silakan coba lagi.");
+			console.error("Gagal mengkonfirmasi alert. Silakan coba lagi.");
 		} finally {
 			setLoading(false);
 		}
@@ -160,59 +158,42 @@ export default function GudangMenu() {
 
 	const handleStockAdjustment = async () => {
 		if (!adjustmentForm.productId || !adjustmentForm.quantity) {
-			Alert.alert("Error", "Produk dan jumlah harus diisi");
+			console.error("Produk dan jumlah harus diisi");
 			return;
 		}
 
 		const quantity = parseInt(adjustmentForm.quantity);
 		if (isNaN(quantity) || quantity < 0) {
-			Alert.alert("Error", "Jumlah harus berupa angka positif");
+			console.error("Jumlah harus berupa angka positif");
 			return;
 		}
 
 		if (quantity === adjustmentForm.currentStock) {
-			Alert.alert("Info", "Jumlah stok tidak berubah");
+			console.info("Jumlah stok tidak berubah");
 			return;
 		}
 
-		Alert.alert(
-			"Konfirmasi",
-			`Ubah stok ${adjustmentForm.productName} dari ${adjustmentForm.currentStock} menjadi ${quantity}?`,
-			[
-				{ text: "Batal", style: "cancel" },
-				{
-					text: "Konfirmasi",
-					onPress: async () => {
-						try {
-							setLoading(true);
-
-							// Update product stock using existing updateProduct method
-							await ProductService.updateProduct(adjustmentForm.productId, {
-								stock_quantity: quantity,
-							});
-
-							// Reset form and reload data
-							setAdjustmentForm({
-								productId: "",
-								productName: "",
-								currentStock: 0,
-								quantity: "",
-								reason: "",
-								notes: "",
-							});
-							await loadData();
-
-							Alert.alert("Sukses", "Stok berhasil disesuaikan");
-						} catch (error) {
-							console.error("Error adjusting stock:", error);
-							Alert.alert("Error", "Gagal menyesuaikan stok. Silakan coba lagi.");
-						} finally {
-							setLoading(false);
-						}
-					},
-				},
-			],
-		);
+		try {
+			setLoading(true);
+			await ProductService.updateProduct(adjustmentForm.productId, {
+				stock_quantity: quantity,
+			});
+			setAdjustmentForm({
+				productId: "",
+				productName: "",
+				currentStock: 0,
+				quantity: "",
+				reason: "",
+				notes: "",
+			});
+			await loadData();
+			console.log("Stok berhasil disesuaikan");
+		} catch (error) {
+			console.error("Error adjusting stock:", error);
+			console.error("Gagal menyesuaikan stok. Silakan coba lagi.");
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	const handleSearch = (text: string) => {

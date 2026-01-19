@@ -346,7 +346,7 @@ export async function acceptBid(bidId: string): Promise<void> {
 	const { error: updateTenderError } = await supabase
 		.from("tenders")
 		.update({
-			status: "awarded",
+			status: "completed",
 			winning_bid_id: bidId,
 			winner_mitra_id: bid.mitra_id,
 			winner_selected_at: new Date().toISOString(),

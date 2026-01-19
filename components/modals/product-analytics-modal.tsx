@@ -10,14 +10,13 @@ import { ProductService } from "@/services/product";
 import { Product } from "@/types/product";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-	ActivityIndicator,
-	Alert,
-	Modal,
-	Pressable,
-	RefreshControl,
-	ScrollView,
-	TextInput,
-	View,
+    ActivityIndicator,
+    Modal,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    TextInput,
+    View,
 } from "react-native";
 
 interface ProductAnalyticsModalProps {
@@ -137,7 +136,7 @@ export function ProductAnalyticsModal({ visible, onClose }: ProductAnalyticsModa
 			}
 
 			setError(errorMessage + " Silakan coba lagi.");
-			Alert.alert("Error", errorMessage + " Silakan coba lagi.");
+			console.error(errorMessage + " Silakan coba lagi.");
 		} finally {
 			setLoading(false);
 		}

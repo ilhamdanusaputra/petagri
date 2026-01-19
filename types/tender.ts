@@ -6,14 +6,7 @@
 import type { Mitra } from "./mitra";
 import type { Product } from "./product";
 
-export type TenderStatus =
-	| "draft"
-	| "open"
-	| "closed"
-	| "locked"
-	| "awarded"
-	| "completed"
-	| "cancelled";
+export type TenderStatus = "draft" | "open" | "closed" | "locked" | "completed" | "cancelled";
 export type BidStatus = "draft" | "submitted" | "withdrawn" | "accepted" | "rejected";
 
 // ================================================

@@ -12,7 +12,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
 	ActivityIndicator,
-	Alert,
 	Modal,
 	Pressable,
 	RefreshControl,
@@ -84,7 +83,7 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 			setCategories(categoriesResponse.data);
 		} catch (error) {
 			console.error("Error loading data:", error);
-			Alert.alert("Error", "Gagal memuat data. Silakan coba lagi.");
+			console.error("Gagal memuat data. Silakan coba lagi.");
 		} finally {
 			setLoading(false);
 		}
@@ -139,7 +138,7 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 			const salePrice = parseFloat(field === "salePrice" ? value : currentUpdate.salePrice) || 0;
 
 			if (salePrice > price && price > 0) {
-				Alert.alert("Peringatan", "Harga diskon tidak boleh lebih tinggi dari harga regular");
+				console.warn("Harga diskon tidak boleh lebih tinggi dari harga regular");
 			}
 		}
 
@@ -168,18 +167,18 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 
 	const applyBulkDiscount = () => {
 		if (!bulkDiscount || selectedProducts.size === 0) {
-			Alert.alert("Info", "Pilih produk dan masukkan nilai diskon terlebih dahulu");
+			console.info("Pilih produk dan masukkan nilai diskon terlebih dahulu");
 			return;
 		}
 
 		const discount = parseFloat(bulkDiscount);
 		if (isNaN(discount) || discount < 0) {
-			Alert.alert("Error", "Nilai diskon tidak valid. Masukkan angka positif.");
+			console.error("Nilai diskon tidak valid. Masukkan angka positif.");
 			return;
 		}
 
 		if (bulkDiscountType === "percentage" && discount > 100) {
-			Alert.alert("Error", "Persentase diskon tidak boleh lebih dari 100%");
+			console.error("Persentase diskon tidak boleh lebih dari 100%");
 			return;
 		}
 
@@ -230,13 +229,11 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 		setPricingUpdates(updates);
 
 		if (successCount > 0) {
-			Alert.alert(
-				"Sukses",
-				`Diskon diterapkan ke ${successCount} produk` +
-					(errorCount > 0 ? `. ${errorCount} produk gagal diproses.` : ""),
+			console.info(
+				`Diskon diterapkan ke ${successCount} produk${errorCount > 0 ? `. ${errorCount} produk gagal diproses.` : ""}`,
 			);
 		} else {
-			Alert.alert("Error", "Tidak ada produk yang berhasil diproses");
+			console.error("Tidak ada produk yang berhasil diproses");
 		}
 	};
 
@@ -262,31 +259,18 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 		});
 
 		setPricingUpdates(updates);
-		Alert.alert("Sukses", `Diskon dihapus dari ${selectedProducts.size} produk`);
+		console.info(`Diskon dihapus dari ${selectedProducts.size} produk`);
 	};
 
 	const clearAllChanges = () => {
 		if (pricingUpdates.size === 0) {
-			Alert.alert("Info", "Tidak ada perubahan untuk dihapus");
+			console.info("Tidak ada perubahan untuk dihapus");
 			return;
 		}
-
-		Alert.alert(
-			"Konfirmasi",
-			"Apakah Anda yakin ingin menghapus semua perubahan yang belum disimpan?",
-			[
-				{ text: "Batal", style: "cancel" },
-				{
-					text: "Hapus",
-					style: "destructive",
-					onPress: () => {
-						setPricingUpdates(new Map());
-						setSelectedProducts(new Set());
-						Alert.alert("Sukses", "Semua perubahan berhasil dihapus");
-					},
-				},
-			],
-		);
+		// Silent: clear all changes directly, no confirmation dialog
+		setPricingUpdates(new Map());
+		setSelectedProducts(new Set());
+		console.info("Semua perubahan berhasil dihapus");
 	};
 
 	const saveChanges = async () => {
@@ -295,75 +279,63 @@ export function PricingModal({ visible, onClose }: PricingModalProps) {
 		);
 
 		if (changedUpdates.length === 0) {
-			Alert.alert("Info", "Tidak ada perubahan untuk disimpan");
+			console.info("Tidak ada perubahan untuk disimpan");
 			return;
 		}
+		// Silent: save changes directly, no confirmation dialog
+		setLoading(true);
+		try {
+			let successCount = 0;
+			let errorCount = 0;
+			const errors: string[] = [];
 
-		Alert.alert(
-			"Konfirmasi",
-			`Apakah Anda yakin ingin menyimpan perubahan pada ${changedUpdates.length} produk?`,
-			[
-				{ text: "Batal", style: "cancel" },
-				{
-					text: "Simpan",
-					onPress: async () => {
-						setLoading(true);
-						try {
-							let successCount = 0;
-							let errorCount = 0;
-							const errors: string[] = [];
+			for (const update of changedUpdates) {
+				try {
+					const updateData: any = {};
 
-							for (const update of changedUpdates) {
-								try {
-									const updateData: any = {};
+					if (update.price) {
+						const price = parseFloat(update.price);
+						if (price > 0) updateData.selling_price = price;
+					}
+					if (update.salePrice) {
+						const salePrice = parseFloat(update.salePrice);
+						if (salePrice >= 0) updateData.discount_amount = salePrice;
+					}
+					if (update.costPrice) {
+						const costPrice = parseFloat(update.costPrice);
+						if (costPrice >= 0) updateData.base_price = costPrice;
+					}
 
-									if (update.price) {
-										const price = parseFloat(update.price);
-										if (price > 0) updateData.selling_price = price;
-									}
-									if (update.salePrice) {
-										const salePrice = parseFloat(update.salePrice);
-										if (salePrice >= 0) updateData.discount_amount = salePrice;
-									}
-									if (update.costPrice) {
-										const costPrice = parseFloat(update.costPrice);
-										if (costPrice >= 0) updateData.base_price = costPrice;
-									}
+					if (Object.keys(updateData).length > 0) {
+						await ProductService.updateProduct(update.productId, updateData);
+						successCount++;
+					}
+				} catch (error) {
+					errorCount++;
+					const product = products.find((p) => p.id === update.productId);
+					errors.push(`${product?.name || update.productId}: ${error}`);
+				}
+			}
 
-									if (Object.keys(updateData).length > 0) {
-										await ProductService.updateProduct(update.productId, updateData);
-										successCount++;
-									}
-								} catch (error) {
-									errorCount++;
-									const product = products.find((p) => p.id === update.productId);
-									errors.push(`${product?.name || update.productId}: ${error}`);
-								}
-							}
+			setPricingUpdates(new Map());
+			setSelectedProducts(new Set());
+			await loadData();
 
-							setPricingUpdates(new Map());
-							setSelectedProducts(new Set());
-							await loadData();
-
-							if (successCount > 0) {
-								let message = `${successCount} produk berhasil diperbarui`;
-								if (errorCount > 0) {
-									message += `. ${errorCount} produk gagal diperbarui.`;
-								}
-								Alert.alert("Sukses", message);
-							} else {
-								Alert.alert("Error", "Tidak ada produk yang berhasil diperbarui");
-							}
-						} catch (error) {
-							console.error("Error saving changes:", error);
-							Alert.alert("Error", "Gagal menyimpan perubahan. Silakan coba lagi.");
-						} finally {
-							setLoading(false);
-						}
-					},
-				},
-			],
-		);
+			if (successCount > 0) {
+				let message = `${successCount} produk berhasil diperbarui`;
+				if (errorCount > 0) {
+					message += `. ${errorCount} produk gagal diperbarui.`;
+				}
+				console.info(message);
+			} else {
+				console.error("Tidak ada produk yang berhasil diperbarui");
+			}
+		} catch (error) {
+			console.error("Error saving changes:", error);
+			console.error("Gagal menyimpan perubahan. Silakan coba lagi.");
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	const filterProducts = () => {

@@ -5,15 +5,7 @@ import { MitraFormData } from "@/types/mitra";
 import { supabase } from "@/utils/supabase";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import {
-	ActivityIndicator,
-	Alert,
-	Modal,
-	Pressable,
-	ScrollView,
-	TextInput,
-	View,
-} from "react-native";
+import { ActivityIndicator, Modal, Pressable, ScrollView, TextInput, View } from "react-native";
 
 interface RegisterMitraModalProps {
 	visible: boolean;
@@ -82,7 +74,7 @@ export function RegisterMitraModal({ visible, onClose }: RegisterMitraModalProps
 			}
 
 			if (existingMitra) {
-				Alert.alert("Error", "Email sudah terdaftar. Gunakan email lain.");
+				console.log("Email sudah terdaftar. Gunakan email lain.");
 				return;
 			}
 
@@ -106,22 +98,17 @@ export function RegisterMitraModal({ visible, onClose }: RegisterMitraModalProps
 			console.log("Insert result:", { newMitra, insertError });
 			if (insertError) {
 				console.error("Insert error:", insertError);
-				Alert.alert("Error", `Gagal menyimpan data mitra: ${insertError.message}`);
+				console.log(`Gagal menyimpan data mitra: ${insertError.message}`);
 				return;
 			}
-			console.log("Success! New mitra created:", newMitra);
-			Alert.alert("Berhasil!", `Mitra "${newMitra.company_name}" berhasil didaftarkan`, [
-				{
-					text: "OK",
-					onPress: () => {
-						reset();
-						onClose();
-					},
-				},
-			]);
+			console.log(`Success! Mitra "${newMitra.company_name}" berhasil didaftarkan`);
+			reset();
+			onClose();
 		} catch (error) {
-			console.error("Error creating mitra:", error);
-			Alert.alert("Error", error instanceof Error ? error.message : "Gagal menyimpan data mitra");
+			console.error(
+				"Error creating mitra:",
+				error instanceof Error ? error.message : "Gagal menyimpan data mitra",
+			);
 		} finally {
 			setIsSubmitting(false);
 		}

@@ -8,7 +8,7 @@ import type { ConsultationVisitWithDetails, UpdateVisitOutcomeForm } from "@/typ
 import type { Product } from "@/types/product";
 import { Picker } from "@react-native-picker/picker";
 import React, { useEffect, useState } from "react";
-import { Alert, Modal, Pressable, ScrollView, Switch, TextInput, View } from "react-native";
+import { Modal, Pressable, ScrollView, Switch, TextInput, View } from "react-native";
 
 interface VisitOutcomeModalProps {
 	visible: boolean;
@@ -77,12 +77,12 @@ export default function VisitOutcomeModal({
 
 	const handleSubmit = async () => {
 		if (!formData.consultation_notes.trim()) {
-			Alert.alert("Error", "Please provide consultation notes");
+			console.error("Please provide consultation notes");
 			return;
 		}
 
 		if (!visit) {
-			Alert.alert("Error", "No visit selected");
+			console.error("No visit selected");
 			return;
 		}
 
@@ -124,19 +124,17 @@ export default function VisitOutcomeModal({
 				});
 
 				await Promise.all(tenderPromises);
-				Alert.alert(
-					"Success",
+				console.log(
 					`Visit outcome updated and ${formData.recommended_products.length} tender(s) created successfully`,
 				);
 			} else {
-				Alert.alert("Success", "Visit outcome updated successfully");
+				console.log("Visit outcome updated successfully");
 			}
 
 			onSuccess();
 			onClose();
 		} catch (error) {
 			console.error("Error updating visit outcome:", error);
-			Alert.alert("Error", "Failed to update visit outcome or create tenders");
 		} finally {
 			setIsLoading(false);
 		}

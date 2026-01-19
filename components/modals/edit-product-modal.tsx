@@ -7,7 +7,6 @@ import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
 	ActivityIndicator,
-	Alert,
 	Modal,
 	Pressable,
 	ScrollView,
@@ -110,19 +109,12 @@ export function EditProductModal({
 
 			await ProductService.updateProduct(product.id, updateData);
 
-			Alert.alert("Sukses", "Produk berhasil diperbarui", [
-				{
-					text: "OK",
-					onPress: () => {
-						onProductUpdated?.();
-						onClose();
-					},
-				},
-			]);
+			console.info("Produk berhasil diperbarui");
+			onProductUpdated?.();
+			onClose();
 		} catch (error) {
 			console.error("Error updating product:", error);
-			Alert.alert(
-				"Error",
+			console.error(
 				`Gagal memperbarui produk: ${error instanceof Error ? error.message : "Unknown error"}`,
 			);
 		} finally {

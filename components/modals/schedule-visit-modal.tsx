@@ -5,7 +5,7 @@ import { createConsultationVisit, getConsultants, getFarms } from "@/services/co
 import type { Consultant, CreateVisitForm, Farm } from "@/types/consultation";
 import { Picker } from "@react-native-picker/picker";
 import React, { useEffect, useState } from "react";
-import { Alert, Modal, Pressable, ScrollView, TextInput, View } from "react-native";
+import { Modal, Pressable, ScrollView, TextInput, View } from "react-native";
 
 interface ScheduleVisitModalProps {
 	visible: boolean;
@@ -58,7 +58,6 @@ export default function ScheduleVisitModal({
 			setFarms(farmData as Farm[]);
 		} catch (error) {
 			console.error("Error loading data:", error);
-			Alert.alert("Error", "Failed to load consultants and farms");
 		} finally {
 			setLoadingData(false);
 		}
@@ -66,26 +65,25 @@ export default function ScheduleVisitModal({
 
 	const handleSubmit = async () => {
 		if (!formData.farm_id || !formData.consultant_id || !formData.scheduled_date) {
-			Alert.alert("Error", "Please fill in all required fields");
+			console.error("Please fill in all required fields");
 			return;
 		}
 
 		const visitDate = new Date(formData.scheduled_date);
 		if (visitDate < new Date()) {
-			Alert.alert("Error", "Visit date cannot be in the past");
+			console.error("Visit date cannot be in the past");
 			return;
 		}
 
 		setIsLoading(true);
 		try {
 			await createConsultationVisit(formData);
-			Alert.alert("Success", "Visit scheduled successfully");
+			console.log("Visit scheduled successfully");
 			onSuccess();
 			onClose();
 			resetForm();
 		} catch (error) {
 			console.error("Error scheduling visit:", error);
-			Alert.alert("Error", "Failed to schedule visit");
 		} finally {
 			setIsLoading(false);
 		}
