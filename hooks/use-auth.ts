@@ -1,44 +1,170 @@
-import { useCallback, useState } from 'react';
+import { supabase } from "@/utils/supabase";
+import type { Session, User } from "@supabase/supabase-js";
+import { useEffect, useState } from "react";
+import { Alert } from "react-native";
 
-export interface User {
-  id: string;
-  email: string;
-  name: string;
+export interface AuthUser extends User {
+	email: string;
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+	const [user, setUser] = useState<AuthUser | null>(null);
+	const [session, setSession] = useState<Session | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
+	const [isInitialized, setIsInitialized] = useState(false);
 
-  const login = useCallback(async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      // Simulate login delay
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      
-      // Dummy user based on email
-      setUser({
-        id: '1',
-        email,
-        name: email.split('@')[0],
-      });
-      return true;
-    } catch (error) {
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+	useEffect(() => {
+		// Get initial session
+		supabase.auth.getSession().then(({ data: { session } }) => {
+			setSession(session);
+			setUser(session?.user as AuthUser | null);
+			setIsLoading(false);
+			setIsInitialized(true);
+		});
 
-  const logout = useCallback(() => {
-    setUser(null);
-  }, []);
+		// Listen for auth changes
+		const {
+			data: { subscription },
+		} = supabase.auth.onAuthStateChange((_event, session) => {
+			setSession(session);
+			setUser(session?.user as AuthUser | null);
+			setIsLoading(false);
+		});
 
-  return {
-    user,
-    isLoading,
-    login,
-    logout,
-    isLoggedIn: user !== null,
-  };
+		return () => subscription.unsubscribe();
+	}, []);
+
+	const signUp = async (email: string, password: string, fullName?: string) => {
+		try {
+			setIsLoading(true);
+			const { data, error } = await supabase.auth.signUp({
+				email,
+				password,
+				options: {
+					data: {
+						full_name: fullName,
+					},
+				},
+			});
+
+			if (error) {
+				Alert.alert("Sign Up Error", error.message);
+				return { success: false, error };
+			}
+
+			if (data.user) {
+				Alert.alert("Success", "Account created! Please check your email to verify your account.");
+				return { success: true, user: data.user };
+			}
+
+			return { success: false };
+		} catch (error: any) {
+			Alert.alert("Error", error.message || "An unexpected error occurred");
+			return { success: false, error };
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const signIn = async (email: string, password: string) => {
+		try {
+			setIsLoading(true);
+			const { data, error } = await supabase.auth.signInWithPassword({
+				email,
+				password,
+			});
+
+			if (error) {
+				Alert.alert("Sign In Error", error.message);
+				return { success: false, error };
+			}
+
+			if (data.user) {
+				return { success: true, user: data.user };
+			}
+
+			return { success: false };
+		} catch (error: any) {
+			Alert.alert("Error", error.message || "An unexpected error occurred");
+			return { success: false, error };
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const signOut = async () => {
+		try {
+			setIsLoading(true);
+			const { error } = await supabase.auth.signOut();
+
+			if (error) {
+				Alert.alert("Sign Out Error", error.message);
+				return { success: false, error };
+			}
+
+			return { success: true };
+		} catch (error: any) {
+			Alert.alert("Error", error.message || "An unexpected error occurred");
+			return { success: false, error };
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const resetPassword = async (email: string) => {
+		try {
+			setIsLoading(true);
+			const { error } = await supabase.auth.resetPasswordForEmail(email, {
+				redirectTo: "petagri://reset-password",
+			});
+
+			if (error) {
+				Alert.alert("Reset Password Error", error.message);
+				return { success: false, error };
+			}
+
+			Alert.alert("Success", "Password reset link sent to your email!");
+			return { success: true };
+		} catch (error: any) {
+			Alert.alert("Error", error.message || "An unexpected error occurred");
+			return { success: false, error };
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const updateProfile = async (updates: { full_name?: string; avatar_url?: string }) => {
+		try {
+			setIsLoading(true);
+			const { error } = await supabase.auth.updateUser({
+				data: updates,
+			});
+
+			if (error) {
+				Alert.alert("Update Profile Error", error.message);
+				return { success: false, error };
+			}
+
+			Alert.alert("Success", "Profile updated successfully!");
+			return { success: true };
+		} catch (error: any) {
+			Alert.alert("Error", error.message || "An unexpected error occurred");
+			return { success: false, error };
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	return {
+		user,
+		session,
+		isLoading,
+		isInitialized,
+		isAuthenticated: !!user,
+		signUp,
+		signIn,
+		signOut,
+		resetPassword,
+		updateProfile,
+	};
 }

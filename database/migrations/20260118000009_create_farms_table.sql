@@ -72,6 +72,94 @@ CREATE TRIGGER farms_updated_at_trigger
     FOR EACH ROW
     EXECUTE FUNCTION update_farms_updated_at();
 
+-- Enable Row Level Security
+ALTER TABLE farms ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies
+
+-- Policy 1: Everyone can view active farms
+CREATE POLICY "Anyone can view active farms"
+    ON farms FOR SELECT
+    USING (farm_status = 'active');
+
+-- Policy 2: Authenticated users can view all farms
+CREATE POLICY "Authenticated users can view all farms"
+    ON farms FOR SELECT
+    USING (auth.uid() IS NOT NULL);
+
+-- Policy 3: Farm owners can create farms
+CREATE POLICY "Farm owners can create farms"
+    ON farms FOR INSERT
+    WITH CHECK (
+        auth.uid() IS NOT NULL
+        AND (
+            -- User has pemilik_kebun role
+            EXISTS (
+                SELECT 1 FROM user_roles ur
+                JOIN roles r ON ur.role_id = r.id
+                WHERE ur.user_id = auth.uid()
+                AND r.name = 'pemilik_kebun'
+            )
+            -- Or user is konsultan (can create farms for clients)
+            OR EXISTS (
+                SELECT 1 FROM user_roles ur
+                JOIN roles r ON ur.role_id = r.id
+                WHERE ur.user_id = auth.uid()
+                AND r.name = 'konsultan'
+            )
+            -- Or user is admin
+            OR EXISTS (
+                SELECT 1 FROM user_roles ur
+                JOIN roles r ON ur.role_id = r.id
+                WHERE ur.user_id = auth.uid()
+                AND r.name IN ('developer', 'owner_platform', 'admin_platform')
+            )
+        )
+    );
+
+-- Policy 4: Farm owners can update their own farms
+-- Note: This assumes contact_email matches user's email
+CREATE POLICY "Farm owners can update their farms"
+    ON farms FOR UPDATE
+    USING (
+        auth.uid() IS NOT NULL
+        AND (
+            -- User's email matches farm contact email
+            contact_email = (SELECT email FROM auth.users WHERE id = auth.uid())
+            -- Or user is konsultan (manages farms)
+            OR EXISTS (
+                SELECT 1 FROM user_roles ur
+                JOIN roles r ON ur.role_id = r.id
+                WHERE ur.user_id = auth.uid()
+                AND r.name = 'konsultan'
+            )
+            -- Or user is admin
+            OR EXISTS (
+                SELECT 1 FROM user_roles ur
+                JOIN roles r ON ur.role_id = r.id
+                WHERE ur.user_id = auth.uid()
+                AND r.name IN ('developer', 'owner_platform', 'admin_platform')
+            )
+        )
+    );
+
+-- Policy 5: Only admins can delete farms
+CREATE POLICY "Only admins can delete farms"
+    ON farms FOR DELETE
+    USING (
+        EXISTS (
+            SELECT 1 FROM user_roles ur
+            JOIN roles r ON ur.role_id = r.id
+            WHERE ur.user_id = auth.uid()
+            AND r.name IN ('developer', 'owner_platform', 'admin_platform')
+        )
+    );
+
+-- Add comments
+COMMENT ON TABLE farms IS 'Agricultural farms managed by farm owners (pemilik_kebun) and consultants (konsultan)';
+COMMENT ON COLUMN farms.contact_email IS 'Primary contact email - used for ownership verification in RLS policies';
+COMMENT ON COLUMN farms.health_score IS 'Farm health rating from 0-5 based on consultation assessments';
+
 -- DOWN MIGRATION
 -- Drop triggers and functions
 DROP TRIGGER IF EXISTS farms_updated_at_trigger ON farms;

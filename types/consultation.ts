@@ -83,6 +83,7 @@ export interface ConsultationVisit {
 	payment_status: "pending" | "paid" | "cancelled";
 	created_at: string;
 	updated_at: string;
+	created_by: string;
 }
 
 // Extended types with relationships

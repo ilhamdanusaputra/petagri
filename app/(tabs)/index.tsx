@@ -3,10 +3,12 @@ import { ScrollView, View } from "react-native";
 import { MenuGrid } from "@/components/menu-grid";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "expo-router";
 
 export default function HomeScreen() {
 	const router = useRouter();
+	const { user } = useAuth();
 
 	const menuItems = [
 		{ key: "core", label: "CORE", icon: "house.fill", onPress: () => router.push("/menus/core") },
@@ -60,10 +62,7 @@ export default function HomeScreen() {
 				{/* Header Section */}
 				<View className="px-6 pt-8 pb-2">
 					<ThemedText type="title" className="text-2xl font-bold mb-1">
-						Selamat Datang 👋
-					</ThemedText>
-					<ThemedText type="default" className="text-gray-500 dark:text-gray-400">
-						Kelola bisnis pertanian Anda dengan mudah
+						Selamat Datang, {user?.user_metadata?.full_name || "User"}! 👋
 					</ThemedText>
 				</View>
 

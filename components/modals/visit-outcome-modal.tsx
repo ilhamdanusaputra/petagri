@@ -3,6 +3,7 @@ import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { updateVisitOutcome } from "@/services/consultation";
 import { ProductService } from "@/services/product";
+import { createTender } from "@/services/tender";
 import type { ConsultationVisitWithDetails, UpdateVisitOutcomeForm } from "@/types/consultation";
 import type { Product } from "@/types/product";
 import { Picker } from "@react-native-picker/picker";
@@ -94,13 +95,48 @@ export default function VisitOutcomeModal({
 				follow_up_notes: formData.follow_up_notes?.trim() || undefined,
 			};
 
+			// Update visit outcome
 			await updateVisitOutcome(visit.id, submitData);
-			Alert.alert("Success", "Visit outcome updated successfully");
+
+			// Create tenders for recommended products
+			if (formData.recommended_products.length > 0) {
+				const tenderPromises = formData.recommended_products.map(async (productId) => {
+					const product = products.find((p) => p.id === productId);
+					if (!product) return;
+
+					// Calculate close date (7 days from now)
+					const closeDate = new Date();
+					closeDate.setDate(closeDate.getDate() + 7);
+
+					return createTender({
+						title: `Tender for ${product.name} - ${visit.farm.farm_name}`,
+						description: `Product recommendation from consultation visit on ${new Date(visit.scheduled_date).toLocaleDateString()}. ${formData.consultation_notes}`,
+						product_id: productId,
+						consultation_visit_id: visit.id,
+						quantity: 1,
+						unit: product.unit_type || "unit",
+						estimated_price: product.selling_price,
+						requirements: formData.recommendations,
+						close_date: closeDate.toISOString(),
+						status: "open",
+						created_by: visit.created_by,
+					});
+				});
+
+				await Promise.all(tenderPromises);
+				Alert.alert(
+					"Success",
+					`Visit outcome updated and ${formData.recommended_products.length} tender(s) created successfully`,
+				);
+			} else {
+				Alert.alert("Success", "Visit outcome updated successfully");
+			}
+
 			onSuccess();
 			onClose();
 		} catch (error) {
 			console.error("Error updating visit outcome:", error);
-			Alert.alert("Error", "Failed to update visit outcome");
+			Alert.alert("Error", "Failed to update visit outcome or create tenders");
 		} finally {
 			setIsLoading(false);
 		}

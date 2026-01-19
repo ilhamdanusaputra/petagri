@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS mitra (
 CREATE INDEX IF NOT EXISTS idx_mitra_company_name ON mitra USING btree (company_name);
 CREATE INDEX IF NOT EXISTS idx_mitra_email ON mitra USING btree (email);
 CREATE INDEX IF NOT EXISTS idx_mitra_status ON mitra USING btree (status);
+CREATE INDEX IF NOT EXISTS idx_mitra_created_by ON mitra USING btree (created_by);
 CREATE INDEX IF NOT EXISTS idx_mitra_created_at ON mitra USING btree (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_mitra_business_type ON mitra USING btree (business_type);
 CREATE INDEX IF NOT EXISTS idx_mitra_active_status ON mitra USING btree (status) WHERE status = 'active';
@@ -63,6 +64,14 @@ CREATE POLICY "view_active_mitra" ON mitra
     USING (
         auth.role() = 'authenticated' 
         AND status IN ('active', 'pending')
+    );
+
+-- Policy: Allow users to view their own mitra records
+CREATE POLICY "view_own_mitra" ON mitra
+    FOR SELECT
+    USING (
+        auth.role() = 'authenticated'
+        AND auth.uid() = created_by
     );
 
 -- Policy: Allow authenticated users to view all mitra (admin level)
