@@ -329,7 +329,7 @@ export default function AddFarmModal({ visible, onClose, onSuccess }: AddFarmMod
 						<Pressable
 							onPress={handleSubmit}
 							disabled={isLoading}
-							className={`py-4 rounded-xl items-center mx-6 ${isLoading ? "bg-gray-600" : "bg-green-600"}`}>
+							className={`py-4 rounded-xl items-center ${isLoading ? "bg-gray-600" : "bg-green-600"}`}>
 							<ThemedText className="text-white text-center font-semibold">
 								{isLoading ? "Adding..." : "Add Farm"}
 							</ThemedText>

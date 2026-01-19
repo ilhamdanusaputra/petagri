@@ -2,7 +2,10 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { updateVisitOutcome } from "@/services/consultation";
+import { ProductService } from "@/services/product";
 import type { ConsultationVisitWithDetails, UpdateVisitOutcomeForm } from "@/types/consultation";
+import type { Product } from "@/types/product";
+import { Picker } from "@react-native-picker/picker";
 import React, { useEffect, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, Switch, TextInput, View } from "react-native";
 
@@ -36,6 +39,8 @@ export default function VisitOutcomeModal({
 
 	const [problemInput, setProblemInput] = useState("");
 	const [recommendationInput, setRecommendationInput] = useState("");
+	const [products, setProducts] = useState<Product[]>([]);
+	const [selectedProductId, setSelectedProductId] = useState<string>("");
 	const [isLoading, setIsLoading] = useState(false);
 
 	useEffect(() => {
@@ -57,6 +62,18 @@ export default function VisitOutcomeModal({
 		}
 	}, [visit]);
 
+	useEffect(() => {
+		const fetchProducts = async () => {
+			try {
+				const response = await ProductService.getProducts({ status: ["active"] });
+				setProducts(response.data);
+			} catch (error) {
+				console.error("Error fetching products:", error);
+			}
+		};
+		fetchProducts();
+	}, []);
+
 	const handleSubmit = async () => {
 		if (!formData.consultation_notes.trim()) {
 			Alert.alert("Error", "Please provide consultation notes");
@@ -70,7 +87,14 @@ export default function VisitOutcomeModal({
 
 		setIsLoading(true);
 		try {
-			await updateVisitOutcome(visit.id, formData);
+			// Convert empty strings to undefined for optional fields
+			const submitData: UpdateVisitOutcomeForm = {
+				...formData,
+				follow_up_date: formData.follow_up_date?.trim() || undefined,
+				follow_up_notes: formData.follow_up_notes?.trim() || undefined,
+			};
+
+			await updateVisitOutcome(visit.id, submitData);
 			Alert.alert("Success", "Visit outcome updated successfully");
 			onSuccess();
 			onClose();
@@ -113,6 +137,23 @@ export default function VisitOutcomeModal({
 		setFormData((prev) => ({
 			...prev,
 			recommendations: prev.recommendations.filter((_, i) => i !== index),
+		}));
+	};
+
+	const addProduct = () => {
+		if (selectedProductId && !formData.recommended_products.includes(selectedProductId)) {
+			setFormData((prev) => ({
+				...prev,
+				recommended_products: [...prev.recommended_products, selectedProductId],
+			}));
+			setSelectedProductId("");
+		}
+	};
+
+	const removeProduct = (index: number) => {
+		setFormData((prev) => ({
+			...prev,
+			recommended_products: prev.recommended_products.filter((_, i) => i !== index),
 		}));
 	};
 
@@ -212,6 +253,44 @@ export default function VisitOutcomeModal({
 									</Pressable>
 								</View>
 							))}
+						</View>
+
+						<View className="mb-4">
+							<ThemedText className="text-sm text-gray-300 mb-2">Recommended Products</ThemedText>
+							<View className="flex-row mb-2 gap-2">
+								<View className="flex-1 bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+									<Picker
+										selectedValue={selectedProductId}
+										onValueChange={(value: string) => setSelectedProductId(value)}
+										style={{ color: "#FFFFFF", backgroundColor: "#1F2937" }}>
+										<Picker.Item label="Select a product..." value="" />
+										{products.map((product) => (
+											<Picker.Item key={product.id} label={product.name} value={product.id} />
+										))}
+									</Picker>
+								</View>
+								<Pressable
+									className="bg-blue-600 px-4 py-3 rounded-xl"
+									onPress={addProduct}
+									disabled={!selectedProductId}>
+									<ThemedText className="text-white font-medium">Add</ThemedText>
+								</Pressable>
+							</View>
+							{formData.recommended_products.map((productId, index) => {
+								const product = products.find((p) => p.id === productId);
+								return (
+									<View
+										key={index}
+										className="flex-row justify-between items-center bg-blue-900/30 border border-blue-700 p-3 rounded-xl mb-2">
+										<ThemedText className="flex-1 text-blue-200">
+											{product?.name || productId}
+										</ThemedText>
+										<Pressable onPress={() => removeProduct(index)}>
+											<ThemedText className="text-blue-400 ml-2">Remove</ThemedText>
+										</Pressable>
+									</View>
+								);
+							})}
 						</View>
 					</View>
 
@@ -316,7 +395,6 @@ export default function VisitOutcomeModal({
 						</View>
 					</View>
 				</ScrollView>
-
 				<View className="pb-10">
 					<Pressable
 						onPress={handleSubmit}

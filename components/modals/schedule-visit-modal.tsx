@@ -233,7 +233,7 @@ export default function ScheduleVisitModal({
 
 							{/* Show selected farm and consultant details */}
 							{formData.farm_id && (
-								<View className="mb-6 bg-blue-900/30 border border-blue-700 p-4 rounded-xl mx-6">
+								<View className="mb-6 bg-blue-900/30 border border-blue-700 p-4 rounded-xl">
 									<ThemedText className="font-semibold text-blue-300 mb-2">
 										Selected Farm:
 									</ThemedText>
@@ -257,7 +257,7 @@ export default function ScheduleVisitModal({
 							)}
 
 							{formData.consultant_id && (
-								<View className="mb-6 bg-green-900/30 border border-green-700 p-4 rounded-xl mx-6">
+								<View className="mb-6 bg-green-900/30 border border-green-700 p-4 rounded-xl">
 									<ThemedText className="font-semibold text-green-300 mb-2">
 										Selected Consultant:
 									</ThemedText>
