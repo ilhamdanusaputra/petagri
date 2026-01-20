@@ -29,7 +29,7 @@ export async function createTender(data: CreateTenderForm): Promise<Tender> {
 		.from("tenders")
 		.insert({
 			...data,
-			status: "draft",
+			status: "open",
 		})
 		.select()
 		.single();
@@ -322,12 +322,13 @@ export async function withdrawBid(id: string): Promise<TenderBid> {
 
 /**
  * Accept a bid - updates bid status and marks tender as awarded
+ * Automatically creates an order and delivery record
  */
 export async function acceptBid(bidId: string): Promise<void> {
-	// Get the bid details first
+	// Get the bid details first with all necessary related data
 	const { data: bid, error: bidError } = await supabase
 		.from("tender_bids")
-		.select("*, tender:tenders(*)")
+		.select("*, tender:tenders(*, product:products(*))")
 		.eq("id", bidId)
 		.single();
 
@@ -364,6 +365,64 @@ export async function acceptBid(bidId: string): Promise<void> {
 		.eq("status", "submitted");
 
 	if (rejectOthersError) throw rejectOthersError;
+
+	// Create order for the accepted bid
+	const orderNumber = `ORD-${Date.now()}-${bidId.substring(0, 8)}`;
+	const { data: order, error: orderError } = await supabase
+		.from("orders")
+		.insert({
+			mitra_id: bid.mitra_id,
+			order_number: orderNumber,
+			total_amount: bid.bid_price,
+			status: "confirmed",
+			items_count: 1,
+			notes: `Order created from tender: ${bid.tender?.title || bid.tender_id}`,
+			delivery_date: bid.tender?.close_date,
+			created_by: bid.tender?.created_by,
+		})
+		.select()
+		.single();
+
+	if (orderError) {
+		console.error("Error creating order:", orderError);
+		throw orderError;
+	}
+
+	if (!order) {
+		throw new Error("Failed to create order");
+	}
+
+	// Create delivery record linked to the farm via consultation_visit_id
+	const deliveryNumber = `DEL-${Date.now()}-${order.id.substring(0, 8)}`;
+	const scheduledDeliveryDate = new Date();
+	scheduledDeliveryDate.setDate(scheduledDeliveryDate.getDate() + 3); // Schedule delivery 3 days from now
+
+	const { error: deliveryError } = await supabase.from("deliveries").insert({
+		order_id: order.id,
+		tender_id: bid.tender_id,
+		mitra_id: bid.mitra_id,
+		product_id: bid.tender?.product_id,
+		consultation_visit_id: bid.tender?.consultation_visit_id,
+		delivery_number: deliveryNumber,
+		quantity: bid.quantity,
+		unit: bid.unit,
+		delivery_address: "Will be populated by trigger from consultation_visit",
+		status: "pending",
+		scheduled_delivery_date: scheduledDeliveryDate.toISOString(),
+		delivery_notes: `Delivery for tender: ${bid.tender?.title || bid.tender_id}. Bid price: ${bid.bid_price}`,
+		created_by: bid.tender?.created_by,
+	});
+
+	if (deliveryError) {
+		console.error("Error creating delivery:", deliveryError);
+		// Don't throw error here, order is already created
+		// Just log for manual intervention if needed
+		console.error("Delivery creation failed but order was created successfully:", order.id);
+	} else {
+		console.info(
+			`Order ${orderNumber} and delivery ${deliveryNumber} created successfully for accepted bid ${bidId}`,
+		);
+	}
 }
 
 /**
