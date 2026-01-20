@@ -87,16 +87,19 @@ export default function CreateBidModal({
 	const handleSubmit = async () => {
 		if (!formData.bid_price || formData.bid_price <= 0) {
 			Alert.alert("Error", "Please enter a valid bid price");
+			console.error("Invalid bid price:", formData.bid_price);
 			return;
 		}
 
 		if (!formData.quantity || formData.quantity <= 0) {
 			Alert.alert("Error", "Please enter a valid quantity");
+			console.error("Invalid quantity:", formData.quantity);
 			return;
 		}
 
 		if (!tender) {
 			Alert.alert("Error", "No tender selected");
+			console.error("No tender selected");
 			return;
 		}
 

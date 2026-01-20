@@ -458,28 +458,15 @@ export function ContractMitraModal({ visible, onClose }: ContractModalProps) {
 
 	// Delete contract
 	const deleteContract = async (contractId: string, contractNumber: string) => {
-		Alert.alert(
-			"Konfirmasi Hapus",
-			`Yakin ingin menghapus kontrak ${contractNumber}? Tindakan ini tidak dapat dibatalkan.`,
-			[
-				{ text: "Batal", style: "cancel" },
-				{
-					text: "Hapus",
-					style: "destructive",
-					onPress: async () => {
-						try {
-							await ContractService.deleteContract(contractId);
-							setContracts((prev) => prev.filter((contract) => contract.id !== contractId));
-							Alert.alert("Berhasil", "Kontrak berhasil dihapus");
-							await loadContractsData(); // Refresh summary
-						} catch (error) {
-							console.error("Error deleting contract:", error);
-							Alert.alert("Error", "Gagal menghapus kontrak");
-						}
-					},
-				},
-			],
-		);
+		try {
+			await ContractService.deleteContract(contractId);
+			setContracts((prev) => prev.filter((contract) => contract.id !== contractId));
+			Alert.alert("Berhasil", "Kontrak berhasil dihapus");
+			await loadContractsData(); // Refresh summary
+		} catch (error) {
+			console.error("Error deleting contract:", error);
+			Alert.alert("Error", "Gagal menghapus kontrak");
+		}
 	};
 
 	const getStatusColor = (status: string) => {

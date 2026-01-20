@@ -62,20 +62,11 @@ export function AddCategoryModal({ visible, onClose, onCategoryAdded }: AddCateg
 
 		try {
 			console.log("Creating category with data:", formData);
-
 			const category = await ProductService.createCategory(formData);
 			console.log("Category created successfully:", category);
-
-			Alert.alert("Sukses", "Kategori berhasil ditambahkan", [
-				{
-					text: "OK",
-					onPress: () => {
-						onCategoryAdded?.();
-						onClose();
-						reset();
-					},
-				},
-			]);
+			onCategoryAdded?.();
+			onClose();
+			reset();
 		} catch (error) {
 			console.error("Error creating category:", error);
 			Alert.alert(

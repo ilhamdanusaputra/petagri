@@ -1,7 +1,7 @@
 import { supabase } from "@/utils/supabase";
 import type { Session, User } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
-
+// Removed Alert usage for error/info
 export interface AuthUser extends User {
 	email: string;
 }
@@ -47,18 +47,18 @@ export function useAuth() {
 			});
 
 			if (error) {
-				Alert.alert("Sign Up Error", error.message);
+				console.error("Sign Up Error:", error.message);
 				return { success: false, error };
 			}
 
 			if (data.user) {
-				Alert.alert("Success", "Account created! Please check your email to verify your account.");
+				console.info("Account created! Please check your email to verify your account.");
 				return { success: true, user: data.user };
 			}
 
 			return { success: false };
 		} catch (error: any) {
-			Alert.alert("Error", error.message || "An unexpected error occurred");
+			console.error("Sign Up Error:", error.message || "An unexpected error occurred");
 			return { success: false, error };
 		} finally {
 			setIsLoading(false);
@@ -74,7 +74,7 @@ export function useAuth() {
 			});
 
 			if (error) {
-				Alert.alert("Sign In Error", error.message);
+				console.error("Sign In Error:", error.message);
 				return { success: false, error };
 			}
 
@@ -84,7 +84,7 @@ export function useAuth() {
 
 			return { success: false };
 		} catch (error: any) {
-			Alert.alert("Error", error.message || "An unexpected error occurred");
+			console.error("Sign In Error:", error.message || "An unexpected error occurred");
 			return { success: false, error };
 		} finally {
 			setIsLoading(false);
@@ -97,13 +97,13 @@ export function useAuth() {
 			const { error } = await supabase.auth.signOut();
 
 			if (error) {
-				Alert.alert("Sign Out Error", error.message);
+				console.error("Sign Out Error:", error.message);
 				return { success: false, error };
 			}
 
 			return { success: true };
 		} catch (error: any) {
-			Alert.alert("Error", error.message || "An unexpected error occurred");
+			console.error("Sign Out Error:", error.message || "An unexpected error occurred");
 			return { success: false, error };
 		} finally {
 			setIsLoading(false);
@@ -118,14 +118,14 @@ export function useAuth() {
 			});
 
 			if (error) {
-				Alert.alert("Reset Password Error", error.message);
+				console.error("Reset Password Error:", error.message);
 				return { success: false, error };
 			}
 
 			console.log("Password reset link sent successfully");
 			return { success: true };
 		} catch (error: any) {
-			Alert.alert("Error", error.message || "An unexpected error occurred");
+			console.error("Reset Password Error:", error.message || "An unexpected error occurred");
 			return { success: false, error };
 		} finally {
 			setIsLoading(false);
@@ -140,14 +140,14 @@ export function useAuth() {
 			});
 
 			if (error) {
-				Alert.alert("Update Profile Error", error.message);
+				console.error("Update Profile Error:", error.message);
 				return { success: false, error };
 			}
 
 			console.log("Profile updated successfully");
 			return { success: true };
 		} catch (error: any) {
-			Alert.alert("Error", error.message || "An unexpected error occurred");
+			console.error("Update Profile Error:", error.message || "An unexpected error occurred");
 			return { success: false, error };
 		} finally {
 			setIsLoading(false);
