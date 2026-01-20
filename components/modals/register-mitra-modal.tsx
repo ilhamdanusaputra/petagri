@@ -1,6 +1,7 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { useAuth } from "@/hooks/use-auth";
 import { MitraFormData } from "@/types/mitra";
 import { supabase } from "@/utils/supabase";
 import React, { useState } from "react";
@@ -10,10 +11,13 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, TextInput, View } from
 interface RegisterMitraModalProps {
 	visible: boolean;
 	onClose: () => void;
+	onSuccess?: () => void;
 }
 
-export function RegisterMitraModal({ visible, onClose }: RegisterMitraModalProps) {
+export function RegisterMitraModal({ visible, onClose, onSuccess }: RegisterMitraModalProps) {
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const { user } = useAuth();
 
 	const {
 		control,
@@ -47,34 +51,51 @@ export function RegisterMitraModal({ visible, onClose }: RegisterMitraModalProps
 	const onSubmit = async (data: MitraFormData) => {
 		console.log("Form submitted with data:", data);
 		setIsSubmitting(true);
+		setErrorMessage(null);
 
 		try {
-			// Test Supabase connection first
-			console.log("Testing Supabase connection...");
-			const { data: testData, error: testError } = await supabase
-				.from("mitra")
-				.select("count")
-				.limit(1);
+			if (!user) {
+				setErrorMessage("Anda harus login terlebih dahulu");
+				return;
+			}
 
-			console.log("Connection test:", { testData, testError });
+			// Check if user already has a mitra registered (1 user = 1 mitra rule)
+			console.log("Checking if user already has a mitra...");
+			const { data: existingUserMitra, error: userCheckError } = await supabase
+				.from("mitra")
+				.select("id, company_name")
+				.eq("created_by", user.id)
+				.single();
+
+			if (userCheckError && userCheckError.code !== "PGRST116") {
+				console.error("Error checking user mitra:", userCheckError);
+				throw new Error(`Gagal memeriksa status kemitraan: ${userCheckError.message}`);
+			}
+
+			if (existingUserMitra) {
+				setErrorMessage(
+					`Anda sudah terdaftar sebagai mitra "${existingUserMitra.company_name}". Setiap pengguna hanya dapat mendaftar satu kemitraan.`,
+				);
+				console.log("User already has a mitra registered");
+				return;
+			}
 
 			// Check if email already exists
 			console.log("Checking if email exists...");
-			const { data: existingMitra, error: checkError } = await supabase
+			const { data: existingEmailMitra, error: emailCheckError } = await supabase
 				.from("mitra")
 				.select("id")
 				.eq("email", data.email.toLowerCase().trim())
 				.single();
 
-			console.log("Email check result:", { existingMitra, checkError });
-
-			if (checkError && checkError.code !== "PGRST116") {
-				console.error("Error checking email:", checkError);
-				throw new Error(`Gagal memeriksa email: ${checkError.message}`);
+			if (emailCheckError && emailCheckError.code !== "PGRST116") {
+				console.error("Error checking email:", emailCheckError);
+				throw new Error(`Gagal memeriksa email: ${emailCheckError.message}`);
 			}
 
-			if (existingMitra) {
-				console.log("Email sudah terdaftar. Gunakan email lain.");
+			if (existingEmailMitra) {
+				setErrorMessage("Email sudah terdaftar. Gunakan email lain.");
+				console.log("Email already registered");
 				return;
 			}
 
@@ -98,17 +119,16 @@ export function RegisterMitraModal({ visible, onClose }: RegisterMitraModalProps
 			console.log("Insert result:", { newMitra, insertError });
 			if (insertError) {
 				console.error("Insert error:", insertError);
-				console.log(`Gagal menyimpan data mitra: ${insertError.message}`);
+				setErrorMessage(`Gagal menyimpan data mitra: ${insertError.message}`);
 				return;
 			}
 			console.log(`Success! Mitra "${newMitra.company_name}" berhasil didaftarkan`);
 			reset();
+			onSuccess?.();
 			onClose();
 		} catch (error) {
-			console.error(
-				"Error creating mitra:",
-				error instanceof Error ? error.message : "Gagal menyimpan data mitra",
-			);
+			console.error("Error creating mitra:", error);
+			setErrorMessage(error instanceof Error ? error.message : "Gagal menyimpan data mitra");
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -116,6 +136,7 @@ export function RegisterMitraModal({ visible, onClose }: RegisterMitraModalProps
 
 	const handleClose = () => {
 		reset();
+		setErrorMessage(null);
 		onClose();
 	};
 
@@ -137,6 +158,18 @@ export function RegisterMitraModal({ visible, onClose }: RegisterMitraModalProps
 						<IconSymbol name="xmark" size={16} color="#9CA3AF" />
 					</Pressable>
 				</View>
+
+				{/* Error Message */}
+				{errorMessage && (
+					<View className="mx-5 mt-4 p-4 bg-red-900/20 border border-red-800 rounded-xl">
+						<View className="flex-row items-start gap-2">
+							<IconSymbol name="exclamationmark.triangle.fill" size={20} color="#EF4444" />
+							<ThemedText className="flex-1 text-red-400 text-sm leading-5">
+								{errorMessage}
+							</ThemedText>
+						</View>
+					</View>
+				)}
 
 				<ScrollView className="flex-1 p-5" showsVerticalScrollIndicator={false}>
 					<View className="gap-4">

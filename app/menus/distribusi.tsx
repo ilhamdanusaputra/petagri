@@ -4,13 +4,13 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { supabase } from "@/utils/supabase";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-	ActivityIndicator,
-	Modal,
-	Pressable,
-	RefreshControl,
-	ScrollView,
-	TextInput,
-	View,
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  TextInput,
+  View,
 } from "react-native";
 
 interface Delivery {
@@ -223,98 +223,41 @@ export default function DistribusiMenu() {
 	return (
 		<ThemedView className="flex-1 bg-black">
 			{/* Tab Navigation */}
-			<View className="flex-row bg-gray-800 mx-5 mt-4 rounded-xl p-1 shadow-sm">
-				<Pressable
-					className={`flex-1 flex-row items-center justify-center py-3 px-3 rounded-lg gap-2 ${
-						activeTab === "all" ? "bg-blue-900/50 shadow-sm" : ""
-					}`}
-					onPress={() => setActiveTab("all")}>
-					<IconSymbol
-						name="archivebox.fill"
-						size={18}
-						color={activeTab === "all" ? "#3B82F6" : "#9CA3AF"}
-					/>
-					<ThemedText
-						className={`text-sm font-semibold ${
-							activeTab === "all" ? "text-blue-400" : "text-gray-400"
-						}`}>
-						All
-					</ThemedText>
-				</Pressable>
-
-				<Pressable
-					className={`flex-1 flex-row items-center justify-center py-3 px-3 rounded-lg gap-2 ${
-						activeTab === "pending" ? "bg-blue-900/50 shadow-sm" : ""
-					}`}
-					onPress={() => setActiveTab("pending")}>
-					<IconSymbol
-						name="bell.fill"
-						size={18}
-						color={activeTab === "pending" ? "#3B82F6" : "#9CA3AF"}
-					/>
-					<ThemedText
-						className={`text-sm font-semibold ${
-							activeTab === "pending" ? "text-blue-400" : "text-gray-400"
-						}`}>
-						Pending
-					</ThemedText>
-				</Pressable>
-
-				<Pressable
-					className={`flex-1 flex-row items-center justify-center py-3 px-3 rounded-lg gap-2 ${
-						activeTab === "in_transit" ? "bg-blue-900/50 shadow-sm" : ""
-					}`}
-					onPress={() => setActiveTab("in_transit")}>
-					<IconSymbol
-						name="bell.fill"
-						size={18}
-						color={activeTab === "in_transit" ? "#3B82F6" : "#9CA3AF"}
-					/>
-					<ThemedText
-						className={`text-sm font-semibold ${
-							activeTab === "in_transit" ? "text-blue-400" : "text-gray-400"
-						}`}>
-						In Transit
-					</ThemedText>
-				</Pressable>
-
-				<Pressable
-					className={`flex-1 flex-row items-center justify-center py-3 px-3 rounded-lg gap-2 ${
-						activeTab === "delivered" ? "bg-blue-900/50 shadow-sm" : ""
-					}`}
-					onPress={() => setActiveTab("delivered")}>
-					<IconSymbol
-						name="bell.fill"
-						size={18}
-						color={activeTab === "delivered" ? "#3B82F6" : "#9CA3AF"}
-					/>
-					<ThemedText
-						className={`text-sm font-semibold ${
-							activeTab === "delivered" ? "text-blue-400" : "text-gray-400"
-						}`}>
-						Delivered
-					</ThemedText>
-				</Pressable>
-
-				<Pressable
-					className={`flex-1 flex-row items-center justify-center py-3 px-3 rounded-lg gap-2 ${
-						activeTab === "approved" ? "bg-blue-900/50 shadow-sm" : ""
-					}`}
-					onPress={() => setActiveTab("approved")}>
-					<IconSymbol
-						name="bell.fill"
-						size={18}
-						color={activeTab === "approved" ? "#3B82F6" : "#9CA3AF"}
-					/>
-					<ThemedText
-						className={`text-sm font-semibold ${
-							activeTab === "approved" ? "text-blue-400" : "text-gray-400"
-						}`}>
-						Approved
-					</ThemedText>
-				</Pressable>
-			</View>
-
+			<ScrollView
+				horizontal
+				showsHorizontalScrollIndicator={false}
+				// Hapus minWidth agar ScrollView tidak memaksa lebar 100%
+				className="bg-gray-800 mx-5 mt-4 rounded-xl p-1 shadow-sm flex-grow-0">
+				<View className="flex-row items-center">
+					{[
+						{ key: "all", label: "All", icon: "archivebox.fill" },
+						{ key: "pending", label: "Pending", icon: "bell.fill" },
+						{ key: "in_transit", label: "In Transit", icon: "arrow.left.arrow.right" },
+						{ key: "delivered", label: "Delivered", icon: "checkmark.circle.fill" },
+						{ key: "approved", label: "Approved", icon: "star.fill" },
+					].map((tab) => (
+						<Pressable
+							key={tab.key}
+							onPress={() => setActiveTab(tab.key as TabType)}
+							// HAPUS flex-1 di sini agar lebar mengikuti isi (wrap content)
+							className={`flex-row items-center justify-center py-2 px-4 rounded-lg gap-2 ${
+								activeTab === tab.key ? "bg-blue-900/50" : ""
+							}`}>
+							<IconSymbol
+								name={tab.icon as any}
+								size={16}
+								color={activeTab === tab.key ? "#3B82F6" : "#9CA3AF"}
+							/>
+							<ThemedText
+								className={`text-sm font-medium ${
+									activeTab === tab.key ? "text-blue-400" : "text-gray-400"
+								}`}>
+								{tab.label}
+							</ThemedText>
+						</Pressable>
+					))}
+				</View>
+			</ScrollView>
 			{/* Deliveries List */}
 			{loading && deliveries.length === 0 ? (
 				<View className="flex-1 items-center justify-center">
@@ -334,6 +277,7 @@ export default function DistribusiMenu() {
 									No deliveries found
 								</ThemedText>
 								<ThemedText className="text-gray-500 text-center mt-2">
+									{" "}
 									Deliveries will appear here when tenders are completed
 								</ThemedText>
 							</View>
