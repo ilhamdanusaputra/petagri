@@ -58,15 +58,8 @@ CREATE INDEX IF NOT EXISTS idx_mitra_search ON mitra USING gin (
 ALTER TABLE mitra ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
--- Policy: Allow authenticated users to view active mitra
-CREATE POLICY "view_active_mitra" ON mitra
-    FOR SELECT
-    USING (
-        auth.role() = 'authenticated' 
-        AND status IN ('active', 'pending')
-    );
-
--- Policy: Allow users to view their own mitra records
+-- Policy: Allow partner owners to ONLY view their own created mitra records
+-- This ensures each partner can only see the mitra they registered
 CREATE POLICY "view_own_mitra" ON mitra
     FOR SELECT
     USING (
@@ -74,44 +67,28 @@ CREATE POLICY "view_own_mitra" ON mitra
         AND auth.uid() = created_by
     );
 
--- Policy: Allow authenticated users to view all mitra (admin level)
-CREATE POLICY "view_all_mitra" ON mitra
-    FOR SELECT
-    USING (
-        auth.role() = 'authenticated'
-        AND (
-            auth.jwt() ->> 'role' = 'admin'
-            OR auth.jwt() ->> 'role' = 'manager'
-        )
-    );
-
 -- Policy: Allow authenticated users to insert new mitra
+-- The created_by will be automatically set to auth.uid() by trigger
 CREATE POLICY "insert_mitra" ON mitra
     FOR INSERT
     WITH CHECK (
         auth.role() = 'authenticated'
     );
 
--- Policy: Allow users to update mitra they created or admins
-CREATE POLICY "update_mitra" ON mitra
+-- Policy: Allow partner owners to update ONLY their own created mitra
+CREATE POLICY "update_own_mitra" ON mitra
     FOR UPDATE
     USING (
         auth.role() = 'authenticated'
-        AND (
-            auth.uid() = created_by
-            OR auth.jwt() ->> 'role' = 'admin'
-            OR auth.jwt() ->> 'role' = 'manager'
-        )
+        AND auth.uid() = created_by
     );
 
--- Policy: Allow admins to delete mitra
-CREATE POLICY "delete_mitra" ON mitra
+-- Policy: Allow partner owners to delete ONLY their own created mitra
+CREATE POLICY "delete_own_mitra" ON mitra
     FOR DELETE
     USING (
         auth.role() = 'authenticated'
-        AND (
-            auth.jwt() ->> 'role' = 'admin'
-        )
+        AND auth.uid() = created_by
     );
 
 -- Create function to automatically set created_by and updated_by
