@@ -29,7 +29,6 @@ CREATE TABLE IF NOT EXISTS consultation_visits (
     consultation_notes TEXT,
     problems_identified TEXT[],
     recommendations TEXT[],
-    recommended_products UUID[], -- References to products table
     
     -- Visit assessment
     visit_rating DECIMAL(3,2) CHECK (visit_rating >= 0 AND visit_rating <= 5),
@@ -62,7 +61,6 @@ CREATE INDEX IF NOT EXISTS idx_consultation_visits_scheduled_date ON consultatio
 CREATE INDEX IF NOT EXISTS idx_consultation_visits_status ON consultation_visits(visit_status);
 CREATE INDEX IF NOT EXISTS idx_consultation_visits_type ON consultation_visits(visit_type);
 CREATE INDEX IF NOT EXISTS idx_consultation_visits_problems ON consultation_visits USING GIN(problems_identified);
-CREATE INDEX IF NOT EXISTS idx_consultation_visits_products ON consultation_visits USING GIN(recommended_products);
 
 -- Create updated_at trigger
 CREATE OR REPLACE FUNCTION update_consultation_visits_updated_at()

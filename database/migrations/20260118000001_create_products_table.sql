@@ -88,13 +88,68 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_products_slug_unique ON products (slug) WH
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
-CREATE POLICY "view_active_products" ON products
-    FOR SELECT
-    USING (status = 'active' OR auth.role() = 'authenticated');
 
-CREATE POLICY "manage_products" ON products
-    FOR ALL
-    USING (auth.role() = 'authenticated');
+-- SELECT: Authenticated users can view active products or their own products
+CREATE POLICY "view_own_products" ON products
+    FOR SELECT
+    USING (
+        auth.role() = 'authenticated' 
+        AND auth.uid() = created_by
+    );
+
+-- SELECT: Admins/managers can view all products
+CREATE POLICY "view_all_products_admin" ON products
+    FOR SELECT
+    USING (
+        auth.role() = 'authenticated'
+        AND (
+            auth.jwt() ->> 'role' = 'admin'
+            OR auth.jwt() ->> 'role' = 'manager'
+        )
+    );
+
+-- INSERT: Authenticated users can create products
+-- The created_by will be automatically set to auth.uid() by trigger
+CREATE POLICY "insert_products" ON products
+    FOR INSERT
+    WITH CHECK (
+        auth.role() = 'authenticated'
+    );
+
+-- UPDATE: Product owners can update their own products
+CREATE POLICY "update_own_products" ON products
+    FOR UPDATE
+    USING (
+        auth.role() = 'authenticated'
+        AND auth.uid() = created_by
+    );
+
+-- UPDATE: Admins/managers can update any products
+CREATE POLICY "update_products_admin" ON products
+    FOR UPDATE
+    USING (
+        auth.role() = 'authenticated'
+        AND (
+            auth.jwt() ->> 'role' = 'admin'
+            OR auth.jwt() ->> 'role' = 'manager'
+        )
+    );
+
+-- DELETE: Product owners can delete their own products
+CREATE POLICY "delete_own_products" ON products
+    FOR DELETE
+    USING (
+        auth.role() = 'authenticated'
+        AND auth.uid() = created_by
+    );
+
+-- DELETE: Admins can delete any products
+CREATE POLICY "delete_products_admin" ON products
+    FOR DELETE
+    USING (
+        auth.role() = 'authenticated'
+        AND auth.jwt() ->> 'role' = 'admin'
+    );
 
 -- Audit trigger
 CREATE OR REPLACE FUNCTION set_products_audit_fields()

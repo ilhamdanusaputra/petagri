@@ -144,6 +144,45 @@ CREATE TRIGGER populate_farm_details_trigger
     FOR EACH ROW
     EXECUTE FUNCTION populate_delivery_farm_details();
 
+-- Enable Row Level Security
+ALTER TABLE deliveries ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policy: Users can view deliveries related to their mitra
+-- This checks if the user created the mitra associated with the delivery
+CREATE POLICY "view_own_mitra_deliveries" ON deliveries
+    FOR SELECT
+    USING (
+        auth.role() = 'authenticated'
+        AND EXISTS (
+            SELECT 1 FROM mitra
+            WHERE mitra.id = deliveries.mitra_id
+            AND mitra.created_by = auth.uid()
+        )
+    );
+
+-- RLS Policy: Farm owners can view deliveries to their farms
+CREATE POLICY "view_own_farm_deliveries" ON deliveries
+    FOR SELECT
+    USING (
+        auth.role() = 'authenticated'
+        AND EXISTS (
+            SELECT 1 FROM farms
+            WHERE farms.id = deliveries.farm_id
+            AND farms.created_by = auth.uid()
+        )
+    );
+
+-- RLS Policy: Admins/managers can view all deliveries
+CREATE POLICY "view_all_deliveries_admin" ON deliveries
+    FOR SELECT
+    USING (
+        auth.role() = 'authenticated'
+        AND (
+            auth.jwt() ->> 'role' = 'admin'
+            OR auth.jwt() ->> 'role' = 'manager'
+        )
+    );
+
 -- Comments
 COMMENT ON TABLE deliveries IS 'Deliveries table for tracking product deliveries from tenders to farms';
 COMMENT ON COLUMN deliveries.tender_id IS 'Reference to the tender that created this delivery';

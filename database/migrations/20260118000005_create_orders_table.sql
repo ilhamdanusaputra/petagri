@@ -60,6 +60,33 @@ ALTER TABLE orders ADD CONSTRAINT check_orders_amount_positive
 ALTER TABLE orders ADD CONSTRAINT check_orders_status_valid 
     CHECK (status IN ('pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'));
 
+-- Enable Row Level Security
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policy: Users can view orders related to their mitra
+-- This checks if the user created the mitra associated with the order
+CREATE POLICY "view_own_mitra_orders" ON orders
+    FOR SELECT
+    USING (
+        auth.role() = 'authenticated'
+        AND EXISTS (
+            SELECT 1 FROM mitra
+            WHERE mitra.id = orders.mitra_id
+            AND mitra.created_by = auth.uid()
+        )
+    );
+
+-- RLS Policy: Admins/managers can view all orders
+CREATE POLICY "view_all_orders_admin" ON orders
+    FOR SELECT
+    USING (
+        auth.role() = 'authenticated'
+        AND (
+            auth.jwt() ->> 'role' = 'admin'
+            OR auth.jwt() ->> 'role' = 'manager'
+        )
+    );
+
 -- Comment on table and columns
 COMMENT ON TABLE orders IS 'Orders table for tracking mitra business performance and transactions';
 COMMENT ON COLUMN orders.id IS 'Primary key UUID for orders';

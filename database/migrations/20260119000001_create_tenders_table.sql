@@ -14,9 +14,8 @@ CREATE TABLE IF NOT EXISTS tenders (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     
-    -- Product Reference (from consultation recommendations)
+    -- Consultation Reference
     consultation_visit_id UUID REFERENCES consultation_visits(id) ON DELETE SET NULL,
-    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
     
     -- Tender Details
     quantity DECIMAL(10, 2) NOT NULL,
@@ -55,7 +54,6 @@ CREATE TABLE IF NOT EXISTS tenders (
 
 -- Create index for performance
 CREATE INDEX idx_tenders_status ON tenders(status);
-CREATE INDEX idx_tenders_product_id ON tenders(product_id);
 CREATE INDEX idx_tenders_consultation_visit_id ON tenders(consultation_visit_id);
 CREATE INDEX idx_tenders_winner_mitra_id ON tenders(winner_mitra_id);
 CREATE INDEX idx_tenders_dates ON tenders(open_date, close_date);

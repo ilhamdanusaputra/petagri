@@ -11,12 +11,16 @@ export function useAuth() {
 	const [session, setSession] = useState<Session | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isInitialized, setIsInitialized] = useState(false);
+	const [userRole, setUserRole] = useState<string | null>(null);
 
 	useEffect(() => {
 		// Get initial session
-		supabase.auth.getSession().then(({ data: { session } }) => {
+		supabase.auth.getSession().then(async ({ data: { session } }) => {
 			setSession(session);
 			setUser(session?.user as AuthUser | null);
+			if (session?.user) {
+				await loadUserRole(session.user.id);
+			}
 			setIsLoading(false);
 			setIsInitialized(true);
 		});
@@ -24,14 +28,40 @@ export function useAuth() {
 		// Listen for auth changes
 		const {
 			data: { subscription },
-		} = supabase.auth.onAuthStateChange((_event, session) => {
+		} = supabase.auth.onAuthStateChange(async (_event, session) => {
 			setSession(session);
 			setUser(session?.user as AuthUser | null);
+			if (session?.user) {
+				await loadUserRole(session.user.id);
+			} else {
+				setUserRole(null);
+			}
 			setIsLoading(false);
 		});
 
 		return () => subscription.unsubscribe();
 	}, []);
+
+	const loadUserRole = async (userId: string) => {
+		try {
+			const { data, error } = await supabase
+				.from("user_roles")
+				.select("roles(name)")
+				.eq("user_id", userId)
+				.single();
+			if (error) {
+				console.error("LOAD ROLE ERROR:", error.message);
+				setUserRole(null);
+			} else {
+				// roles is an object with name property, not an array
+				const roleName = (data?.roles as any)?.name ?? null;
+				setUserRole(roleName);
+			}
+		} catch (err) {
+			console.error("LOAD ROLE EXCEPTION:", err);
+			setUserRole(null);
+		}
+	};
 
 	const signUp = async (email: string, password: string, fullName?: string) => {
 		try {
@@ -160,6 +190,7 @@ export function useAuth() {
 		isLoading,
 		isInitialized,
 		isAuthenticated: !!user,
+		userRole: userRole,
 		signUp,
 		signIn,
 		signOut,

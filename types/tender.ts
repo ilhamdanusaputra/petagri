@@ -4,7 +4,6 @@
 // ================================================
 
 import type { Mitra } from "./mitra";
-import type { Product } from "./product";
 
 export type TenderStatus = "draft" | "open" | "closed" | "locked" | "completed" | "cancelled";
 export type BidStatus = "draft" | "submitted" | "withdrawn" | "accepted" | "rejected";
@@ -20,8 +19,6 @@ export interface Tender {
 
 	// References
 	consultation_visit_id?: string;
-	product_id: string;
-	product?: Product;
 
 	// Tender Details
 	quantity: number;
@@ -84,8 +81,6 @@ export interface TenderBid {
 	// Metadata
 	created_at: string;
 	updated_at: string;
-	created_by?: string;
-	updated_by?: string;
 }
 
 // ================================================
@@ -120,7 +115,6 @@ export interface TenderBidHistory {
 // ================================================
 
 export interface TenderWithDetails extends Tender {
-	product: Product;
 	winner_mitra?: Mitra;
 	bids?: TenderBid[];
 	bid_count?: number;
@@ -142,7 +136,6 @@ export interface CreateTenderForm {
 	title: string;
 	description?: string;
 	consultation_visit_id?: string;
-	product_id: string;
 	quantity: number;
 	unit: string;
 	estimated_price?: number;
@@ -209,7 +202,6 @@ export interface SelectWinnerForm {
 
 export interface TenderFilters {
 	status?: TenderStatus[];
-	product_id?: string;
 	consultation_visit_id?: string;
 	min_quantity?: number;
 	max_quantity?: number;
@@ -223,7 +215,6 @@ export interface TenderFilters {
 export interface BidFilters {
 	tender_id?: string;
 	mitra_id?: string;
-	created_by?: string;
 	status?: BidStatus[];
 	min_price?: number;
 	max_price?: number;

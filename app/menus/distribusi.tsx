@@ -4,13 +4,13 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { supabase } from "@/utils/supabase";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  TextInput,
-  View,
+	ActivityIndicator,
+	Modal,
+	Pressable,
+	RefreshControl,
+	ScrollView,
+	TextInput,
+	View,
 } from "react-native";
 
 interface Delivery {
@@ -19,7 +19,6 @@ interface Delivery {
 	order_id: string;
 	tender_id: string | null;
 	mitra_id: string;
-	product_id: string;
 	consultation_visit_id: string | null;
 	farm_id: string | null;
 	quantity: number;
@@ -51,7 +50,6 @@ interface Delivery {
 	// Relations
 	order?: { order_number: string; total_amount: number };
 	mitra?: { company_name: string; contact_person: string };
-	product?: { name: string; sku: string };
 	farm?: { farm_name: string; owner_name: string; contact_email: string };
 }
 
@@ -83,7 +81,6 @@ export default function DistribusiMenu() {
           *,
           order:orders(order_number, total_amount),
           mitra:mitra(company_name, contact_person),
-          product:products(name, sku),
           farm:farms(farm_name, owner_name, contact_email)
         `,
 				)
@@ -312,7 +309,7 @@ export default function DistribusiMenu() {
 										<View className="flex-row items-center gap-2 mb-2">
 											<IconSymbol name="bag.fill" size={14} color="#9CA3AF" />
 											<ThemedText className="text-gray-300 text-sm">
-												{delivery.product?.name || "Product"} - {delivery.quantity} {delivery.unit}
+												{delivery.quantity} {delivery.unit}
 											</ThemedText>
 										</View>
 										<View className="flex-row items-center gap-2">
@@ -513,12 +510,6 @@ function DeliveryDetailModal({
 					<View className="mb-6 bg-gray-800 p-4 rounded-xl border border-gray-700">
 						<ThemedText className="text-sm text-gray-400 mb-3 uppercase font-semibold">
 							Product Information
-						</ThemedText>
-						<ThemedText className="text-white text-lg font-bold mb-2">
-							{delivery.product?.name || "Product"}
-						</ThemedText>
-						<ThemedText className="text-gray-300 text-sm mb-2">
-							SKU: {delivery.product?.sku || "N/A"}
 						</ThemedText>
 						<ThemedText className="text-gray-300 text-sm">
 							Quantity: {delivery.quantity} {delivery.unit}

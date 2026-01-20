@@ -4,19 +4,19 @@
 // ================================================
 
 import type {
-    BidFilters,
-    CreateBidForm,
-    CreateTenderForm,
-    SelectWinnerForm,
-    Tender,
-    TenderBid,
-    TenderBidHistory,
-    TenderBidWithDetails,
-    TenderFilters,
-    TenderStatistics,
-    TenderWithDetails,
-    UpdateBidForm,
-    UpdateTenderForm,
+	BidFilters,
+	CreateBidForm,
+	CreateTenderForm,
+	SelectWinnerForm,
+	Tender,
+	TenderBid,
+	TenderBidHistory,
+	TenderBidWithDetails,
+	TenderFilters,
+	TenderStatistics,
+	TenderWithDetails,
+	UpdateBidForm,
+	UpdateTenderForm,
 } from "@/types/tender";
 import { supabase } from "@/utils/supabase";
 
@@ -44,7 +44,6 @@ export async function getTenders(filters: TenderFilters = {}): Promise<TenderWit
 		.select(
 			`
       *,
-      product:products(*),
       winner_mitra:mitra(*)
     `,
 		)
@@ -53,10 +52,6 @@ export async function getTenders(filters: TenderFilters = {}): Promise<TenderWit
 	// Apply filters
 	if (filters.status && filters.status.length > 0) {
 		query = query.in("status", filters.status);
-	}
-
-	if (filters.product_id) {
-		query = query.eq("product_id", filters.product_id);
 	}
 
 	if (filters.consultation_visit_id) {
@@ -95,7 +90,6 @@ export async function getTenderById(id: string): Promise<TenderWithDetails> {
 		.select(
 			`
       *,
-      product:products(*),
       winner_mitra:mitra(*),
       bids:tender_bids(
         *,
@@ -260,10 +254,6 @@ export async function getBids(filters: BidFilters = {}): Promise<TenderBidWithDe
 		query = query.eq("mitra_id", filters.mitra_id);
 	}
 
-	if (filters.created_by) {
-		query = query.eq("created_by", filters.created_by);
-	}
-
 	if (filters.status && filters.status.length > 0) {
 		query = query.in("status", filters.status);
 	}
@@ -332,7 +322,7 @@ export async function acceptBid(bidId: string): Promise<void> {
 	// Get the bid details first with all necessary related data
 	const { data: bid, error: bidError } = await supabase
 		.from("tender_bids")
-		.select("*, tender:tenders(*, product:products(*))")
+		.select("*, tender:tenders(*)")
 		.eq("id", bidId)
 		.single();
 
@@ -405,7 +395,6 @@ export async function acceptBid(bidId: string): Promise<void> {
 		order_id: order.id,
 		tender_id: bid.tender_id,
 		mitra_id: bid.mitra_id,
-		product_id: bid.tender?.product_id,
 		consultation_visit_id: bid.tender?.consultation_visit_id,
 		delivery_number: deliveryNumber,
 		quantity: bid.quantity,

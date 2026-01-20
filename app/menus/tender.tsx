@@ -44,7 +44,7 @@ export default function TenderMenu() {
 			// Also fetch all bids for the current user to show Edit vs Place Bid correctly
 			if (currentUserId) {
 				try {
-					const userBidsData = await getBids({ created_by: currentUserId });
+					const userBidsData = await getBids({ mitra_id: currentUserId });
 					setBids(userBidsData);
 				} catch (err) {
 					console.error("Error fetching user bids:", err);
@@ -110,12 +110,8 @@ export default function TenderMenu() {
 
 	const getUserBidForTender = (tenderId: string): TenderBidWithDetails | undefined => {
 		// Check bids array for this tender
-		// First try matching by mitra_id, then by checking if it's the user's bid
-		return bids.find(
-			(bid) =>
-				bid.tender_id === tenderId &&
-				(bid.mitra_id === currentUserId || bid.created_by === currentUserId),
-		);
+		// Match by mitra_id since that's who creates the bid
+		return bids.find((bid) => bid.tender_id === tenderId && bid.mitra_id === currentUserId);
 	};
 	const handleAcceptBid = async (bidId: string) => {
 		try {
@@ -267,7 +263,7 @@ export default function TenderMenu() {
 											{tender.title}
 										</ThemedText>
 										<ThemedText className="text-sm text-gray-400">
-											{tender.product?.name || "Unknown Product"}
+											{tender.description || "No description"}
 										</ThemedText>
 									</View>
 									<View className={`px-3 py-1 rounded-full ${getStatusBgColor(tender.status)}`}>
@@ -390,7 +386,7 @@ export default function TenderMenu() {
 											{selectedTender.title}
 										</ThemedText>
 										<ThemedText className="text-xs text-gray-400">
-											{selectedTender.product?.name || "Unknown Product"}
+											{selectedTender.description || "No description"}
 										</ThemedText>
 									</View>
 									<View
@@ -487,9 +483,7 @@ export default function TenderMenu() {
 					{selectedTender && selectedTender.status === "open" && (
 						<View className="px-5 py-4 bg-black border-t border-gray-800">
 							{(() => {
-								const userBid = bids.find(
-									(bid) => bid.mitra_id === currentUserId || bid.created_by === currentUserId,
-								);
+								const userBid = bids.find((bid) => bid.mitra_id === currentUserId);
 								if (userBid) {
 									return (
 										<View className="gap-2">

@@ -69,7 +69,6 @@ export interface ConsultationVisit {
 	consultation_notes?: string;
 	problems_identified: string[];
 	recommendations: string[];
-	recommended_products: string[];
 	visit_rating?: number;
 	farmer_feedback?: string;
 	consultant_feedback?: string;
@@ -149,7 +148,6 @@ export interface UpdateVisitOutcomeForm {
 	consultation_notes: string;
 	problems_identified: string[];
 	recommendations: string[];
-	recommended_products: string[];
 	visit_rating?: number;
 	farmer_feedback?: string;
 	consultant_feedback?: string;

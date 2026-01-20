@@ -188,7 +188,7 @@ export default function CreateBidModal({
 					<View className="mb-6 bg-gray-800 p-4 rounded-xl border border-gray-700">
 						<ThemedText className="text-sm text-gray-400 mb-1">Tender Details</ThemedText>
 						<ThemedText className="text-base text-white font-semibold mb-2">
-							{tender.product?.name}
+							{tender.title}
 						</ThemedText>
 						<View className="gap-1">
 							<ThemedText className="text-sm text-gray-300">
