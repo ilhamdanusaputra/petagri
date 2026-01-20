@@ -4,19 +4,19 @@
 // ================================================
 
 import type {
-	BidFilters,
-	CreateBidForm,
-	CreateTenderForm,
-	SelectWinnerForm,
-	Tender,
-	TenderBid,
-	TenderBidHistory,
-	TenderBidWithDetails,
-	TenderFilters,
-	TenderStatistics,
-	TenderWithDetails,
-	UpdateBidForm,
-	UpdateTenderForm,
+    BidFilters,
+    CreateBidForm,
+    CreateTenderForm,
+    SelectWinnerForm,
+    Tender,
+    TenderBid,
+    TenderBidHistory,
+    TenderBidWithDetails,
+    TenderFilters,
+    TenderStatistics,
+    TenderWithDetails,
+    UpdateBidForm,
+    UpdateTenderForm,
 } from "@/types/tender";
 import { supabase } from "@/utils/supabase";
 
@@ -258,6 +258,10 @@ export async function getBids(filters: BidFilters = {}): Promise<TenderBidWithDe
 
 	if (filters.mitra_id) {
 		query = query.eq("mitra_id", filters.mitra_id);
+	}
+
+	if (filters.created_by) {
+		query = query.eq("created_by", filters.created_by);
 	}
 
 	if (filters.status && filters.status.length > 0) {

@@ -36,20 +36,28 @@ export default function CreateBidModal({
 		notes: "",
 	});
 	const [isLoading, setIsLoading] = useState(false);
+	const [hasMitra, setHasMitra] = useState<boolean>(false);
+	const [checkingMitra, setCheckingMitra] = useState(true);
 
 	useEffect(() => {
 		if (!tender || !userId) return;
 
 		const initializeForm = async () => {
+			setCheckingMitra(true);
 			// Try to fetch mitra record if user is a mitra partner
 			const { data: mitra } = await supabase
 				.from("mitra")
-				.select("id")
+				.select("id, status")
 				.eq("created_by", userId)
 				.single();
 
+			// Check if user has an active mitra
+			const hasActiveMitra = mitra?.id && mitra?.status === "active";
+			setHasMitra(hasActiveMitra || false);
+
 			// Use mitra_id if user has a mitra record, otherwise null
 			const mitraId = mitra?.id || null;
+			setCheckingMitra(false);
 
 			// EDIT MODE
 			if (existingBid) {
@@ -85,6 +93,15 @@ export default function CreateBidModal({
 	}, [tender, userId, existingBid]);
 
 	const handleSubmit = async () => {
+		// Check if user has active mitra before allowing bid
+		if (!hasMitra && !existingBid) {
+			Alert.alert(
+				"Mitra Required",
+				"You need to register as an active mitra partner before placing bids. Please register in the Product menu.",
+			);
+			return;
+		}
+
 		if (!formData.bid_price || formData.bid_price <= 0) {
 			Alert.alert("Error", "Please enter a valid bid price");
 			console.error("Invalid bid price:", formData.bid_price);
@@ -151,6 +168,22 @@ export default function CreateBidModal({
 				</View>
 
 				<ScrollView className="flex-1 px-6 pt-4" showsVerticalScrollIndicator={false}>
+					{" "}
+					{/* Mitra Warning */}
+					{!checkingMitra && !hasMitra && !existingBid && (
+						<View className="mb-4 bg-yellow-900/20 border border-yellow-700 p-4 rounded-xl">
+							<View className="flex-row items-center gap-2 mb-2">
+								<IconSymbol name="exclamationmark.triangle.fill" size={20} color="#FCD34D" />
+								<ThemedText className="text-yellow-400 font-semibold">
+									Mitra Registration Required
+								</ThemedText>
+							</View>
+							<ThemedText className="text-yellow-200 text-sm">
+								You need to register as an active mitra partner before placing bids. Please go to
+								the Product menu to register.
+							</ThemedText>
+						</View>
+					)}{" "}
 					{/* Tender Info */}
 					<View className="mb-6 bg-gray-800 p-4 rounded-xl border border-gray-700">
 						<ThemedText className="text-sm text-gray-400 mb-1">Tender Details</ThemedText>
@@ -177,7 +210,6 @@ export default function CreateBidModal({
 							</ThemedText>
 						</View>
 					</View>
-
 					{/* Bid Form */}
 					<View className="mb-6">
 						<ThemedText className="text-lg font-semibold text-white mb-4">Your Bid</ThemedText>
@@ -258,7 +290,6 @@ export default function CreateBidModal({
 							/>
 						</View>
 					</View>
-
 					{/* Requirements */}
 					{tender.requirements && tender.requirements.length > 0 && (
 						<View className="mb-6">
@@ -279,10 +310,16 @@ export default function CreateBidModal({
 				<View className="px-6 pb-10">
 					<Pressable
 						onPress={handleSubmit}
-						disabled={isLoading}
-						className={`py-4 rounded-xl items-center ${isLoading ? "bg-gray-600" : "bg-blue-600"}`}>
+						disabled={isLoading || (!hasMitra && !existingBid) || checkingMitra}
+						className={`py-4 rounded-xl items-center ${isLoading || (!hasMitra && !existingBid) || checkingMitra ? "bg-gray-600" : "bg-blue-600"}`}>
 						<ThemedText className="text-white text-center font-semibold">
-							{isLoading ? "Submitting..." : existingBid ? "Update Bid" : "Submit Bid"}
+							{checkingMitra
+								? "Checking..."
+								: isLoading
+									? "Submitting..."
+									: existingBid
+										? "Update Bid"
+										: "Submit Bid"}
 						</ThemedText>
 					</Pressable>
 				</View>

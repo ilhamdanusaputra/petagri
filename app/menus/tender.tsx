@@ -40,12 +40,22 @@ export default function TenderMenu() {
 			const filters = activeTab === "all" ? {} : { status: [activeTab] };
 			const data = await getTenders(filters);
 			setTenders(data);
+
+			// Also fetch all bids for the current user to show Edit vs Place Bid correctly
+			if (currentUserId) {
+				try {
+					const userBidsData = await getBids({ created_by: currentUserId });
+					setBids(userBidsData);
+				} catch (err) {
+					console.error("Error fetching user bids:", err);
+				}
+			}
 		} catch (error) {
 			console.error("Error fetching tenders:", error);
 		} finally {
 			setLoading(false);
 		}
-	}, [activeTab]);
+	}, [activeTab, currentUserId]);
 
 	useEffect(() => {
 		fetchTenders();
@@ -99,7 +109,13 @@ export default function TenderMenu() {
 	};
 
 	const getUserBidForTender = (tenderId: string): TenderBidWithDetails | undefined => {
-		return bids.find((bid) => bid.tender_id === tenderId && bid.mitra_id === currentUserId);
+		// Check bids array for this tender
+		// First try matching by mitra_id, then by checking if it's the user's bid
+		return bids.find(
+			(bid) =>
+				bid.tender_id === tenderId &&
+				(bid.mitra_id === currentUserId || bid.created_by === currentUserId),
+		);
 	};
 	const handleAcceptBid = async (bidId: string) => {
 		try {
@@ -471,7 +487,9 @@ export default function TenderMenu() {
 					{selectedTender && selectedTender.status === "open" && (
 						<View className="px-5 py-4 bg-black border-t border-gray-800">
 							{(() => {
-								const userBid = bids.find((bid) => bid.mitra_id === currentUserId);
+								const userBid = bids.find(
+									(bid) => bid.mitra_id === currentUserId || bid.created_by === currentUserId,
+								);
 								if (userBid) {
 									return (
 										<View className="gap-2">
