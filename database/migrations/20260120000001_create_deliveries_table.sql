@@ -160,26 +160,16 @@ CREATE POLICY "view_own_mitra_deliveries" ON deliveries
         )
     );
 
--- RLS Policy: Farm owners can view deliveries to their farms
-CREATE POLICY "view_own_farm_deliveries" ON deliveries
+-- RLS Policy: Owner can view all deliveries
+CREATE POLICY "view_all_deliveries_owner" ON deliveries
     FOR SELECT
     USING (
         auth.role() = 'authenticated'
         AND EXISTS (
-            SELECT 1 FROM farms
-            WHERE farms.id = deliveries.farm_id
-            AND farms.created_by = auth.uid()
-        )
-    );
-
--- RLS Policy: Admins/managers can view all deliveries
-CREATE POLICY "view_all_deliveries_admin" ON deliveries
-    FOR SELECT
-    USING (
-        auth.role() = 'authenticated'
-        AND (
-            auth.jwt() ->> 'role' = 'admin'
-            OR auth.jwt() ->> 'role' = 'manager'
+            SELECT 1 FROM user_roles ur
+            JOIN roles r ON ur.role_id = r.id
+            WHERE ur.user_id = auth.uid()
+            AND r.name IN ('owner_platform')
         )
     );
 
