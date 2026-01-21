@@ -130,31 +130,36 @@ export default function DistribusiMenu() {
 
 	const loadAvailableDrivers = async () => {
 		try {
-			// Query users with driver role
-			const { data: userRoles, error } = await supabase
-				.from("user_roles")
-				.select(
-					`
-					user_id,
-					roles!inner(name)
-				`,
-				)
-				.eq("roles.name", "supir");
+			// Query users with driver role from v_profiles view
+			const { data: profiles, error } = await supabase
+				.from("v_profiles")
+				.select("*")
+				.filter("roles", "cs", '{"supir"}');
 
-			if (error) throw error;
+			if (error) {
+				console.error("Error querying profiles:", error);
+				throw error;
+			}
 
-			if (!userRoles || userRoles.length === 0) {
+			console.log("Loaded driver profiles:", profiles);
+
+			if (!profiles || profiles.length === 0) {
+				console.warn("No drivers found with 'supir' role");
 				setAvailableDrivers([]);
 				return;
 			}
 
-			// Get user details for each driver
-			const driverIds = userRoles.map((ur) => ur.user_id);
-			const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
+			// Map profiles to Driver format
+			const drivers = profiles.map((profile) => ({
+				id: profile.id,
+				email: profile.email,
+				user_metadata: {
+					full_name: profile.full_name,
+					phone: profile.phone,
+				},
+			}));
 
-			if (usersError) throw usersError;
-
-			const drivers = users.users.filter((u) => driverIds.includes(u.id));
+			console.log("Mapped drivers:", drivers);
 			setAvailableDrivers(drivers as Driver[]);
 		} catch (error) {
 			console.error("Error loading drivers:", error);
