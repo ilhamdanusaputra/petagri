@@ -53,6 +53,7 @@ const MAPPING = {
 	"creditcard.fill": "payment",
 	globe: "public",
 	"doc.text.fill": "article",
+	"person.2.circle": "person.2",
 } as IconMapping;
 
 /**
@@ -72,6 +73,5 @@ export function IconSymbol({
 	style?: StyleProp<TextStyle>;
 	weight?: SymbolWeight;
 }) {
-	return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
 	return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
 }
