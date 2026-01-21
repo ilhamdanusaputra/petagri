@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS deliveries (
     unit VARCHAR(20) NOT NULL DEFAULT 'kg',
     
     -- Driver and vehicle information
+    driver_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
     driver_name VARCHAR(255),
     driver_phone VARCHAR(50),
     driver_id VARCHAR(50), -- ID KTP or driver license
@@ -170,6 +171,45 @@ CREATE POLICY "view_all_deliveries_owner" ON deliveries
             JOIN roles r ON ur.role_id = r.id
             WHERE ur.user_id = auth.uid()
             AND r.name IN ('owner_platform')
+        )
+    );
+
+-- RLS Policy: Only platform owners can create deliveries
+CREATE POLICY "create_deliveries_platform_owner" ON deliveries
+    FOR INSERT
+    WITH CHECK (
+        auth.role() = 'authenticated'
+        AND EXISTS (
+            SELECT 1 FROM user_roles ur
+            JOIN roles r ON ur.role_id = r.id
+            WHERE ur.user_id = auth.uid()
+            AND r.name = 'owner_platform'
+        )
+    );
+
+-- RLS Policy: Only drivers can update deliveries
+CREATE POLICY "update_deliveries_driver" ON deliveries
+    FOR UPDATE
+    USING (
+        auth.role() = 'authenticated'
+        AND EXISTS (
+            SELECT 1 FROM user_roles ur
+            JOIN roles r ON ur.role_id = r.id
+            WHERE ur.user_id = auth.uid()
+            AND r.name = 'driver'
+        )
+    );
+
+-- RLS Policy: Only platform owners can delete deliveries
+CREATE POLICY "delete_deliveries_platform_owner" ON deliveries
+    FOR DELETE
+    USING (
+        auth.role() = 'authenticated'
+        AND EXISTS (
+            SELECT 1 FROM user_roles ur
+            JOIN roles r ON ur.role_id = r.id
+            WHERE ur.user_id = auth.uid()
+            AND r.name = 'owner_platform'
         )
     );
 

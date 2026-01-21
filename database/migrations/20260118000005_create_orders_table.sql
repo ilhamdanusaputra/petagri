@@ -87,6 +87,45 @@ CREATE POLICY "view_all_orders_admin" ON orders
         )
     );
 
+-- RLS Policy: Only platform owners can create orders
+CREATE POLICY "create_orders_platform_owner" ON orders
+    FOR INSERT
+    WITH CHECK (
+        auth.role() = 'authenticated'
+        AND EXISTS (
+            SELECT 1 FROM user_roles ur
+            JOIN roles r ON ur.role_id = r.id
+            WHERE ur.user_id = auth.uid()
+            AND r.name = 'owner_platform'
+        )
+    );
+
+-- RLS Policy: Only platform owners can update orders
+CREATE POLICY "update_orders_platform_owner" ON orders
+    FOR UPDATE
+    USING (
+        auth.role() = 'authenticated'
+        AND EXISTS (
+            SELECT 1 FROM user_roles ur
+            JOIN roles r ON ur.role_id = r.id
+            WHERE ur.user_id = auth.uid()
+            AND r.name = 'owner_platform'
+        )
+    );
+
+-- RLS Policy: Only platform owners can delete orders
+CREATE POLICY "delete_orders_platform_owner" ON orders
+    FOR DELETE
+    USING (
+        auth.role() = 'authenticated'
+        AND EXISTS (
+            SELECT 1 FROM user_roles ur
+            JOIN roles r ON ur.role_id = r.id
+            WHERE ur.user_id = auth.uid()
+            AND r.name = 'owner_platform'
+        )
+    );
+
 -- Comment on table and columns
 COMMENT ON TABLE orders IS 'Orders table for tracking mitra business performance and transactions';
 COMMENT ON COLUMN orders.id IS 'Primary key UUID for orders';

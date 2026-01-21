@@ -23,6 +23,7 @@ interface Delivery {
 	farm_id: string | null;
 	quantity: number;
 	unit: string;
+	driver_user_id: string | null;
 	driver_name: string | null;
 	driver_phone: string | null;
 	vehicle_number: string | null;
@@ -55,6 +56,15 @@ interface Delivery {
 
 type TabType = "all" | "pending" | "in_transit" | "delivered" | "approved";
 
+interface Driver {
+	id: string;
+	email: string;
+	user_metadata: {
+		full_name?: string;
+		phone?: string;
+	};
+}
+
 export default function DistribusiMenu() {
 	const [deliveries, setDeliveries] = useState<Delivery[]>([]);
 	const [loading, setLoading] = useState(false);
@@ -63,6 +73,8 @@ export default function DistribusiMenu() {
 	const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
 	const [showDetailModal, setShowDetailModal] = useState(false);
 	const [showUpdateModal, setShowUpdateModal] = useState(false);
+	const [showAssignDriverModal, setShowAssignDriverModal] = useState(false);
+	const [availableDrivers, setAvailableDrivers] = useState<Driver[]>([]);
 	const [updateForm, setUpdateForm] = useState({
 		status: "",
 		driver_name: "",
@@ -114,6 +126,40 @@ export default function DistribusiMenu() {
 		setRefreshing(true);
 		await loadDeliveries();
 		setRefreshing(false);
+	};
+
+	const loadAvailableDrivers = async () => {
+		try {
+			// Query users with driver role
+			const { data: userRoles, error } = await supabase
+				.from("user_roles")
+				.select(
+					`
+					user_id,
+					roles!inner(name)
+				`,
+				)
+				.eq("roles.name", "supir");
+
+			if (error) throw error;
+
+			if (!userRoles || userRoles.length === 0) {
+				setAvailableDrivers([]);
+				return;
+			}
+
+			// Get user details for each driver
+			const driverIds = userRoles.map((ur) => ur.user_id);
+			const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
+
+			if (usersError) throw usersError;
+
+			const drivers = users.users.filter((u) => driverIds.includes(u.id));
+			setAvailableDrivers(drivers as Driver[]);
+		} catch (error) {
+			console.error("Error loading drivers:", error);
+			setAvailableDrivers([]);
+		}
 	};
 
 	const handleUpdateStatus = async (deliveryId: string, newStatus: string) => {
@@ -182,6 +228,33 @@ export default function DistribusiMenu() {
 			await loadDeliveries();
 		} catch (error) {
 			console.error("Error approving delivery:", error);
+		}
+	};
+
+	const handleAssignDriver = async (driverId: string) => {
+		if (!selectedDelivery) return;
+
+		try {
+			const driver = availableDrivers.find((d) => d.id === driverId);
+			if (!driver) throw new Error("Driver not found");
+
+			const { error } = await supabase
+				.from("deliveries")
+				.update({
+					driver_user_id: driverId,
+					driver_name: driver.user_metadata?.full_name || driver.email,
+					driver_phone: driver.user_metadata?.phone || null,
+				})
+				.eq("id", selectedDelivery.id);
+
+			if (error) throw error;
+
+			console.info("Driver assigned successfully");
+			await loadDeliveries();
+			setShowAssignDriverModal(false);
+			setSelectedDelivery(null);
+		} catch (error) {
+			console.error("Error assigning driver:", error);
 		}
 	};
 
@@ -391,6 +464,11 @@ export default function DistribusiMenu() {
 						});
 						setShowUpdateModal(true);
 					}}
+					onAssignDriver={() => {
+						setShowDetailModal(false);
+						loadAvailableDrivers();
+						setShowAssignDriverModal(true);
+					}}
 				/>
 			)}
 
@@ -408,6 +486,21 @@ export default function DistribusiMenu() {
 					onSave={handleUpdateDeliveryInfo}
 				/>
 			)}
+
+			{/* Assign Driver Modal */}
+			{showAssignDriverModal && selectedDelivery && (
+				<AssignDriverModal
+					visible={showAssignDriverModal}
+					delivery={selectedDelivery}
+					drivers={availableDrivers}
+					onClose={() => {
+						setShowAssignDriverModal(false);
+						setSelectedDelivery(null);
+					}}
+					onAssign={handleAssignDriver}
+					onLoadDrivers={loadAvailableDrivers}
+				/>
+			)}
 		</ThemedView>
 	);
 }
@@ -420,6 +513,7 @@ interface DeliveryDetailModalProps {
 	onUpdateStatus: (deliveryId: string, newStatus: string) => void;
 	onApprove: (deliveryId: string) => void;
 	onEdit: () => void;
+	onAssignDriver: () => void;
 }
 
 function DeliveryDetailModal({
@@ -429,6 +523,7 @@ function DeliveryDetailModal({
 	onUpdateStatus,
 	onApprove,
 	onEdit,
+	onAssignDriver,
 }: DeliveryDetailModalProps) {
 	const getStatusColor = (status: string) => {
 		switch (status) {
@@ -624,13 +719,31 @@ function DeliveryDetailModal({
 
 				{/* Action Buttons */}
 				<View className="px-6 pb-10 gap-3">
+					{/* Assign Driver Button - only show for pending deliveries without driver */}
+					{delivery.status === "pending" && !delivery.driver_user_id && (
+						<Pressable onPress={onAssignDriver} className="bg-purple-600 py-4 rounded-xl">
+							<ThemedText className="text-white text-center font-semibold">
+								Assign Driver
+							</ThemedText>
+						</Pressable>
+					)}
+
 					{nextStatus() && delivery.status !== "approved" && (
 						<Pressable
 							onPress={() => {
+								// Validate driver is assigned before allowing status change from pending
+								if (delivery.status === "pending" && !delivery.driver_user_id) {
+									console.warn("Please assign a driver before proceeding");
+									return;
+								}
 								onUpdateStatus(delivery.id, nextStatus());
 								onClose();
 							}}
-							className="bg-blue-600 py-4 rounded-xl">
+							className={`py-4 rounded-xl ${
+								delivery.status === "pending" && !delivery.driver_user_id
+									? "bg-gray-600"
+									: "bg-blue-600"
+							}`}>
 							<ThemedText className="text-white text-center font-semibold">
 								Mark as {getStatusText(nextStatus())}
 							</ThemedText>
@@ -792,6 +905,139 @@ function UpdateDeliveryModal({
 				<View className="px-6 pb-10">
 					<Pressable onPress={onSave} className="bg-blue-600 py-4 rounded-xl">
 						<ThemedText className="text-white text-center font-semibold">Save Changes</ThemedText>
+					</Pressable>
+				</View>
+			</ThemedView>
+		</Modal>
+	);
+}
+
+// Assign Driver Modal Component
+interface AssignDriverModalProps {
+	visible: boolean;
+	delivery: Delivery;
+	drivers: Driver[];
+	onClose: () => void;
+	onAssign: (driverId: string) => void;
+	onLoadDrivers: () => void;
+}
+
+function AssignDriverModal({
+	visible,
+	delivery,
+	drivers,
+	onClose,
+	onAssign,
+	onLoadDrivers,
+}: AssignDriverModalProps) {
+	const [selectedDriverId, setSelectedDriverId] = React.useState<string>("");
+	const [loading, setLoading] = React.useState(false);
+
+	React.useEffect(() => {
+		if (visible) {
+			setLoading(true);
+			onLoadDrivers();
+			setLoading(false);
+		}
+	}, [visible, onLoadDrivers]);
+
+	return (
+		<Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+			<ThemedView className="flex-1 bg-black">
+				{/* Header */}
+				<View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-800">
+					<View className="flex-1">
+						<ThemedText type="title" className="text-xl font-bold text-white">
+							Assign Driver
+						</ThemedText>
+						<ThemedText className="text-gray-400 text-sm mt-1">
+							{delivery.delivery_number}
+						</ThemedText>
+					</View>
+					<Pressable
+						onPress={onClose}
+						className="w-8 h-8 rounded-full bg-gray-800 items-center justify-center">
+						<IconSymbol name="xmark" size={16} color="#9CA3AF" />
+					</Pressable>
+				</View>
+
+				<ScrollView className="flex-1 px-6 pt-4" showsVerticalScrollIndicator={false}>
+					{/* Instructions */}
+					<View className="mb-6 bg-blue-900/20 border border-blue-700 p-4 rounded-xl">
+						<View className="flex-row items-center gap-2 mb-2">
+							<IconSymbol name="bell.fill" size={20} color="#60A5FA" />
+							<ThemedText className="text-blue-400 font-semibold">Select a Driver</ThemedText>
+						</View>
+						<ThemedText className="text-blue-200 text-sm">
+							Choose a driver from the list below to assign to this delivery. The driver will be
+							responsible for picking up and delivering the goods.
+						</ThemedText>
+					</View>
+
+					{/* Driver List */}
+					{loading ? (
+						<View className="items-center py-12">
+							<ActivityIndicator size="large" color="#3B82F6" />
+							<ThemedText className="text-gray-400 mt-3">Loading drivers...</ThemedText>
+						</View>
+					) : drivers.length === 0 ? (
+						<View className="items-center py-12">
+							<IconSymbol name="gear" size={64} color="#6B7280" />
+							<ThemedText className="text-gray-400 text-lg font-medium mt-4">
+								No Drivers Available
+							</ThemedText>
+							<ThemedText className="text-gray-500 text-center mt-2">
+								Please add users with the &quot;driver&quot; role first
+							</ThemedText>
+						</View>
+					) : (
+						<View className="gap-3">
+							{drivers.map((driver) => (
+								<Pressable
+									key={driver.id}
+									onPress={() => setSelectedDriverId(driver.id)}
+									className={`p-4 rounded-xl border ${
+										selectedDriverId === driver.id
+											? "bg-blue-900/30 border-blue-600"
+											: "bg-gray-800 border-gray-700"
+									}`}>
+									<View className="flex-row items-center justify-between">
+										<View className="flex-1">
+											<ThemedText className="text-white font-bold text-base mb-1">
+												{driver.user_metadata?.full_name || driver.email}
+											</ThemedText>
+											{driver.user_metadata?.phone && (
+												<ThemedText className="text-gray-400 text-sm">
+													📱 {driver.user_metadata.phone}
+												</ThemedText>
+											)}
+											<ThemedText className="text-gray-500 text-xs mt-1">{driver.email}</ThemedText>
+										</View>
+										{selectedDriverId === driver.id && (
+											<View className="w-6 h-6 rounded-full bg-blue-600 items-center justify-center">
+												<IconSymbol name="checkmark" size={14} color="#FFFFFF" />
+											</View>
+										)}
+									</View>
+								</Pressable>
+							))}
+						</View>
+					)}
+				</ScrollView>
+
+				{/* Assign Button */}
+				<View className="px-6 pb-10">
+					<Pressable
+						onPress={() => {
+							if (selectedDriverId) {
+								onAssign(selectedDriverId);
+							}
+						}}
+						disabled={!selectedDriverId}
+						className={`py-4 rounded-xl ${selectedDriverId ? "bg-purple-600" : "bg-gray-600"}`}>
+						<ThemedText className="text-white text-center font-semibold">
+							{selectedDriverId ? "Assign Driver" : "Select a Driver"}
+						</ThemedText>
 					</Pressable>
 				</View>
 			</ThemedView>
