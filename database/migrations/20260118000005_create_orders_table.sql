@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS orders (
     
     -- Foreign keys
     mitra_id UUID NOT NULL REFERENCES mitra(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES products(id) ON DELETE SET NULL,
     
     -- Order information
     order_number VARCHAR(50) NOT NULL UNIQUE,
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS orders (
     -- Order details
     items_count INTEGER DEFAULT 1 NOT NULL,
     notes TEXT,
+    customer_name VARCHAR(255),
     delivery_date DATE,
     
     -- Audit fields
@@ -33,6 +35,7 @@ CREATE TABLE IF NOT EXISTS orders (
 
 -- Create indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_orders_mitra_id ON orders(mitra_id);
+CREATE INDEX IF NOT EXISTS idx_orders_product_id ON orders(product_id);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
@@ -130,6 +133,7 @@ CREATE POLICY "delete_orders_platform_owner" ON orders
 COMMENT ON TABLE orders IS 'Orders table for tracking mitra business performance and transactions';
 COMMENT ON COLUMN orders.id IS 'Primary key UUID for orders';
 COMMENT ON COLUMN orders.mitra_id IS 'Foreign key reference to mitra table';
+COMMENT ON COLUMN orders.product_id IS 'Foreign key reference to products table (nullable for non-product orders)';
 COMMENT ON COLUMN orders.order_number IS 'Unique order number for tracking';
 COMMENT ON COLUMN orders.total_amount IS 'Total order amount in IDR';
 COMMENT ON COLUMN orders.status IS 'Order status (pending, confirmed, processing, shipped, delivered, cancelled)';

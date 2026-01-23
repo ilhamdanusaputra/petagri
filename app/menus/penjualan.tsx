@@ -5,16 +5,16 @@ import { Product } from "@/types/product";
 import { supabase } from "@/utils/supabase";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Modal,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-  View,
+	ActivityIndicator,
+	Alert,
+	Image,
+	Modal,
+	Pressable,
+	RefreshControl,
+	ScrollView,
+	TextInput,
+	TouchableOpacity,
+	View,
 } from "react-native";
 
 export default function PenjualanMenu() {
@@ -94,6 +94,7 @@ export default function PenjualanMenu() {
 				.select(
 					`
 					*,
+					product:products(name),
 					mitra:mitra(company_name)
 				`,
 				)
@@ -177,10 +178,10 @@ export default function PenjualanMenu() {
 				.from("orders")
 				.insert({
 					order_number: orderNumber,
+					customer_name: saleData.customerName,
 					mitra_id: mitraData.id,
 					product_id: product.id,
-					quantity: quantity,
-					unit_price: product.selling_price,
+					items_count: quantity,
 					total_amount: totalAmount,
 					status: "pending",
 					delivery_date: new Date().toISOString(),
@@ -201,6 +202,7 @@ export default function PenjualanMenu() {
 				delivery_address: saleData.deliveryAddress,
 				status: "pending",
 				delivery_notes: saleData.notes || null,
+				scheduled_delivery_date: new Date().toISOString(),
 				product_condition: "good",
 			});
 

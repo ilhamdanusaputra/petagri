@@ -15,7 +15,6 @@ CREATE TABLE IF NOT EXISTS deliveries (
     order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     tender_id UUID REFERENCES tenders(id) ON DELETE SET NULL,
     mitra_id UUID NOT NULL REFERENCES mitra(id) ON DELETE CASCADE,
-    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     consultation_visit_id UUID REFERENCES consultation_visits(id) ON DELETE SET NULL,
     farm_id UUID REFERENCES farms(id) ON DELETE SET NULL,
     
@@ -91,7 +90,6 @@ CREATE TABLE IF NOT EXISTS deliveries (
 CREATE INDEX IF NOT EXISTS idx_deliveries_order_id ON deliveries(order_id);
 CREATE INDEX IF NOT EXISTS idx_deliveries_tender_id ON deliveries(tender_id);
 CREATE INDEX IF NOT EXISTS idx_deliveries_mitra_id ON deliveries(mitra_id);
-CREATE INDEX IF NOT EXISTS idx_deliveries_product_id ON deliveries(product_id);
 CREATE INDEX IF NOT EXISTS idx_deliveries_consultation_visit_id ON deliveries(consultation_visit_id);
 CREATE INDEX IF NOT EXISTS idx_deliveries_farm_id ON deliveries(farm_id);
 CREATE INDEX IF NOT EXISTS idx_deliveries_status ON deliveries(status);

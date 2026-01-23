@@ -49,7 +49,7 @@ interface Delivery {
 	created_at: string;
 	updated_at: string;
 	// Relations
-	order?: { order_number: string; total_amount: number };
+	order?: { order_number: string; total_amount: number; customer_name?: string };
 	mitra?: { company_name: string; contact_person: string };
 	farm?: { farm_name: string; owner_name: string; contact_email: string };
 }
@@ -91,7 +91,7 @@ export default function DistribusiMenu() {
 				.select(
 					`
           *,
-          order:orders(order_number, total_amount),
+          order:orders(order_number, total_amount, customer_name),
           mitra:mitra(company_name, contact_person),
           farm:farms(farm_name, owner_name, contact_email)
         `,
@@ -101,8 +101,10 @@ export default function DistribusiMenu() {
 			// Filter by tab
 			if (activeTab !== "all") {
 				if (activeTab === "in_transit") {
+					// In Transit includes: picked_up, in_transit, arrived statuses
 					query = query.in("status", ["picked_up", "in_transit", "arrived"]);
 				} else {
+					// Exact match for pending, delivered, approved
 					query = query.eq("status", activeTab);
 				}
 			}
@@ -113,6 +115,7 @@ export default function DistribusiMenu() {
 			setDeliveries(data || []);
 		} catch (error) {
 			console.error("Error loading deliveries:", error);
+			setDeliveries([]);
 		} finally {
 			setLoading(false);
 		}
@@ -400,14 +403,13 @@ export default function DistribusiMenu() {
 
 									{/* Delivery Details */}
 									<View className="gap-2">
-										{delivery.farm && (
-											<View className="flex-row items-center gap-2">
-												<IconSymbol name="leaf.fill" size={14} color="#9CA3AF" />
-												<ThemedText className="text-gray-300 text-sm flex-1" numberOfLines={1}>
-													To: {delivery.farm.farm_name} ({delivery.farm.owner_name})
-												</ThemedText>
-											</View>
-										)}
+										<View className="flex-row items-center gap-2">
+											<IconSymbol name="leaf.fill" size={14} color="#9CA3AF" />
+											<ThemedText className="text-gray-300 text-sm flex-1" numberOfLines={1}>
+												To: {delivery.farm?.farm_name ?? delivery.order?.customer_name}{" "}
+												{delivery.farm?.owner_name && "(" + delivery.farm?.owner_name + ")"}
+											</ThemedText>
+										</View>
 
 										{delivery.driver_name && (
 											<View className="flex-row items-center gap-2">
