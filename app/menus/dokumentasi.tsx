@@ -1,7 +1,7 @@
 import { ExternalLink } from "@/components/external-link";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { BookOpen, Code, Layers } from "lucide-react-native";
+import { Code, Layers } from "lucide-react-native";
 import React from "react";
 import { ScrollView, StyleSheet } from "react-native";
 
@@ -11,18 +11,6 @@ export default function DokumentasiMenu() {
 			<ScrollView
 				contentContainerStyle={{ paddingBottom: 32 }}
 				showsVerticalScrollIndicator={false}>
-				{/* Header */}
-				<ThemedView className="mb-8 items-center">
-					<BookOpen size={40} className="text-green-600 dark:text-green-400 mb-2" />
-					<ThemedText type="title" className="text-2xl font-bold text-center">
-						Dokumentasi Petagri
-					</ThemedText>
-					<ThemedText className="mt-2 text-center text-gray-600 dark:text-gray-400">
-						Panduan lengkap penggunaan aplikasi, struktur fitur, dan referensi teknis untuk
-						pengembangan Petagri.
-					</ThemedText>
-				</ThemedView>
-
 				{/* Sections */}
 				<DocCard
 					title="Panduan Pengguna"
