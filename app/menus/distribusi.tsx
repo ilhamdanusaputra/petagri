@@ -128,7 +128,7 @@ export default function DistribusiMenu() {
 		setRefreshing(false);
 	};
 
-	const loadAvailableDrivers = async () => {
+	const loadAvailableDrivers = useCallback(async () => {
 		try {
 			// Query users with driver role from v_profiles view
 			const { data: profiles, error } = await supabase
@@ -165,7 +165,7 @@ export default function DistribusiMenu() {
 			console.error("Error loading drivers:", error);
 			setAvailableDrivers([]);
 		}
-	};
+	}, []);
 
 	const handleUpdateStatus = async (deliveryId: string, newStatus: string) => {
 		try {
@@ -944,7 +944,8 @@ function AssignDriverModal({
 			onLoadDrivers();
 			setLoading(false);
 		}
-	}, [visible, onLoadDrivers]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [visible]);
 
 	return (
 		<Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
