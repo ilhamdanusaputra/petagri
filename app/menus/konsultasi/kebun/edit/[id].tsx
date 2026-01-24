@@ -117,7 +117,16 @@ export default function EditKebun() {
 		setSaving(false);
 
 		if (result.success) {
-			router.back();
+			// Refresh previous page (kebun detail) if possible
+			if (router.canGoBack()) {
+				router.back();
+				setTimeout(() => {
+					// Use router.replace to force reload if needed
+					router.replace(`/menus/konsultasi/kebun/${id}`);
+				}, 100);
+			} else {
+				router.replace(`/menus/konsultasi/kebun/${id}`);
+			}
 		} else {
 			setValidationError(result.error || "Gagal memperbarui kebun");
 		}

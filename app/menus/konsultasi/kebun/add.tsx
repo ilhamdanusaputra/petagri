@@ -70,7 +70,15 @@ export default function AddKebun() {
 		setSaving(false);
 
 		if (result.success) {
-			router.back();
+			if (router.canGoBack()) {
+				router.back();
+				setTimeout(() => {
+					// Use router.replace to force reload if needed
+					router.replace(`/menus/konsultasi/kebun/`);
+				}, 100);
+			} else {
+				router.replace(`/menus/konsultasi/kebun/`);
+			}
 		} else {
 			setValidationError(result.error || "Gagal menambahkan kebun");
 		}
