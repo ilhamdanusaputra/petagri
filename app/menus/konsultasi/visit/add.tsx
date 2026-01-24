@@ -7,14 +7,14 @@ import { useVisit } from "@/hooks/use-visit";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-	FlatList,
-	Modal,
-	Platform,
-	Pressable,
-	ScrollView,
-	StyleSheet,
-	TextInput,
-	View,
+   FlatList,
+   Modal,
+   Platform,
+   Pressable,
+   ScrollView,
+   StyleSheet,
+   TextInput,
+   View,
 } from "react-native";
 
 export default function AddVisit() {
@@ -75,7 +75,15 @@ export default function AddVisit() {
 		setSaving(false);
 
 		if (result.success) {
-			router.back();
+			if (router.canGoBack()) {
+				router.back();
+				setTimeout(() => {
+					// Use router.replace to force reload if needed
+					router.replace(`/menus/konsultasi/kebun/${formData.farmId}/`);
+				}, 100);
+			} else {
+				router.replace(`/menus/konsultasi/kebun/${formData.farmId}/`);
+			}
 		} else {
 			setValidationError(result.error || "Gagal membuat jadwal");
 		}

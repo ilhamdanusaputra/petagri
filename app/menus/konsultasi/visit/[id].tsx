@@ -163,6 +163,16 @@ export default function VisitDetailPage() {
 		if (result.success && result.data) {
 			setVisit(result.data);
 		}
+
+		// Close modal and refresh previous page if possible
+		if (router.canGoBack()) {
+			router.back();
+			setTimeout(() => {
+				router.replace(`/menus/konsultasi/visit/${id}`);
+			}, 100);
+		} else {
+			router.replace(`/menus/konsultasi/visit/${id}`);
+		}
 	};
 
 	const addRecommendation = () => {
