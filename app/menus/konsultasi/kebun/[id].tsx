@@ -5,6 +5,7 @@ import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useKebun, type Kebun } from "@/hooks/use-kebun";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import { useVisit, type Visit } from "@/hooks/use-visit";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from "react-native";
@@ -13,9 +14,11 @@ export default function KebunDetail() {
 	const params = useLocalSearchParams();
 	const router = useRouter();
 	const { getKebunById, updateKebun } = useKebun();
+	const { fetchVisitsByFarm } = useVisit();
 	const id = params?.id as string;
 
 	const [kebun, setKebun] = useState<Kebun | null>(null);
+	const [visits, setVisits] = useState<Visit[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [showCalendar, setShowCalendar] = useState(false);
@@ -42,6 +45,12 @@ export default function KebunDetail() {
 			if (result.success && result.data) {
 				setKebun(result.data);
 				setError(null);
+
+				// Fetch visits for this farm
+				const visitResult = await fetchVisitsByFarm(id);
+				if (visitResult.success && visitResult.data) {
+					setVisits(visitResult.data);
+				}
 			} else {
 				setError(result.error || "Gagal memuat data");
 			}
@@ -190,96 +199,126 @@ export default function KebunDetail() {
 								justifyContent: "space-between",
 								alignItems: "center",
 							}}>
-							<ThemedText style={{ color: muted }}>Menampilkan 3 jadwal terdekat</ThemedText>
+							<ThemedText style={{ color: muted }}>
+								{visits.length > 0 ? `${visits.length} jadwal terdekat` : "Belum ada jadwal"}
+							</ThemedText>
 							<View style={{ flexDirection: "row", gap: 8 }}>
 								<Pressable
-									accessibilityLabel={showCalendar ? "Tampilkan daftar" : "Tampilkan kalender"}
-									style={[
-										styles.actionBtn,
-										showCalendar
-											? { backgroundColor: tint }
-											: { backgroundColor: cardBg, borderWidth: 1, borderColor: border },
-									]}
-									onPress={() => setShowCalendar((s) => !s)}>
-									{showCalendar ? (
-										<IconSymbol name="list.bullet" size={18} color="#fff" />
-									) : (
-										<IconSymbol name="calendar" size={18} color={text} />
-									)}
+									accessibilityLabel="Tambah jadwal kunjungan"
+									style={[styles.actionBtn, { backgroundColor: tint }]}
+									onPress={() => router.push(`/menus/konsultasi/visit/add?farmId=${id}`)}>
+									<IconSymbol name="plus" size={18} color="#fff" />
 								</Pressable>
+								{visits.length > 0 && (
+									<Pressable
+										accessibilityLabel={showCalendar ? "Tampilkan daftar" : "Tampilkan kalender"}
+										style={[
+											styles.actionBtn,
+											showCalendar
+												? { backgroundColor: tint }
+												: { backgroundColor: cardBg, borderWidth: 1, borderColor: border },
+										]}
+										onPress={() => setShowCalendar((s) => !s)}>
+										{showCalendar ? (
+											<IconSymbol name="list.bullet" size={18} color="#fff" />
+										) : (
+											<IconSymbol name="calendar" size={18} color={text} />
+										)}
+									</Pressable>
+								)}
 							</View>
 						</View>
 
-						{showCalendar ? (
+						{visits.length === 0 ? (
+							<ThemedText style={{ color: muted, fontStyle: "italic" }}>
+								Belum ada jadwal kunjungan untuk kebun ini
+							</ThemedText>
+						) : showCalendar ? (
 							<ScheduleCalendar
-								events={[
-									{
-										id: "s1",
-										date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-										note: "Pemeriksaan umum",
-									},
-									{
-										id: "s2",
-										date: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000),
-										note: "Pemupukan",
-									},
-									{
-										id: "s3",
-										date: new Date(Date.now() + 35 * 24 * 60 * 60 * 1000),
-										note: "Panen kecil",
-									},
-								]}
+								events={visits.map((v) => ({
+									id: v.id,
+									date: new Date(v.scheduled_date),
+									note: `${v.consultant_name} - ${v.status === "completed" ? "Selesai" : v.status === "scheduled" ? "Terjadwal" : "Dibatalkan"}`,
+								}))}
 							/>
 						) : (
 							<>
-								{[
-									{
-										id: "s1",
-										date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-										note: "Pemeriksaan umum",
-									},
-									{
-										id: "s2",
-										date: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000),
-										note: "Pemupukan",
-									},
-									{
-										id: "s3",
-										date: new Date(Date.now() + 35 * 24 * 60 * 60 * 1000),
-										note: "Panen kecil",
-									},
-								].map((s) => (
-									<View
-										key={s.id}
-										style={[
-											{
-												flexDirection: "row",
-												alignItems: "center",
-												padding: 10,
-												borderRadius: 8,
-												borderWidth: 1,
-											},
-											{ backgroundColor: cardBg, borderColor: border },
-										]}>
-										<View
-											style={{
-												width: 44,
-												height: 44,
-												borderRadius: 8,
-												alignItems: "center",
-												justifyContent: "center",
-												marginRight: 12,
+								{visits.map((visit) => {
+									const statusColor =
+										visit.status === "completed"
+											? success
+											: visit.status === "scheduled"
+												? "#3B82F6"
+												: danger;
+
+									return (
+										<Pressable
+											key={visit.id}
+											style={[
+												{
+													flexDirection: "row",
+													alignItems: "center",
+													padding: 10,
+													borderRadius: 8,
+													borderWidth: 1,
+													marginBottom: 8,
+												},
+												{ backgroundColor: cardBg, borderColor: border },
+											]}
+											onPress={() => {
+												router.push(`/menus/konsultasi/visit/${visit.id}`);
 											}}>
-											<IconSymbol name="book" size={18} color={text} />
-										</View>
-										<View style={{ flex: 1 }}>
-											<ThemedText style={{ color: text, fontWeight: "600" }}>
-												{s.date.toLocaleDateString("id-ID")}
-											</ThemedText>
-											<ThemedText style={{ color: muted }}>{s.note}</ThemedText>
-										</View>
-									</View>
-								))}
+											<View
+												style={{
+													width: 44,
+													height: 44,
+													borderRadius: 8,
+													alignItems: "center",
+													justifyContent: "center",
+													marginRight: 12,
+													backgroundColor: statusColor + "20",
+												}}>
+												<IconSymbol name="bell.fill" size={18} color={statusColor} />
+											</View>
+											<View style={{ flex: 1 }}>
+												<View
+													style={{
+														flexDirection: "row",
+														alignItems: "center",
+														gap: 6,
+														marginBottom: 2,
+													}}>
+													<ThemedText style={{ color: text, fontWeight: "600", fontSize: 14 }}>
+														{new Date(visit.scheduled_date).toLocaleDateString("id-ID", {
+															weekday: "short",
+															day: "numeric",
+															month: "short",
+														})}
+													</ThemedText>
+													<View
+														style={{
+															paddingHorizontal: 6,
+															paddingVertical: 2,
+															borderRadius: 4,
+															backgroundColor: statusColor,
+														}}>
+														<ThemedText style={{ color: "#fff", fontSize: 10, fontWeight: "600" }}>
+															{visit.status === "completed"
+																? "Selesai"
+																: visit.status === "scheduled"
+																	? "Terjadwal"
+																	: "Batal"}
+														</ThemedText>
+													</View>
+												</View>
+												<ThemedText style={{ color: muted, fontSize: 13 }}>
+													Konsultan: {visit.consultant_name}
+												</ThemedText>
+											</View>
+											<IconSymbol name="chevron.right" size={20} color={muted} />
+										</Pressable>
+									);
+								})}
 							</>
 						)}
 					</View>
