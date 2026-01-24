@@ -37,7 +37,7 @@ export default function KonsultanList() {
 		<ThemedView style={styles.container}>
 			<View style={styles.headerRow}>
 				<ThemedText type="title">Kelola Konsultan</ThemedText>
-				{/* <Pressable
+				<Pressable
 					style={{
 						backgroundColor: "#1B5E20",
 						paddingHorizontal: 16,
@@ -48,9 +48,9 @@ export default function KonsultanList() {
 						gap: 6,
 					}}
 					onPress={() => router.push("./konsultan/add")}>
-					<IconSymbol name="bell.fill" size={18} color="#fff" />
+					<IconSymbol name="person.fill" size={18} color="#fff" />
 					<ThemedText style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>Tambah</ThemedText>
-				</Pressable> */}
+				</Pressable>
 			</View>
 
 			<ThemedText style={{ marginBottom: 12, color: muted }}>
