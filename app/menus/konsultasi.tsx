@@ -8,86 +8,124 @@ import { Pressable, StyleSheet, View } from "react-native";
 import KonsultasiRoleMiddleware from "./konsultasi/_middleware";
 
 export default function KonsultasiMenu() {
-	const router = useRouter();
-	const cardBg = useThemeColor({}, "card");
-	const borderColor = useThemeColor({}, "cardBorder");
-	const textColor = useThemeColor({ light: "#1F2937", dark: "#F3F4F6" }, "text");
-	const iconTint = useThemeColor({}, "tint");
+  const router = useRouter();
+  const cardBg = useThemeColor({}, "card");
+  const borderColor = useThemeColor({}, "cardBorder");
+  const textColor = useThemeColor(
+    { light: "#1F2937", dark: "#F3F4F6" },
+    "text",
+  );
+  const iconTint = useThemeColor({}, "tint");
 
-	return (
-		<KonsultasiRoleMiddleware>
-			<ThemedView style={styles.container}>
-				<ThemedText type="title">KONSULTASI & KEBUN</ThemedText>
-				<ThemedText>Halaman untuk konsultasi dan manajemen kebun.</ThemedText>
+  return (
+    <KonsultasiRoleMiddleware>
+      <ThemedView style={styles.container}>
+        <ThemedText type="title">KONSULTASI & KEBUN</ThemedText>
+        <ThemedText>Halaman untuk konsultasi dan manajemen kebun.</ThemedText>
 
-				<View style={{ height: 12 }} />
+        <View style={{ height: 12 }} />
 
-				<Pressable
-					onPress={() => router.push("/menus/konsultasi/konsultan")}
-					style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
-					<View style={[styles.iconWrap, { backgroundColor: iconTint + "22" }]}>
-						<IconSymbol name="person.fill" size={22} color={iconTint} />
-					</View>
-					<View style={styles.cardBody}>
-						<ThemedText type="subtitle" style={[styles.cardTitle, { color: textColor }]}>
-							Kelola Konsultan
-						</ThemedText>
-						<ThemedText style={[styles.cardDesc, { color: textColor }]}>
-							Kelola data konsultan lapangan: daftar, tambah/edit/nonaktifkan, status aktif, wilayah
-							tugas, dan akses riwayat kunjungan kebun.
-						</ThemedText>
-					</View>
-				</Pressable>
+        <Pressable
+          onPress={() => router.push("/menus/konsultasi/konsultan")}
+          style={[styles.card, { backgroundColor: cardBg, borderColor }]}
+        >
+          <View style={[styles.iconWrap, { backgroundColor: iconTint + "22" }]}>
+            <IconSymbol name="person.fill" size={22} color={iconTint} />
+          </View>
+          <View style={styles.cardBody}>
+            <ThemedText
+              type="subtitle"
+              style={[styles.cardTitle, { color: textColor }]}
+            >
+              Kelola Konsultan
+            </ThemedText>
+            <ThemedText style={[styles.cardDesc, { color: textColor }]}>
+              Kelola data konsultan lapangan: daftar, tambah/edit/nonaktifkan,
+              status aktif, wilayah tugas, dan akses riwayat kunjungan kebun.
+            </ThemedText>
+          </View>
+        </Pressable>
 
-				<Pressable
-					onPress={() => router.push("/menus/konsultasi/kebun")}
-					style={[styles.card, { backgroundColor: cardBg, borderColor, marginTop: 12 }]}>
-					<View style={[styles.iconWrap, { backgroundColor: iconTint + "22" }]}>
-						<IconSymbol name="leaf.fill" size={22} color={iconTint} />
-					</View>
-					<View style={styles.cardBody}>
-						<ThemedText type="subtitle" style={[styles.cardTitle, { color: textColor }]}>
-							Kelola Kebun
-						</ThemedText>
-						<ThemedText style={[styles.cardDesc, { color: textColor }]}>
-							Kelola data kebun: daftar kebun, detail (lokasi, komoditas, luas), status kebun,
-							riwayat kunjungan, dan rekomendasi konsultan.
-						</ThemedText>
-					</View>
-				</Pressable>
-			</ThemedView>
-		</KonsultasiRoleMiddleware>
-	);
+        <Pressable
+          onPress={() => router.push("/menus/konsultasi/kebun")}
+          style={[
+            styles.card,
+            { backgroundColor: cardBg, borderColor, marginTop: 12 },
+          ]}
+        >
+          <View style={[styles.iconWrap, { backgroundColor: iconTint + "22" }]}>
+            <IconSymbol name="leaf.fill" size={22} color={iconTint} />
+          </View>
+          <View style={styles.cardBody}>
+            <ThemedText
+              type="subtitle"
+              style={[styles.cardTitle, { color: textColor }]}
+            >
+              Kelola Kebun
+            </ThemedText>
+            <ThemedText style={[styles.cardDesc, { color: textColor }]}>
+              Kelola data kebun: daftar kebun, detail (lokasi, komoditas, luas),
+              status kebun, riwayat kunjungan, dan rekomendasi konsultan.
+            </ThemedText>
+          </View>
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push("/menus/konsultasi/visit")}
+          style={[
+            styles.card,
+            { backgroundColor: cardBg, borderColor, marginTop: 12 },
+          ]}
+        >
+          <View style={[styles.iconWrap, { backgroundColor: iconTint + "22" }]}>
+            <IconSymbol name="calendar" size={22} color={iconTint} />
+          </View>
+          <View style={styles.cardBody}>
+            <ThemedText
+              type="subtitle"
+              style={[styles.cardTitle, { color: textColor }]}
+            >
+              Kelola Jadwal Kunjungan
+            </ThemedText>
+            <ThemedText style={[styles.cardDesc, { color: textColor }]}>
+              Atur jadwal kunjungan konsultan ke kebun, lihat daftar kunjungan,
+              dan buat kunjungan baru.
+            </ThemedText>
+          </View>
+        </Pressable>
+      </ThemedView>
+    </KonsultasiRoleMiddleware>
+  );
 }
 
 const styles = StyleSheet.create({
-	container: { padding: 16, gap: 8 },
-	card: {
-		borderRadius: 12,
-		padding: 12,
-		flexDirection: "row",
-		alignItems: "flex-start",
-		borderWidth: 1,
-	},
-	iconWrap: {
-		width: 44,
-		height: 44,
-		borderRadius: 10,
-		alignItems: "center",
-		justifyContent: "center",
-		marginRight: 12,
-	},
-	cardBody: {
-		flex: 1,
-	},
-	cardTitle: {
-		fontSize: 16,
-		fontWeight: "600",
-		marginBottom: 6,
-	},
-	cardDesc: {
-		fontSize: 13,
-		lineHeight: 18,
-		opacity: 0.9,
-	},
+  container: { padding: 16, gap: 8 },
+  card: {
+    borderRadius: 12,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    borderWidth: 1,
+  },
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  cardBody: {
+    flex: 1,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 6,
+  },
+  cardDesc: {
+    fontSize: 13,
+    lineHeight: 18,
+    opacity: 0.9,
+  },
 });
