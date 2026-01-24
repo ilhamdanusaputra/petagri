@@ -1,38 +1,47 @@
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useKebun } from '@/hooks/use-kebun';
-import { useKonsultan } from '@/hooks/use-konsultan';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { useVisit } from '@/hooks/use-visit';
-import { supabase } from '@/utils/supabase';
-import { useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { useKebun } from "@/hooks/use-kebun";
+import { useKonsultan } from "@/hooks/use-konsultan";
+import { useThemeColor } from "@/hooks/use-theme-color";
+import { useVisit } from "@/hooks/use-visit";
+import { supabase } from "@/utils/supabase";
+import { useRouter } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    Modal,
-    Pressable,
-    StyleSheet,
-    TextInput,
-    View,
-} from 'react-native';
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Modal,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
 
 export default function VisitManager() {
   const router = useRouter();
-  const { visits, loading, error, fetchVisits, createVisit, updateVisitStatus } = useVisit();
+  const {
+    visits,
+    loading,
+    error,
+    fetchVisits,
+    createVisit,
+    updateVisitStatus,
+  } = useVisit();
   const { kebuns, fetchKebuns } = useKebun();
   const { konsultans, fetchKonsultans } = useKonsultan();
-  const cardBg = useThemeColor({}, 'card');
-  const border = useThemeColor({}, 'cardBorder');
-  const muted = useThemeColor({ light: '#6B7280', dark: '#9CA3AF' }, 'icon');
+  const cardBg = useThemeColor({}, "card");
+  const border = useThemeColor({}, "cardBorder");
+  const muted = useThemeColor({ light: "#6B7280", dark: "#9CA3AF" }, "icon");
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
-  const [farmId, setFarmId] = useState('');
-  const [consultantId, setConsultantId] = useState('');
-  const [scheduledDate, setScheduledDate] = useState('');
+  const [farmId, setFarmId] = useState("");
+  const [consultantId, setConsultantId] = useState("");
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [showFarmPicker, setShowFarmPicker] = useState(false);
+  const [showConsultantPicker, setShowConsultantPicker] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -42,9 +51,9 @@ export default function VisitManager() {
 
   const openCreate = () => {
     setEditing(null);
-    setFarmId('');
-    setConsultantId('');
-    setScheduledDate('');
+    setFarmId("");
+    setConsultantId("");
+    setScheduledDate("");
     setModalVisible(true);
   };
 
@@ -52,13 +61,13 @@ export default function VisitManager() {
     setEditing(v);
     setFarmId(v.farm_id);
     setConsultantId(v.consultant_id);
-    setScheduledDate(v.scheduled_date?.slice(0, 10) || '');
+    setScheduledDate(v.scheduled_date?.slice(0, 10) || "");
     setModalVisible(true);
   };
 
   const handleSave = async () => {
     if (!farmId || !consultantId || !scheduledDate) {
-      Alert.alert('Validasi', 'Semua field harus diisi');
+      Alert.alert("Validasi", "Semua field harus diisi");
       return;
     }
 
@@ -66,37 +75,48 @@ export default function VisitManager() {
     try {
       if (editing) {
         const { error } = await supabase
-          .from('visits')
-          .update({ farm_id: farmId, consultant_id: consultantId, scheduled_date: scheduledDate })
-          .eq('id', editing.id);
+          .from("visits")
+          .update({
+            farm_id: farmId,
+            consultant_id: consultantId,
+            scheduled_date: scheduledDate,
+          })
+          .eq("id", editing.id);
         if (error) throw error;
       } else {
-        const res = await createVisit({ farm_id: farmId, consultant_id: consultantId, scheduled_date: scheduledDate });
-        if (!res.success) throw new Error(res.error || 'Gagal membuat jadwal');
+        const res = await createVisit({
+          farm_id: farmId,
+          consultant_id: consultantId,
+          scheduled_date: scheduledDate,
+        });
+        if (!res.success) throw new Error(res.error || "Gagal membuat jadwal");
       }
 
       await fetchVisits();
       setModalVisible(false);
     } catch (err: any) {
-      Alert.alert('Error', err.message || 'Gagal menyimpan');
+      Alert.alert("Error", err.message || "Gagal menyimpan");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = (id: string) => {
-    Alert.alert('Hapus', 'Yakin ingin menghapus jadwal ini?', [
-      { text: 'Batal', style: 'cancel' },
+    Alert.alert("Hapus", "Yakin ingin menghapus jadwal ini?", [
+      { text: "Batal", style: "cancel" },
       {
-        text: 'Hapus',
-        style: 'destructive',
+        text: "Hapus",
+        style: "destructive",
         onPress: async () => {
           try {
-            const { error } = await supabase.from('visits').delete().eq('id', id);
+            const { error } = await supabase
+              .from("visits")
+              .delete()
+              .eq("id", id);
             if (error) throw error;
             await fetchVisits();
           } catch (err: any) {
-            Alert.alert('Error', err.message || 'Gagal menghapus');
+            Alert.alert("Error", err.message || "Gagal menghapus");
           }
         },
       },
@@ -108,20 +128,45 @@ export default function VisitManager() {
       style={[styles.card, { backgroundColor: cardBg, borderColor: border }]}
       onPress={() => openEdit(item)}
       onLongPress={() =>
-        Alert.alert(item.farm_name || 'Kunjungan', undefined, [
-          { text: 'Batal', style: 'cancel' },
-          { text: 'Mark Completed', onPress: () => updateVisitStatus(item.id, 'completed') },
-          { text: 'Cancel', onPress: () => updateVisitStatus(item.id, 'cancelled') },
-          { text: 'Hapus', style: 'destructive', onPress: () => handleDelete(item.id) },
+        Alert.alert(item.farm_name || "Kunjungan", undefined, [
+          { text: "Batal", style: "cancel" },
+          {
+            text: "Mark Completed",
+            onPress: () => updateVisitStatus(item.id, "completed"),
+          },
+          {
+            text: "Cancel",
+            onPress: () => updateVisitStatus(item.id, "cancelled"),
+          },
+          {
+            text: "Hapus",
+            style: "destructive",
+            onPress: () => handleDelete(item.id),
+          },
         ])
-      }>
+      }
+    >
       <View style={styles.cardLeft}>
         <ThemedText style={[styles.cardTitle]}>{item.farm_name}</ThemedText>
-        <ThemedText style={{ color: muted, fontSize: 13 }}>{item.consultant_name}</ThemedText>
-        <ThemedText style={{ color: muted, fontSize: 13 }}>{item.scheduled_date?.slice(0, 16)}</ThemedText>
+        <ThemedText style={{ color: muted, fontSize: 13 }}>
+          {item.consultant_name}
+        </ThemedText>
+        <ThemedText style={{ color: muted, fontSize: 13 }}>
+          {item.scheduled_date?.slice(0, 16)}
+        </ThemedText>
       </View>
       <View style={styles.cardRight}>
-        <IconSymbol name={item.status === 'scheduled' ? 'calendar' : item.status === 'completed' ? 'checkmark' : 'xmark'} size={18} color={muted} />
+        <IconSymbol
+          name={
+            item.status === "scheduled"
+              ? "calendar"
+              : item.status === "completed"
+                ? "checkmark"
+                : "xmark"
+          }
+          size={18}
+          color={muted}
+        />
       </View>
     </Pressable>
   );
@@ -147,64 +192,144 @@ export default function VisitManager() {
     <ThemedView style={styles.container}>
       <View style={styles.headerRow as any}>
         <ThemedText type="title">Kelola Jadwal Kunjungan</ThemedText>
-        <Pressable style={[styles.addButton, { backgroundColor: '#1B5E20' }]} onPress={openCreate}>
+        <Pressable
+          style={[styles.addButton, { backgroundColor: "#1B5E20" }]}
+          onPress={openCreate}
+        >
           <IconSymbol name="calendar" size={18} color="#fff" />
         </Pressable>
       </View>
 
       {loading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
           <ActivityIndicator size="large" color="#1B5E20" />
         </View>
       ) : error ? (
-        <ThemedText style={{ color: '#EF4444' }}>Error: {error}</ThemedText>
+        <ThemedText style={{ color: "#EF4444" }}>Error: {error}</ThemedText>
       ) : visits.length === 0 ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
           <IconSymbol name="calendar" size={48} color={muted} />
-          <ThemedText style={{ marginTop: 12, color: muted }}>Belum ada jadwal kunjungan</ThemedText>
+          <ThemedText style={{ marginTop: 12, color: muted }}>
+            Belum ada jadwal kunjungan
+          </ThemedText>
         </View>
       ) : (
-        <FlatList data={visits} keyExtractor={(i: any) => i.id} renderItem={renderItem} />
+        <FlatList
+          data={visits}
+          keyExtractor={(i: any) => i.id}
+          renderItem={renderItem}
+        />
       )}
 
-      <Modal visible={modalVisible} animationType="slide" onRequestClose={() => setModalVisible(false)}>
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
         <ThemedView style={{ flex: 1, padding: 16 }}>
           <View style={styles.headerRow as any}>
-            <ThemedText type="title">{editing ? 'Edit Kunjungan' : 'Tambah Kunjungan'}</ThemedText>
+            <ThemedText type="title">
+              {editing ? "Edit Kunjungan" : "Tambah Kunjungan"}
+            </ThemedText>
             <Pressable onPress={() => setModalVisible(false)}>
-              <ThemedText style={{ color: '#0a7ea4' }}>Tutup</ThemedText>
+              <ThemedText style={{ color: "#0a7ea4" }}>Tutup</ThemedText>
             </Pressable>
           </View>
 
           <View style={{ height: 12 }} />
 
           <ThemedText>Petani / Kebun</ThemedText>
-          <Pressable style={[styles.input, { borderColor: border }]} onPress={() => {
-            // cycle through kebuns for quick pick
-            const ids = kebuns.map((k: any) => k.id);
-            const idx = ids.indexOf(farmId);
-            const next = ids[(idx + 1) % Math.max(1, ids.length)];
-            setFarmId(next || '');
-          }}>
-            <ThemedText>{kebunMap[farmId]?.name || 'Pilih kebun (ketuk untuk memilih)'}</ThemedText>
+          <Pressable
+            style={[styles.input, { borderColor: border }]}
+            onPress={() => setShowFarmPicker(true)}
+          >
+            <ThemedText>
+              {kebunMap[farmId]?.name || "Pilih kebun (ketuk untuk memilih)"}
+            </ThemedText>
           </Pressable>
+
+          {showFarmPicker && (
+            <View
+              style={[
+                styles.dropdown,
+                { backgroundColor: cardBg, borderColor: border },
+              ]}
+            >
+              <FlatList
+                data={kebuns}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <Pressable
+                    style={[styles.dropdownItem, { borderBottomColor: border }]}
+                    onPress={() => {
+                      setFarmId(item.id);
+                      setShowFarmPicker(false);
+                    }}
+                  >
+                    <ThemedText>{item.name}</ThemedText>
+                  </Pressable>
+                )}
+              />
+            </View>
+          )}
 
           <ThemedText style={{ marginTop: 8 }}>Konsultan</ThemedText>
-          <Pressable style={[styles.input, { borderColor: border }]} onPress={() => {
-            const ids = konsultans.map((k: any) => k.id);
-            const idx = ids.indexOf(consultantId);
-            const next = ids[(idx + 1) % Math.max(1, ids.length)];
-            setConsultantId(next || '');
-          }}>
-            <ThemedText>{konsMap[consultantId]?.full_name || 'Pilih konsultan (ketuk untuk memilih)'}</ThemedText>
+          <Pressable
+            style={[styles.input, { borderColor: border }]}
+            onPress={() => setShowConsultantPicker(true)}
+          >
+            <ThemedText>
+              {konsMap[consultantId]?.full_name ||
+                "Pilih konsultan (ketuk untuk memilih)"}
+            </ThemedText>
           </Pressable>
 
+          {showConsultantPicker && (
+            <View
+              style={[
+                styles.dropdown,
+                { backgroundColor: cardBg, borderColor: border },
+              ]}
+            >
+              <FlatList
+                data={konsultans}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <Pressable
+                    style={[styles.dropdownItem, { borderBottomColor: border }]}
+                    onPress={() => {
+                      setConsultantId(item.id);
+                      setShowConsultantPicker(false);
+                    }}
+                  >
+                    <ThemedText>{item.full_name || item.email}</ThemedText>
+                  </Pressable>
+                )}
+              />
+            </View>
+          )}
+
           <ThemedText style={{ marginTop: 8 }}>Tanggal (YYYY-MM-DD)</ThemedText>
-          <TextInput style={[styles.input, { borderColor: border }]} value={scheduledDate} onChangeText={setScheduledDate} placeholder="2026-01-31" />
+          <TextInput
+            style={[styles.input, { borderColor: border }]}
+            value={scheduledDate}
+            onChangeText={setScheduledDate}
+            placeholder="2026-01-31"
+          />
 
           <View style={{ height: 12 }} />
-          <Pressable style={[styles.saveButton, { backgroundColor: '#1B5E20' }]} onPress={handleSave} disabled={saving}>
-            <ThemedText style={{ color: '#fff', fontWeight: '600' }}>{saving ? 'Menyimpan...' : 'Simpan'}</ThemedText>
+          <Pressable
+            style={[styles.saveButton, { backgroundColor: "#1B5E20" }]}
+            onPress={handleSave}
+            disabled={saving}
+          >
+            <ThemedText style={{ color: "#fff", fontWeight: "600" }}>
+              {saving ? "Menyimpan..." : "Simpan"}
+            </ThemedText>
           </Pressable>
         </ThemedView>
       </Modal>
@@ -214,12 +339,41 @@ export default function VisitManager() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  addButton: { width: 40, height: 40, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  card: { flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 10, borderWidth: 1, marginBottom: 10 },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  addButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 10,
+  },
   cardLeft: { flex: 1 },
-  cardRight: { alignItems: 'center', justifyContent: 'center' },
-  cardTitle: { fontSize: 16, fontWeight: '600' },
+  cardRight: { alignItems: "center", justifyContent: "center" },
+  cardTitle: { fontSize: 16, fontWeight: "600" },
   input: { borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 6 },
-  saveButton: { padding: 12, borderRadius: 8, alignItems: 'center', marginTop: 8 },
+  saveButton: {
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  dropdown: { borderRadius: 8, borderWidth: 1, maxHeight: 240, marginTop: 8 },
+  dropdownItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    paddingHorizontal: 12,
+  },
 });
