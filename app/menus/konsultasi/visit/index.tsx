@@ -6,6 +6,7 @@ import { useKonsultan } from "@/hooks/use-konsultan";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useVisit } from "@/hooks/use-visit";
 import { supabase } from "@/utils/supabase";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -13,6 +14,7 @@ import {
   Alert,
   FlatList,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   TextInput,
@@ -39,9 +41,12 @@ export default function VisitManager() {
   const [editing, setEditing] = useState<any | null>(null);
   const [farmId, setFarmId] = useState("");
   const [consultantId, setConsultantId] = useState("");
-  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledDate, setScheduledDate] = useState<Date>(new Date());
+  const [scheduledTime, setScheduledTime] = useState<Date>(new Date());
   const [showFarmPicker, setShowFarmPicker] = useState(false);
   const [showConsultantPicker, setShowConsultantPicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -53,7 +58,8 @@ export default function VisitManager() {
     setEditing(null);
     setFarmId("");
     setConsultantId("");
-    setScheduledDate("");
+    setScheduledDate(new Date());
+    setScheduledTime(new Date());
     setModalVisible(true);
   };
 
@@ -61,7 +67,14 @@ export default function VisitManager() {
     setEditing(v);
     setFarmId(v.farm_id);
     setConsultantId(v.consultant_id);
-    setScheduledDate(v.scheduled_date?.slice(0, 10) || "");
+    try {
+      const d = v.scheduled_date ? new Date(v.scheduled_date) : new Date();
+      setScheduledDate(d);
+      setScheduledTime(d);
+    } catch {
+      setScheduledDate(new Date());
+      setScheduledTime(new Date());
+    }
     setModalVisible(true);
   };
 
@@ -71,6 +84,10 @@ export default function VisitManager() {
       return;
     }
 
+    const dateStr = scheduledDate.toISOString().split("T")[0];
+    const timeStr = scheduledTime.toTimeString().split(" ")[0];
+    const scheduledDateTime = `${dateStr}T${timeStr}`;
+
     setSaving(true);
     try {
       if (editing) {
@@ -79,7 +96,7 @@ export default function VisitManager() {
           .update({
             farm_id: farmId,
             consultant_id: consultantId,
-            scheduled_date: scheduledDate,
+            scheduled_date: scheduledDateTime,
           })
           .eq("id", editing.id);
         if (error) throw error;
@@ -87,7 +104,7 @@ export default function VisitManager() {
         const res = await createVisit({
           farm_id: farmId,
           consultant_id: consultantId,
-          scheduled_date: scheduledDate,
+          scheduled_date: scheduledDateTime,
         });
         if (!res.success) throw new Error(res.error || "Gagal membuat jadwal");
       }
@@ -184,7 +201,6 @@ export default function VisitManager() {
   }, [konsultans]);
 
   useEffect(() => {
-    // ensure visits refreshed when kebun/konsultan change
     fetchVisits();
   }, [kebuns.length, konsultans.length]);
 
@@ -314,12 +330,93 @@ export default function VisitManager() {
           )}
 
           <ThemedText style={{ marginTop: 8 }}>Tanggal (YYYY-MM-DD)</ThemedText>
-          <TextInput
-            style={[styles.input, { borderColor: border }]}
-            value={scheduledDate}
-            onChangeText={setScheduledDate}
-            placeholder="2026-01-31"
-          />
+          {Platform.OS === "web" ? (
+            <TextInput
+              style={[styles.input, { borderColor: border }]}
+              value={scheduledDate.toISOString().split("T")[0]}
+              onChangeText={(text) => {
+                if (text && text.length === 10) {
+                  const d = new Date(text);
+                  if (!isNaN(d.getTime())) setScheduledDate(d);
+                }
+              }}
+              placeholder="2026-01-31"
+              {...(Platform.OS === "web" && { type: "date" as any })}
+            />
+          ) : (
+            <>
+              <Pressable
+                style={[
+                  styles.input,
+                  { borderColor: border, justifyContent: "center" },
+                ]}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <ThemedText>
+                  {scheduledDate.toISOString().split("T")[0]}
+                </ThemedText>
+              </Pressable>
+              {showDatePicker && (
+                <DateTimePicker
+                  value={scheduledDate}
+                  mode="date"
+                  display="default"
+                  onChange={(_, d) => {
+                    setShowDatePicker(false);
+                    if (d) setScheduledDate(d);
+                  }}
+                />
+              )}
+            </>
+          )}
+
+          <ThemedText style={{ marginTop: 8 }}>Waktu (HH:MM)</ThemedText>
+          {Platform.OS === "web" ? (
+            <TextInput
+              style={[styles.input, { borderColor: border }]}
+              value={scheduledTime.toTimeString().split(" ")[0].substring(0, 5)}
+              onChangeText={(text) => {
+                if (text && text.length === 5) {
+                  const [h, m] = text.split(":");
+                  const hh = parseInt(h, 10);
+                  const mm = parseInt(m, 10);
+                  if (!isNaN(hh) && !isNaN(mm)) {
+                    const nd = new Date();
+                    nd.setHours(hh);
+                    nd.setMinutes(mm);
+                    setScheduledTime(nd);
+                  }
+                }
+              }}
+              placeholder="14:30"
+              {...(Platform.OS === "web" && { type: "time" as any })}
+            />
+          ) : (
+            <>
+              <Pressable
+                style={[
+                  styles.input,
+                  { borderColor: border, justifyContent: "center" },
+                ]}
+                onPress={() => setShowTimePicker(true)}
+              >
+                <ThemedText>
+                  {scheduledTime.toTimeString().split(" ")[0].substring(0, 5)}
+                </ThemedText>
+              </Pressable>
+              {showTimePicker && (
+                <DateTimePicker
+                  value={scheduledTime}
+                  mode="time"
+                  display="default"
+                  onChange={(_, d) => {
+                    setShowTimePicker(false);
+                    if (d) setScheduledTime(d);
+                  }}
+                />
+              )}
+            </>
+          )}
 
           <View style={{ height: 12 }} />
           <Pressable
