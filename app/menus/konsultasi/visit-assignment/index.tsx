@@ -10,14 +10,14 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  View
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    Modal,
+    Platform,
+    Pressable,
+    StyleSheet,
+    View,
 } from "react-native";
 
 export default function VisitManager() {

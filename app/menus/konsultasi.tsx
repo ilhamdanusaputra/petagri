@@ -71,7 +71,7 @@ export default function KonsultasiMenu() {
         </Pressable>
 
         <Pressable
-          onPress={() => router.push("/menus/konsultasi/visit")}
+          onPress={() => router.push("/menus/konsultasi/visit-assignment")}
           style={[
             styles.card,
             { backgroundColor: cardBg, borderColor, marginTop: 12 },

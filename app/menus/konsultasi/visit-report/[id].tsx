@@ -193,10 +193,10 @@ export default function VisitDetailPage() {
     if (router.canGoBack()) {
       router.back();
       setTimeout(() => {
-        router.replace(`/menus/konsultasi/visit/${id}`);
+        router.replace(`/menus/konsultasi/visit-report/${id}`);
       }, 100);
     } else {
-      router.replace(`/menus/konsultasi/visit/${id}`);
+      router.replace(`/menus/konsultasi/visit-report/${id}`);
     }
   };
 

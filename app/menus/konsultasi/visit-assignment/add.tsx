@@ -8,13 +8,13 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  FlatList,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View
+    FlatList,
+    Modal,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    View,
 } from "react-native";
 
 export default function AddVisit() {
