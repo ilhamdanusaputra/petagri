@@ -37,7 +37,7 @@ export default function KonsultanList() {
 		<ThemedView style={styles.container}>
 			<View style={styles.headerRow}>
 				<ThemedText type="title">Kelola Konsultan</ThemedText>
-				{/* <Pressable
+				<Pressable
 					style={{
 						backgroundColor: "#1B5E20",
 						paddingHorizontal: 16,
@@ -48,9 +48,9 @@ export default function KonsultanList() {
 						gap: 6,
 					}}
 					onPress={() => router.push("./konsultan/add")}>
-					<IconSymbol name="bell.fill" size={18} color="#fff" />
+					<IconSymbol name="person.fill" size={18} color="#fff" />
 					<ThemedText style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>Tambah</ThemedText>
-				</Pressable> */}
+				</Pressable>
 			</View>
 
 			<ThemedText style={{ marginBottom: 12, color: muted }}>
@@ -71,13 +71,18 @@ export default function KonsultanList() {
 							style={[styles.card, { backgroundColor: cardBg, borderColor: border }]}
 							onPress={() => router.push(`./konsultan/${item.id}`)}>
 							<View style={styles.cardLeft}>
-								<ThemedText style={[styles.cardTitle, { color: text }]}>
-									{item.full_name || "Nama belum diatur"}
-								</ThemedText>
-								<ThemedText style={{ color: muted, fontSize: 13 }}>{item.email}</ThemedText>
-								{item.phone && (
-									<ThemedText style={{ color: muted, fontSize: 13 }}>{item.phone}</ThemedText>
-								)}
+								<View style={styles.avatar}>
+									<IconSymbol name="person.fill" size={28} color={muted} />
+								</View>
+								<View style={styles.cardInfo}>
+									<ThemedText style={[styles.cardTitle, { color: text }]}> 
+										{item.full_name || "Nama belum diatur"}
+									</ThemedText>
+									<ThemedText style={{ color: muted, fontSize: 13 }}>{item.email}</ThemedText>
+									{item.phone && (
+										<ThemedText style={{ color: muted, fontSize: 13 }}>{item.phone}</ThemedText>
+									)}
+								</View>
 							</View>
 							<View style={styles.cardRight}>
 								<IconSymbol name="chevron.right" size={20} color={muted} />
@@ -106,7 +111,9 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		marginBottom: 10,
 	},
-	cardLeft: { flex: 1, gap: 4 },
+	cardLeft: { flex: 1, flexDirection: "row", alignItems: "center" },
+	avatar: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
+	cardInfo: { marginLeft: 12 },
 	cardRight: { alignItems: "center", justifyContent: "center" },
 	cardTitle: { fontSize: 16, fontWeight: "600" },
 });
