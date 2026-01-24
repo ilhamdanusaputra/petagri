@@ -75,7 +75,9 @@ export default function KebunList() {
 					data={kebuns}
 					keyExtractor={(i) => i.id}
 					renderItem={({ item }) => (
-						<Pressable style={[styles.card, { backgroundColor: cardBg, borderColor: border }]}>
+						<Pressable
+							style={[styles.card, { backgroundColor: cardBg, borderColor: border }]}
+							onPress={() => router.push(`./kebun/${item.id}`)}>
 							<View style={styles.cardLeft}>
 								<ThemedText style={[styles.cardTitle, { color: text }]}>{item.name}</ThemedText>
 								<ThemedText style={{ color: muted }}>
@@ -88,7 +90,7 @@ export default function KebunList() {
 								</ThemedText>
 								<Pressable
 									style={styles.smallButton}
-									onPress={() => router.push(`./kebun/${item.id}/visits`)}>
+									onPress={() => router.push(`./visit/${item.id}`)}>
 									<ThemedText style={{ color: "#0a7ea4" }}>Riwayat</ThemedText>
 								</Pressable>
 							</View>
