@@ -34,6 +34,7 @@ export default function VisitDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [isEditingReport, setIsEditingReport] = useState(false);
 
   const bg = useThemeColor({ light: "#F9FAFB", dark: "#111827" }, "background");
   const cardBg = useThemeColor({}, "card");
@@ -189,15 +190,8 @@ export default function VisitDetailPage() {
       setVisit(result.data);
     }
 
-    // Close modal and refresh previous page if possible
-    if (router.canGoBack()) {
-      router.back();
-      setTimeout(() => {
-        router.replace(`/menus/konsultasi/visit-results/${id}`);
-      }, 100);
-    } else {
-      router.replace(`/menus/konsultasi/visit-results/${id}`);
-    }
+    // After save, refresh data and exit edit mode (stay on same page)
+    setIsEditingReport(false);
   };
 
   const addRecommendation = () => {
@@ -503,7 +497,7 @@ export default function VisitDetailPage() {
         </View>
 
         {/* Form Laporan Kondisi Kebun */}
-        {!isCompleted && (
+        {(!isCompleted || isEditingReport) && (
           <View
             style={[
               styles.section,
@@ -687,7 +681,7 @@ export default function VisitDetailPage() {
         )}
 
         {/* Form Rekomendasi Produk */}
-        {!isCompleted && (
+        {(!isCompleted || isEditingReport) && (
           <View
             style={[
               styles.section,
@@ -953,28 +947,75 @@ export default function VisitDetailPage() {
           </View>
         )}
 
-        {/* Save Button */}
-        {!isCompleted && (
-          <Pressable
-            style={[
-              {
-                backgroundColor: success,
-                paddingVertical: 14,
-                borderRadius: 8,
-                alignItems: "center",
-                marginBottom: 32,
-              },
-              saving && { opacity: 0.6 },
-            ]}
-            onPress={handleSaveReport}
-            disabled={saving}
-          >
-            <ThemedText
-              style={{ color: "#fff", fontWeight: "600", fontSize: 16 }}
+        {/* Save / Cancel Buttons */}
+        {(!isCompleted || isEditingReport) && (
+          <View style={{ flexDirection: "row", gap: 12, marginBottom: 32 }}>
+            <Pressable
+              style={[
+                {
+                  flex: 1,
+                  backgroundColor: success,
+                  paddingVertical: 14,
+                  borderRadius: 8,
+                  alignItems: "center",
+                },
+                saving && { opacity: 0.6 },
+              ]}
+              onPress={handleSaveReport}
+              disabled={saving}
             >
-              {saving ? "Menyimpan..." : "Simpan Laporan"}
-            </ThemedText>
-          </Pressable>
+              <ThemedText
+                style={{ color: "#fff", fontWeight: "600", fontSize: 16 }}
+              >
+                {saving ? "Menyimpan..." : "Simpan Laporan"}
+              </ThemedText>
+            </Pressable>
+
+            {isEditingReport && (
+              <Pressable
+                style={{
+                  flex: 1,
+                  paddingVertical: 14,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: border,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onPress={() => {
+                  // revert form values to original report
+                  if (visit?.report) {
+                    const r = visit.report;
+                    setReportForm({
+                      plantType: r.plant_type,
+                      plantAge: r.plant_age,
+                      landArea: r.land_area.toString(),
+                      problems: r.problems,
+                      gpsLatitude: r.gps_latitude?.toString() || "",
+                      gpsLongitude: r.gps_longitude?.toString() || "",
+                      weatherNotes: r.weather_notes || "",
+                    });
+                    if (visit.recommendations && visit.recommendations.length)
+                      setRecommendations(
+                        visit.recommendations.map((rec) => ({
+                          product_name: rec.product_name,
+                          function: rec.function,
+                          dosage: rec.dosage,
+                          estimated_qty: rec.estimated_qty,
+                          urgency: rec.urgency,
+                          alternative_products: rec.alternative_products || "",
+                        })),
+                      );
+                  }
+                  setIsEditingReport(false);
+                }}
+              >
+                <ThemedText style={{ color: text, fontWeight: "600" }}>
+                  Batal
+                </ThemedText>
+              </Pressable>
+            )}
+          </View>
         )}
 
         {/* Display Report if Completed */}
@@ -990,23 +1031,47 @@ export default function VisitDetailPage() {
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
+                  justifyContent: "space-between",
                   marginBottom: 12,
                 }}
               >
-                <View
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <View
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 8,
+                      backgroundColor: success + "20",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginRight: 10,
+                    }}
+                  >
+                    <IconSymbol
+                      name="doc.text.fill"
+                      size={18}
+                      color={success}
+                    />
+                  </View>
+                  <ThemedText type="subtitle">Laporan Kondisi Kebun</ThemedText>
+                </View>
+
+                <Pressable
+                  onPress={() => setIsEditingReport(true)}
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 8,
-                    backgroundColor: success + "20",
+                    flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: "center",
-                    marginRight: 10,
+                    gap: 8,
+                    paddingHorizontal: 8,
+                    paddingVertical: 6,
+                    borderRadius: 8,
                   }}
                 >
-                  <IconSymbol name="doc.text.fill" size={18} color={success} />
-                </View>
-                <ThemedText type="subtitle">Laporan Kondisi Kebun</ThemedText>
+                  <IconSymbol name="pencil" size={16} color={tint} />
+                  <ThemedText style={{ color: tint, fontWeight: "600" }}>
+                    Edit
+                  </ThemedText>
+                </Pressable>
               </View>
 
               <View style={{ gap: 10 }}>
