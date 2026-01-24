@@ -1018,8 +1018,8 @@ export default function VisitDetailPage() {
           </View>
         )}
 
-        {/* Display Report if Completed */}
-        {isCompleted && visit.report && (
+        {/* Display Report if Completed (hidden while editing) */}
+        {isCompleted && visit.report && !isEditingReport && (
           <>
             <View
               style={[
