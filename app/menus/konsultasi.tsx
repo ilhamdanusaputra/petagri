@@ -45,6 +45,19 @@ export default function KonsultasiMenu() {
           <ThemedText style={[styles.cardDesc, { color: textColor }]}>Kelola data kebun: daftar kebun, detail (lokasi, komoditas, luas), status kebun, riwayat kunjungan, dan rekomendasi konsultan.</ThemedText>
         </View>
       </Pressable>
+
+      <Pressable
+        onPress={() => router.push('/menus/konsultasi/visit')}
+        style={[styles.card, { backgroundColor: cardBg, borderColor, marginTop: 12 }]}
+      >
+        <View style={[styles.iconWrap, { backgroundColor: iconTint + '22' }]}> 
+          <IconSymbol name="calendar" size={22} color={iconTint} />
+        </View>
+        <View style={styles.cardBody}>
+          <ThemedText type="subtitle" style={[styles.cardTitle, { color: textColor }]}>Kelola Jadwal Kunjungan</ThemedText>
+          <ThemedText style={[styles.cardDesc, { color: textColor }]}>Atur jadwal kunjungan konsultan ke kebun, lihat daftar kunjungan, dan buat kunjungan baru.</ThemedText>
+        </View>
+      </Pressable>
     </ThemedView>
   );
 }
