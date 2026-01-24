@@ -185,6 +185,7 @@ export default function PenjualanMenu() {
 					total_amount: totalAmount,
 					status: "pending",
 					delivery_date: new Date().toISOString(),
+					created_by: userData.user.id,
 				})
 				.select()
 				.single();
@@ -203,6 +204,7 @@ export default function PenjualanMenu() {
 				status: "pending",
 				delivery_notes: saleData.notes || null,
 				scheduled_delivery_date: new Date().toISOString(),
+				created_by: userData.user.id,
 				product_condition: "good",
 			});
 
