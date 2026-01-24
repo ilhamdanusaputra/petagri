@@ -1,171 +1,143 @@
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { useAuth } from '@/hooks/use-auth';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { useThemePreference } from '@/hooks/use-theme-preference';
-import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, TextInput } from 'react-native';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { useAuth } from "@/hooks/use-auth";
+import { useThemeColor } from "@/hooks/use-theme-color";
+import { supabase } from "@/utils/supabase";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
 
 export default function ProfileScreen() {
-  const { user, isLoading, login, logout, isLoggedIn } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+	const { user, isLoading, logout, isLoggedIn } = useAuth();
+	const [profile, setProfile] = useState<any>(null);
+	const [loadingProfile, setLoadingProfile] = useState(true);
 
-  const handleLogin = async () => {
-    if (email.trim() && password.trim()) {
-      await login(email, password);
-      setPassword('');
-    }
-  };
+	useEffect(() => {
+		const fetchProfile = async () => {
+			if (user) {
+				const { data } = await supabase
+					.from("profiles")
+					.select("full_name, phone, roles")
+					.eq("id", user.id)
+					.single();
+				setProfile(data || {});
+			}
+			setLoadingProfile(false);
+		};
+		fetchProfile();
+	}, [user]);
 
-  const handleLogout = () => {
-    logout();
-    setEmail('');
-    setPassword('');
-  };
+	const handleLogout = () => {
+		logout();
+	};
 
-  const { colorScheme } = useThemePreference();
+	const bgColor = useThemeColor({ light: "#F9FAFB", dark: "#111827" }, "background");
+	const cardBg = useThemeColor({}, "card");
+	const borderColor = useThemeColor({ light: "#E5E7EB", dark: "#374151" }, "cardBorder");
+	const primaryGreen = useThemeColor({ light: "#1B5E20", dark: "#81C784" }, "tint");
+	const textColor = useThemeColor({ light: "#1F2937", dark: "#F3F4F6" }, "text");
+	const mutedColor = useThemeColor({ light: "#6B7280", dark: "#9CA3AF" }, "icon");
+	const dangerColor = useThemeColor({ light: "#EF4444", dark: "#EF4444" }, "danger");
 
-  const bgColor = useThemeColor({ light: '#F9FAFB', dark: '#111827' }, 'background');
-  const cardBg = useThemeColor({}, 'card');
-  const borderColor = useThemeColor({ light: '#E5E7EB', dark: '#374151' }, 'cardBorder');
-  const primaryGreen = useThemeColor({ light: '#1B5E20', dark: '#81C784' }, 'tint');
-  const textColor = useThemeColor({ light: '#1F2937', dark: '#F3F4F6' }, 'text');
-  const dangerColor = useThemeColor({ light: '#EF4444', dark: '#EF4444' }, 'danger');
+	if (isLoading || loadingProfile) {
+		return (
+			<ThemedView style={[styles.container, { backgroundColor: bgColor }]}>
+				<ActivityIndicator size="large" color={primaryGreen} />
+			</ThemedView>
+		);
+	}
 
-  return (
-    <ThemedView style={[styles.container, { backgroundColor: bgColor }]}> 
-      <ThemedText type="title" style={[styles.title, { color: primaryGreen }]}> 
-        Profile
-      </ThemedText>
+	return (
+		<ThemedView style={[styles.container, { backgroundColor: bgColor }]}>
+			<ThemedText type="title" style={[styles.title, { color: primaryGreen }]}>
+				Profil Pengguna
+			</ThemedText>
 
-      {isLoggedIn ? (
-        <ThemedView style={[styles.profileCard, { backgroundColor: cardBg, borderColor }] }>
-          <ThemedText type="subtitle" style={{ color: textColor }}>Selamat datang!</ThemedText>
-          <ThemedText style={[styles.userName, { color: textColor }]}>{user?.name}</ThemedText>
-          <ThemedText style={[styles.userEmail, { color: textColor }]}>{user?.email}</ThemedText>
+			{isLoggedIn && user ? (
+				<ThemedView style={[styles.profileCard, { backgroundColor: cardBg, borderColor }]}>
+					<ThemedText type="subtitle" style={{ color: textColor, marginBottom: 16 }}>
+						Informasi Akun
+					</ThemedText>
 
-          <Pressable style={[styles.logoutButton, { backgroundColor: dangerColor }]} onPress={handleLogout}>
-            <ThemedText style={styles.logoutButtonText}>Logout</ThemedText>
-          </Pressable>
-        </ThemedView>
-      ) : (
-        <ThemedView style={[styles.loginCard, { backgroundColor: cardBg, borderColor }] }>
-          <ThemedText type="subtitle" style={[styles.loginTitle, { color: textColor }]}>Login</ThemedText>
+					<ThemedView style={styles.infoRow}>
+						<ThemedText style={[styles.infoLabel, { color: mutedColor }]}>Email</ThemedText>
+						<ThemedText style={[styles.infoValue, { color: textColor }]}>
+							{user.email || "belum diatur"}
+						</ThemedText>
+					</ThemedView>
 
-          <TextInput
-            style={[styles.input, { color: textColor, borderColor, backgroundColor: cardBg }]}
-            placeholder="Email"
-            placeholderTextColor={colorScheme === 'light' ? '#999' : '#9CA3AF'}
-            value={email}
-            onChangeText={setEmail}
-            editable={!isLoading}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+					<ThemedView style={styles.infoRow}>
+						<ThemedText style={[styles.infoLabel, { color: mutedColor }]}>Nama Lengkap</ThemedText>
+						<ThemedText style={[styles.infoValue, { color: textColor }]}>
+							{profile?.full_name || "belum diatur"}
+						</ThemedText>
+					</ThemedView>
 
-          <TextInput
-            style={[styles.input, { color: textColor, borderColor, backgroundColor: cardBg }]}
-            placeholder="Password"
-            placeholderTextColor={colorScheme === 'light' ? '#999' : '#9CA3AF'}
-            value={password}
-            onChangeText={setPassword}
-            editable={!isLoading}
-            secureTextEntry
-          />
+					<ThemedView style={styles.infoRow}>
+						<ThemedText style={[styles.infoLabel, { color: mutedColor }]}>No. HP</ThemedText>
+						<ThemedText style={[styles.infoValue, { color: textColor }]}>
+							{profile?.phone || "belum diatur"}
+						</ThemedText>
+					</ThemedView>
 
-          <Pressable
-            style={[styles.loginButton, isLoading && styles.loginButtonDisabled, { backgroundColor: primaryGreen }]}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <ThemedText style={styles.loginButtonText}>Login</ThemedText>
-            )}
-          </Pressable>
+					<ThemedView style={styles.infoRow}>
+						<ThemedText style={[styles.infoLabel, { color: mutedColor }]}>Role</ThemedText>
+						<ThemedText style={[styles.infoValue, { color: textColor }]}>
+							{profile?.roles || "belum diatur"}
+						</ThemedText>
+					</ThemedView>
 
-          <ThemedText style={[styles.dummyText, { color: textColor }]}>💡 Tip: Gunakan email apapun (contoh: demo@example.com)</ThemedText>
-        </ThemedView>
-      )}
-    </ThemedView>
-  );
+					<Pressable
+						style={[styles.logoutButton, { backgroundColor: dangerColor, marginTop: 24 }]}
+						onPress={handleLogout}>
+						<ThemedText style={styles.logoutButtonText}>Logout</ThemedText>
+					</Pressable>
+				</ThemedView>
+			) : (
+				<ThemedView style={[styles.profileCard, { backgroundColor: cardBg, borderColor }]}>
+					<ThemedText style={{ color: textColor, textAlign: "center" }}>
+						Anda belum login
+					</ThemedText>
+				</ThemedView>
+			)}
+		</ThemedView>
+	);
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    justifyContent: 'center',
-  },
-  title: {
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  profileCard: {
-    padding: 24,
-    borderRadius: 12,
-    backgroundColor: '#E6F4FE',
-    alignItems: 'center',
-    gap: 8,
-  },
-  userName: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  userEmail: {
-    fontSize: 14,
-    marginBottom: 16,
-  },
-  logoutButton: {
-    backgroundColor: '#d32f2f',
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    marginTop: 8,
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  loginCard: {
-    padding: 24,
-    borderRadius: 12,
-    gap: 16,
-  },
-  loginTitle: {
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    fontSize: 14,
-    color: '#000',
-  },
-  loginButton: {
-    backgroundColor: '#0a7ea4',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  loginButtonDisabled: {
-    backgroundColor: '#0a7ea480',
-  },
-  loginButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  dummyText: {
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 8,
-  },
+	container: {
+		flex: 1,
+		padding: 16,
+		justifyContent: "center",
+	},
+	title: {
+		marginBottom: 24,
+		textAlign: "center",
+	},
+	profileCard: {
+		padding: 24,
+		borderRadius: 12,
+		borderWidth: 1,
+	},
+	infoRow: {
+		marginBottom: 16,
+	},
+	infoLabel: {
+		fontSize: 13,
+		fontWeight: "600",
+		marginBottom: 4,
+	},
+	infoValue: {
+		fontSize: 15,
+	},
+	logoutButton: {
+		paddingVertical: 12,
+		paddingHorizontal: 24,
+		borderRadius: 8,
+		alignItems: "center",
+	},
+	logoutButtonText: {
+		color: "#fff",
+		fontWeight: "600",
+		fontSize: 16,
+	},
 });
