@@ -143,7 +143,7 @@ export default function KebunList() {
                 </ThemedText>
                 <Pressable
                   style={styles.smallButton}
-                  onPress={() => router.push(`./visit-report/${item.id}`)}
+                  onPress={() => router.push(`./visit-results/${item.id}`)}
                 >
                   <ThemedText style={{ color: "#0a7ea4" }}>Riwayat</ThemedText>
                 </Pressable>

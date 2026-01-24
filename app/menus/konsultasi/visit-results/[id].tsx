@@ -3,19 +3,19 @@ import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import {
-    useVisit,
-    type VisitDetail,
-    type VisitRecommendation,
+  useVisit,
+  type VisitDetail,
+  type VisitRecommendation,
 } from "@/hooks/use-visit";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    View,
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
 } from "react-native";
 
 export default function VisitDetailPage() {
@@ -193,10 +193,10 @@ export default function VisitDetailPage() {
     if (router.canGoBack()) {
       router.back();
       setTimeout(() => {
-        router.replace(`/menus/konsultasi/visit-report/${id}`);
+        router.replace(`/menus/konsultasi/visit-results/${id}`);
       }, 100);
     } else {
-      router.replace(`/menus/konsultasi/visit-report/${id}`);
+      router.replace(`/menus/konsultasi/visit-results/${id}`);
     }
   };
 

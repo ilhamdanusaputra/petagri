@@ -9,11 +9,11 @@ import { useVisit, type Visit } from "@/hooks/use-visit";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    View,
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
 } from "react-native";
 
 export default function KebunDetail() {
@@ -334,7 +334,7 @@ export default function KebunDetail() {
                       ]}
                       onPress={() => {
                         router.push(
-                          `/menus/konsultasi/visit-report/${visit.id}`,
+                          `/menus/konsultasi/visit-results/${visit.id}`,
                         );
                       }}
                     >

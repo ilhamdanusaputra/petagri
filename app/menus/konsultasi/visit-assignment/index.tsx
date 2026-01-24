@@ -35,6 +35,7 @@ export default function VisitManager() {
   const cardBg = useThemeColor({}, "card");
   const border = useThemeColor({}, "cardBorder");
   const muted = useThemeColor({ light: "#6B7280", dark: "#9CA3AF" }, "icon");
+  const tint = useThemeColor({}, "tint");
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
@@ -142,7 +143,9 @@ export default function VisitManager() {
   const renderItem = ({ item }: { item: any }) => (
     <Pressable
       style={[styles.card, { backgroundColor: cardBg, borderColor: border }]}
-      onPress={() => openEdit(item)}
+      onPress={() =>
+        router.push(`/menus/konsultasi/visit-assignment/edit/${item.id}`)
+      }
       onLongPress={() =>
         Alert.alert(item.farm_name || "Kunjungan", undefined, [
           { text: "Batal", style: "cancel" },
@@ -208,10 +211,13 @@ export default function VisitManager() {
       <View style={styles.headerRow as any}>
         <ThemedText type="title">Kelola Jadwal Kunjungan</ThemedText>
         <Pressable
-          style={[styles.addButton, { backgroundColor: "#1B5E20" }]}
-          onPress={openCreate}
+          style={{ flexDirection: "row", alignItems: "center" }}
+          onPress={() => router.push("/menus/konsultasi/visit-assignment/add")}
         >
-          <IconSymbol name="calendar" size={18} color="#fff" />
+          <IconSymbol name="calendar" size={16} color={tint} />
+          <ThemedText style={{ color: tint, fontWeight: "600", marginLeft: 8 }}>
+            Atur Jadwal Kunjungan
+          </ThemedText>
         </Pressable>
       </View>
 
