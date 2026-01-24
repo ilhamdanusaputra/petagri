@@ -71,7 +71,7 @@ export default function KonsultasiMenu() {
         </Pressable>
 
         <Pressable
-          onPress={() => router.push("/menus/konsultasi/visit")}
+          onPress={() => router.push("/menus/konsultasi/visit-assignment")}
           style={[
             styles.card,
             { backgroundColor: cardBg, borderColor, marginTop: 12 },
@@ -90,6 +90,29 @@ export default function KonsultasiMenu() {
             <ThemedText style={[styles.cardDesc, { color: textColor }]}>
               Atur jadwal kunjungan konsultan ke kebun, lihat daftar kunjungan,
               dan buat kunjungan baru.
+            </ThemedText>
+          </View>
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push("/menus/konsultasi/visit-results")}
+          style={[
+            styles.card,
+            { backgroundColor: cardBg, borderColor, marginTop: 12 },
+          ]}
+        >
+          <View style={[styles.iconWrap, { backgroundColor: iconTint + "22" }]}>
+            <IconSymbol name="doc.text.fill" size={22} color={iconTint} />
+          </View>
+          <View style={styles.cardBody}>
+            <ThemedText
+              type="subtitle"
+              style={[styles.cardTitle, { color: textColor }]}
+            >
+              Kelola Hasil Kunjungan
+            </ThemedText>
+            <ThemedText style={[styles.cardDesc, { color: textColor }]}>
+              Tambah, lihat, dan edit laporan hasil kunjungan lapangan.
             </ThemedText>
           </View>
         </Pressable>
