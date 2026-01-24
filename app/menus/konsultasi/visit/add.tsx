@@ -8,14 +8,13 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-	FlatList,
-	Modal,
-	Platform,
-	Pressable,
-	ScrollView,
-	StyleSheet,
-	TextInput,
-	View,
+  FlatList,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View
 } from "react-native";
 
 export default function AddVisit() {
@@ -247,13 +246,11 @@ export default function AddVisit() {
         <View style={styles.fieldGroup}>
           <ThemedText style={styles.label}>Tanggal *</ThemedText>
           {Platform.OS === "web" ? (
-            <TextInput
-              style={[
-                styles.input,
-                { backgroundColor: inputBg, color: text, borderColor: border },
-              ]}
+            <input
+              type="date"
               value={formData.scheduledDate.toISOString().split("T")[0]}
-              onChangeText={(value) => {
+              onChange={(e: any) => {
+                const value = e?.target?.value;
                 if (value && value.length === 10) {
                   try {
                     const newDate = new Date(value);
@@ -265,9 +262,11 @@ export default function AddVisit() {
                   }
                 }
               }}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={placeholderColor}
-              {...(Platform.OS === "web" && { type: "date" as any })}
+              style={Object.assign({}, styles.input as any, {
+                backgroundColor: inputBg,
+                color: text,
+                borderColor: border,
+              })}
             />
           ) : (
             <>
@@ -310,16 +309,14 @@ export default function AddVisit() {
         <View style={styles.fieldGroup}>
           <ThemedText style={styles.label}>Waktu *</ThemedText>
           {Platform.OS === "web" ? (
-            <TextInput
-              style={[
-                styles.input,
-                { backgroundColor: inputBg, color: text, borderColor: border },
-              ]}
+            <input
+              type="time"
               value={formData.scheduledTime
                 .toTimeString()
                 .split(" ")[0]
                 .substring(0, 5)}
-              onChangeText={(value) => {
+              onChange={(e: any) => {
+                const value = e?.target?.value;
                 if (value && value.length === 5) {
                   try {
                     const [hours, minutes] = value.split(":");
@@ -336,9 +333,11 @@ export default function AddVisit() {
                   }
                 }
               }}
-              placeholder="HH:MM"
-              placeholderTextColor={placeholderColor}
-              {...(Platform.OS === "web" && { type: "time" as any })}
+              style={Object.assign({}, styles.input as any, {
+                backgroundColor: inputBg,
+                color: text,
+                borderColor: border,
+              })}
             />
           ) : (
             <>

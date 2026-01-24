@@ -17,8 +17,7 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  TextInput,
-  View,
+  View
 } from "react-native";
 
 export default function VisitManager() {
@@ -331,17 +330,19 @@ export default function VisitManager() {
 
           <ThemedText style={{ marginTop: 8 }}>Tanggal (YYYY-MM-DD)</ThemedText>
           {Platform.OS === "web" ? (
-            <TextInput
-              style={[styles.input, { borderColor: border }]}
+            <input
+              type="date"
               value={scheduledDate.toISOString().split("T")[0]}
-              onChangeText={(text) => {
+              onChange={(e: any) => {
+                const text = e?.target?.value;
                 if (text && text.length === 10) {
                   const d = new Date(text);
                   if (!isNaN(d.getTime())) setScheduledDate(d);
                 }
               }}
-              placeholder="2026-01-31"
-              {...(Platform.OS === "web" && { type: "date" as any })}
+              style={Object.assign({}, styles.input as any, {
+                borderColor: border,
+              })}
             />
           ) : (
             <>
@@ -372,10 +373,11 @@ export default function VisitManager() {
 
           <ThemedText style={{ marginTop: 8 }}>Waktu (HH:MM)</ThemedText>
           {Platform.OS === "web" ? (
-            <TextInput
-              style={[styles.input, { borderColor: border }]}
+            <input
+              type="time"
               value={scheduledTime.toTimeString().split(" ")[0].substring(0, 5)}
-              onChangeText={(text) => {
+              onChange={(e: any) => {
+                const text = e?.target?.value;
                 if (text && text.length === 5) {
                   const [h, m] = text.split(":");
                   const hh = parseInt(h, 10);
@@ -388,8 +390,9 @@ export default function VisitManager() {
                   }
                 }
               }}
-              placeholder="14:30"
-              {...(Platform.OS === "web" && { type: "time" as any })}
+              style={Object.assign({}, styles.input as any, {
+                borderColor: border,
+              })}
             />
           ) : (
             <>
