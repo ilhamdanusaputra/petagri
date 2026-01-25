@@ -11,12 +11,14 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert, Dimensions, FlatList,
+  Alert,
+  Dimensions,
+  FlatList,
   Modal,
   Platform,
   Pressable,
   StyleSheet,
-  View
+  View,
 } from "react-native";
 
 export default function VisitManager() {
@@ -194,7 +196,13 @@ export default function VisitManager() {
                 : "xmark"
           }
           size={18}
-          color={muted}
+          color={
+            item.status === "scheduled"
+              ? tint
+              : item.status === "completed"
+                ? "#16A34A"
+                : "#EF4444"
+          }
         />
         <Pressable
           style={[styles.menuButton, { backgroundColor: cardBg }]}

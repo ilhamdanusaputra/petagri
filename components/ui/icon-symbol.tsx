@@ -13,35 +13,37 @@ type IconSymbolName = SymbolViewProps["name"];
  * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
  */
 const MAPPING = {
-	"house.fill": "home",
-	"paperplane.fill": "send",
-	"chevron.left.forwardslash.chevron.right": "code",
-	"chevron.right": "chevron-right",
-	"leaf.fill": "local-florist",
-	"bag.fill": "store",
-	gavel: "gavel",
-	"cart.fill": "shopping-cart",
-	truck: "local-shipping",
-	"archivebox.fill": "archive",
-	"dollarsign.circle.fill": "attach-money",
-	"chart.bar.fill": "insert-chart",
-	"bell.fill": "notifications",
-	gear: "settings",
-	"gearshape.fill": "settings",
-	person: "person",
-	"person.fill": "person",
-	book: "menu-book",
-	plus: "add",
-	calendar: "calendar-today",
-	"list.bullet": "format-list-bulleted",
-	"sun.max.fill": "light-mode",
-	"moon.fill": "dark-mode",
-	"checkmark.circle.fill": "check-circle",
-	"clock.fill": "schedule",
-	"xmark.circle.fill": "cancel",
-	"doc.text.fill": "description",
+  "house.fill": "home",
+  "paperplane.fill": "send",
+  "chevron.left.forwardslash.chevron.right": "code",
+  "chevron.right": "chevron-right",
+  "leaf.fill": "local-florist",
+  "bag.fill": "store",
+  gavel: "gavel",
+  "cart.fill": "shopping-cart",
+  truck: "local-shipping",
+  "archivebox.fill": "archive",
+  "dollarsign.circle.fill": "attach-money",
+  "chart.bar.fill": "insert-chart",
+  "bell.fill": "notifications",
+  gear: "settings",
+  "gearshape.fill": "settings",
+  person: "person",
+  "person.fill": "person",
+  book: "menu-book",
+  plus: "add",
+  calendar: "calendar-today",
+  "list.bullet": "format-list-bulleted",
+  "sun.max.fill": "light-mode",
+  "moon.fill": "dark-mode",
+  "checkmark.circle.fill": "check-circle",
+  "clock.fill": "schedule",
+  "xmark.circle.fill": "cancel",
+  checkmark: "check",
+  xmark: "close",
+  "doc.text.fill": "description",
 } as const satisfies Partial<
-	Record<SymbolViewProps["name"], ComponentProps<typeof MaterialIcons>["name"]>
+  Record<SymbolViewProps["name"], ComponentProps<typeof MaterialIcons>["name"]>
 >;
 
 type IconSymbolMappedName = keyof typeof MAPPING;
@@ -52,16 +54,23 @@ type IconSymbolMappedName = keyof typeof MAPPING;
  * Icon `name`s are based on SF Symbols and require manual mapping to Material Icons.
  */
 export function IconSymbol({
-	name,
-	size = 24,
-	color,
-	style,
+  name,
+  size = 24,
+  color,
+  style,
 }: {
-	name: IconSymbolMappedName;
-	size?: number;
-	color: string | OpaqueColorValue;
-	style?: StyleProp<TextStyle>;
-	weight?: SymbolWeight;
+  name: IconSymbolMappedName;
+  size?: number;
+  color: string | OpaqueColorValue;
+  style?: StyleProp<TextStyle>;
+  weight?: SymbolWeight;
 }) {
-	return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  return (
+    <MaterialIcons
+      color={color}
+      size={size}
+      name={MAPPING[name]}
+      style={style}
+    />
+  );
 }
