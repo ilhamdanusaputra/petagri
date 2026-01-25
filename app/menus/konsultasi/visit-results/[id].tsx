@@ -7,7 +7,7 @@ import {
   type VisitDetail,
   type VisitRecommendation,
 } from "@/hooks/use-visit";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -275,6 +275,27 @@ export default function VisitDetailPage() {
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: bg }]}>
+      <Stack.Screen
+        options={{
+          title: visit?.farm_name
+            ? `Laporan — ${visit.farm_name}`
+            : "Laporan Kunjungan",
+          headerBackTitle: "Kembali",
+          headerRight: () => (
+            <Pressable
+              onPress={() => setIsEditingReport(true)}
+              style={{
+                marginRight: 12,
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <IconSymbol name="pencil" size={18} color={tint} />
+            </Pressable>
+          ),
+        }}
+      />
+
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         {/* Header Card dengan Visual yang Lebih Menarik */}
         <View
