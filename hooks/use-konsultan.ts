@@ -66,32 +66,18 @@ export function useKonsultan() {
 		phone?: string;
 	}) => {
 		try {
-			// Create new user with auth
-			const { data: authData, error: signUpError } = await supabase.auth.signUp({
-				email: data.email,
-				password: data.password,
-				options: {
-					data: {
-						full_name: data.full_name,
-						phone: data.phone || null,
-					},
-				},
-			});
+			const { data: result, error } = await supabase.functions.invoke(
+				"create-konsultan",
+				{
+					body: data,
+				}
+			);
 
-			if (signUpError) throw signUpError;
-			if (!authData.user) throw new Error("Gagal membuat user");
+			if (error) {
+				return { success: false, error: error.message };
+			}
 
-			// Update profile with konsultan role
-			const { error: updateError } = await supabase
-				.from("profiles")
-				.update({ roles: "konsultan" })
-				.eq("id", authData.user.id);
-
-			if (updateError) throw updateError;
-
-			// Refresh list
-			await fetchKonsultans();
-
+			await fetchKonsultans(); // refresh list setelah create
 			return { success: true };
 		} catch (err: any) {
 			return { success: false, error: err.message || "Gagal menambahkan konsultan" };

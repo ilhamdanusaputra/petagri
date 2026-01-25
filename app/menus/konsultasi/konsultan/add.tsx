@@ -55,7 +55,15 @@ export default function AddKonsultan() {
 		setSaving(false);
 
 		if (result.success) {
-			router.back();
+			if (router.canGoBack()) {
+				router.back();
+				setTimeout(() => {
+					// Use router.replace to force reload if needed
+					router.replace(`/menus/konsultasi/konsultan/`);
+				}, 100);
+			} else {
+				router.replace(`/menus/konsultasi/konsultan/`);
+			}
 		} else {
 			setValidationError(result.error || "Gagal menambahkan konsultan");
 		}
