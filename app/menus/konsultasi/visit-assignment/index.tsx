@@ -8,16 +8,16 @@ import { useVisit } from "@/hooks/use-visit";
 import { supabase } from "@/utils/supabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    Modal,
-    Platform,
-    Pressable,
-    StyleSheet,
-    View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
 } from "react-native";
 
 export default function VisitManager() {
@@ -76,6 +76,13 @@ export default function VisitManager() {
       setScheduledTime(new Date());
     }
     setModalVisible(true);
+  };
+
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuActionRef = useRef(false);
+
+  const toggleStatusMenu = (itemId: string) => {
+    setOpenMenuId((cur) => (cur === itemId ? null : itemId));
   };
 
   const handleSave = async () => {
@@ -143,9 +150,13 @@ export default function VisitManager() {
   const renderItem = ({ item }: { item: any }) => (
     <Pressable
       style={[styles.card, { backgroundColor: cardBg, borderColor: border }]}
-      onPress={() =>
-        router.push(`/menus/konsultasi/visit-assignment/edit/${item.id}`)
-      }
+      onPress={() => {
+        if (menuActionRef.current) {
+          menuActionRef.current = false;
+          return;
+        }
+        router.push(`/menus/konsultasi/visit-assignment/edit/${item.id}`);
+      }}
       onLongPress={() =>
         Alert.alert(item.farm_name || "Kunjungan", undefined, [
           { text: "Batal", style: "cancel" },
@@ -186,6 +197,89 @@ export default function VisitManager() {
           size={18}
           color={muted}
         />
+        <Pressable
+          style={[styles.menuButton, { backgroundColor: cardBg }]}
+          onPress={() => {
+            menuActionRef.current = true;
+            toggleStatusMenu(item.id);
+          }}
+        >
+          <IconSymbol name="list.bullet" size={18} color={muted} />
+        </Pressable>
+
+        {openMenuId === item.id && (
+          <View
+            style={[
+              styles.menuDropdown,
+              { backgroundColor: cardBg, borderColor: border },
+            ]}
+          >
+            <Pressable
+              style={styles.menuItem}
+              onPress={async () => {
+                try {
+                  await updateVisitStatus(item.id, "scheduled");
+                  await fetchVisits();
+                } catch (err: any) {
+                  Alert.alert("Error", err.message || "Gagal mengubah status");
+                } finally {
+                  setOpenMenuId(null);
+                }
+              }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <IconSymbol name="calendar" size={16} color={muted} />
+                <ThemedText style={{ marginLeft: 8 }}>Scheduled</ThemedText>
+              </View>
+            </Pressable>
+            <Pressable
+              style={styles.menuItem}
+              onPress={async () => {
+                try {
+                  await updateVisitStatus(item.id, "completed");
+                  await fetchVisits();
+                } catch (err: any) {
+                  Alert.alert("Error", err.message || "Gagal mengubah status");
+                } finally {
+                  setOpenMenuId(null);
+                }
+              }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <IconSymbol
+                  name="checkmark.circle.fill"
+                  size={16}
+                  color="#16A34A"
+                />
+                <ThemedText style={{ marginLeft: 8 }}>Completed</ThemedText>
+              </View>
+            </Pressable>
+            <Pressable
+              style={styles.menuItem}
+              onPress={async () => {
+                try {
+                  await updateVisitStatus(item.id, "cancelled");
+                  await fetchVisits();
+                } catch (err: any) {
+                  Alert.alert("Error", err.message || "Gagal mengubah status");
+                } finally {
+                  setOpenMenuId(null);
+                }
+              }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <IconSymbol
+                  name="xmark.circle.fill"
+                  size={16}
+                  color="#EF4444"
+                />
+                <ThemedText style={{ marginLeft: 8, color: "#EF4444" }}>
+                  Cancelled
+                </ThemedText>
+              </View>
+            </Pressable>
+          </View>
+        )}
       </View>
     </Pressable>
   );
@@ -461,13 +555,18 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
+    position: "relative",
     padding: 12,
     borderRadius: 10,
     borderWidth: 1,
     marginBottom: 10,
   },
   cardLeft: { flex: 1 },
-  cardRight: { alignItems: "center", justifyContent: "center" },
+  cardRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   cardTitle: { fontSize: 16, fontWeight: "600" },
   input: { borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 6 },
   saveButton: {
@@ -481,5 +580,34 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     paddingHorizontal: 12,
+  },
+  menuButton: {
+    marginLeft: 8,
+    padding: 6,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 2,
+  },
+  menuDropdown: {
+    position: "absolute",
+    right: 8,
+    top: 42,
+    borderWidth: 1,
+    borderRadius: 8,
+    minWidth: 140,
+    zIndex: 1000,
+    overflow: "hidden",
+  },
+  menuItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.06)",
+    backgroundColor: "transparent",
   },
 });
