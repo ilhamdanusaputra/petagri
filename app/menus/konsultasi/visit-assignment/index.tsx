@@ -11,13 +11,12 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
-  FlatList,
+  Alert, Dimensions, FlatList,
   Modal,
   Platform,
   Pressable,
   StyleSheet,
-  View,
+  View
 } from "react-native";
 
 export default function VisitManager() {
@@ -78,12 +77,12 @@ export default function VisitManager() {
     setModalVisible(true);
   };
 
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuModalVisible, setMenuModalVisible] = useState(false);
+  const [menuModalPos, setMenuModalPos] = useState({ x: 0, y: 0 });
+  const [menuModalItem, setMenuModalItem] = useState<any | null>(null);
   const menuActionRef = useRef(false);
 
-  const toggleStatusMenu = (itemId: string) => {
-    setOpenMenuId((cur) => (cur === itemId ? null : itemId));
-  };
+  const windowWidth = Dimensions.get("window").width;
 
   const handleSave = async () => {
     if (!farmId || !consultantId || !scheduledDate) {
@@ -199,87 +198,17 @@ export default function VisitManager() {
         />
         <Pressable
           style={[styles.menuButton, { backgroundColor: cardBg }]}
-          onPress={() => {
+          onPressIn={(e) => {
+            // prevent parent onPress navigation
             menuActionRef.current = true;
-            toggleStatusMenu(item.id);
+            const { pageX, pageY } = e.nativeEvent;
+            setMenuModalPos({ x: pageX, y: pageY });
+            setMenuModalItem(item);
+            setMenuModalVisible(true);
           }}
         >
           <IconSymbol name="list.bullet" size={18} color={muted} />
         </Pressable>
-
-        {openMenuId === item.id && (
-          <View
-            style={[
-              styles.menuDropdown,
-              { backgroundColor: cardBg, borderColor: border },
-            ]}
-          >
-            <Pressable
-              style={styles.menuItem}
-              onPress={async () => {
-                try {
-                  await updateVisitStatus(item.id, "scheduled");
-                  await fetchVisits();
-                } catch (err: any) {
-                  Alert.alert("Error", err.message || "Gagal mengubah status");
-                } finally {
-                  setOpenMenuId(null);
-                }
-              }}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <IconSymbol name="calendar" size={16} color={muted} />
-                <ThemedText style={{ marginLeft: 8 }}>Scheduled</ThemedText>
-              </View>
-            </Pressable>
-            <Pressable
-              style={styles.menuItem}
-              onPress={async () => {
-                try {
-                  await updateVisitStatus(item.id, "completed");
-                  await fetchVisits();
-                } catch (err: any) {
-                  Alert.alert("Error", err.message || "Gagal mengubah status");
-                } finally {
-                  setOpenMenuId(null);
-                }
-              }}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <IconSymbol
-                  name="checkmark.circle.fill"
-                  size={16}
-                  color="#16A34A"
-                />
-                <ThemedText style={{ marginLeft: 8 }}>Completed</ThemedText>
-              </View>
-            </Pressable>
-            <Pressable
-              style={styles.menuItem}
-              onPress={async () => {
-                try {
-                  await updateVisitStatus(item.id, "cancelled");
-                  await fetchVisits();
-                } catch (err: any) {
-                  Alert.alert("Error", err.message || "Gagal mengubah status");
-                } finally {
-                  setOpenMenuId(null);
-                }
-              }}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <IconSymbol
-                  name="xmark.circle.fill"
-                  size={16}
-                  color="#EF4444"
-                />
-                <ThemedText style={{ marginLeft: 8, color: "#EF4444" }}>
-                  Cancelled
-                </ThemedText>
-              </View>
-            </Pressable>
-          </View>
-        )}
       </View>
     </Pressable>
   );
@@ -339,6 +268,111 @@ export default function VisitManager() {
           renderItem={renderItem}
         />
       )}
+
+      {/* Dropdown modal to avoid clipping by card/list */}
+      <Modal
+        visible={menuModalVisible}
+        transparent
+        animationType="none"
+        onRequestClose={() => setMenuModalVisible(false)}
+      >
+        <Pressable
+          style={{ flex: 1 }}
+          onPress={() => setMenuModalVisible(false)}
+        >
+          {menuModalItem && (
+            <View
+              style={[
+                styles.menuDropdown,
+                {
+                  backgroundColor: cardBg,
+                  borderColor: border,
+                  left: Math.min(
+                    Math.max(8, menuModalPos.x - 160 + 24),
+                    windowWidth - 160 - 8,
+                  ),
+                  top: menuModalPos.y + 8,
+                  position: "absolute",
+                },
+              ]}
+            >
+              <Pressable
+                style={styles.menuItem}
+                onPress={async () => {
+                  try {
+                    await updateVisitStatus(menuModalItem.id, "scheduled");
+                    await fetchVisits();
+                  } catch (err: any) {
+                    Alert.alert(
+                      "Error",
+                      err.message || "Gagal mengubah status",
+                    );
+                  } finally {
+                    setMenuModalVisible(false);
+                  }
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <IconSymbol name="calendar" size={16} color={muted} />
+                  <ThemedText style={{ marginLeft: 8 }}>Scheduled</ThemedText>
+                </View>
+              </Pressable>
+              <Pressable
+                style={styles.menuItem}
+                onPress={async () => {
+                  try {
+                    await updateVisitStatus(menuModalItem.id, "completed");
+                    await fetchVisits();
+                  } catch (err: any) {
+                    Alert.alert(
+                      "Error",
+                      err.message || "Gagal mengubah status",
+                    );
+                  } finally {
+                    setMenuModalVisible(false);
+                  }
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <IconSymbol
+                    name="checkmark.circle.fill"
+                    size={16}
+                    color="#16A34A"
+                  />
+                  <ThemedText style={{ marginLeft: 8 }}>Completed</ThemedText>
+                </View>
+              </Pressable>
+              <Pressable
+                style={styles.menuItem}
+                onPress={async () => {
+                  try {
+                    await updateVisitStatus(menuModalItem.id, "cancelled");
+                    await fetchVisits();
+                  } catch (err: any) {
+                    Alert.alert(
+                      "Error",
+                      err.message || "Gagal mengubah status",
+                    );
+                  } finally {
+                    setMenuModalVisible(false);
+                  }
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <IconSymbol
+                    name="xmark.circle.fill"
+                    size={16}
+                    color="#EF4444"
+                  />
+                  <ThemedText style={{ marginLeft: 8, color: "#EF4444" }}>
+                    Cancelled
+                  </ThemedText>
+                </View>
+              </Pressable>
+            </View>
+          )}
+        </Pressable>
+      </Modal>
 
       <Modal
         visible={modalVisible}
@@ -556,6 +590,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     position: "relative",
+    overflow: "visible",
     padding: 12,
     borderRadius: 10,
     borderWidth: 1,
@@ -600,8 +635,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     minWidth: 140,
-    zIndex: 1000,
-    overflow: "hidden",
+    zIndex: 9999,
+    overflow: "visible",
+    elevation: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
   },
   menuItem: {
     paddingVertical: 8,
