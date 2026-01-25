@@ -177,16 +177,7 @@ export default function VisitManager() {
         ])
       }
     >
-      <View style={styles.cardLeft}>
-        <ThemedText style={[styles.cardTitle]}>{item.farm_name}</ThemedText>
-        <ThemedText style={{ color: muted, fontSize: 13 }}>
-          {item.consultant_name}
-        </ThemedText>
-        <ThemedText style={{ color: muted, fontSize: 13 }}>
-          {item.scheduled_date?.slice(0, 16)}
-        </ThemedText>
-      </View>
-      <View style={styles.cardRight}>
+      <View style={styles.cardStatus}>
         <IconSymbol
           name={
             item.status === "scheduled"
@@ -204,6 +195,18 @@ export default function VisitManager() {
                 : "#EF4444"
           }
         />
+      </View>
+
+      <View style={styles.cardLeft}>
+        <ThemedText style={[styles.cardTitle]}>{item.farm_name}</ThemedText>
+        <ThemedText style={{ color: muted, fontSize: 13 }}>
+          {item.consultant_name}
+        </ThemedText>
+        <ThemedText style={{ color: muted, fontSize: 13 }}>
+          {item.scheduled_date?.slice(0, 16)}
+        </ThemedText>
+      </View>
+      <View style={styles.cardRight}>
         <Pressable
           style={[styles.menuButton, { backgroundColor: cardBg }]}
           onPressIn={(e) => {
@@ -605,6 +608,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   cardLeft: { flex: 1 },
+  cardStatus: {
+    width: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
   cardRight: {
     flexDirection: "row",
     alignItems: "center",
