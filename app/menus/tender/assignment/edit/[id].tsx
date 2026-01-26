@@ -10,17 +10,17 @@ import { showError, showSuccess } from "@/utils/toast";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
 } from "react-native";
 
 export default function EditTenderAssign() {
@@ -159,6 +159,35 @@ export default function EditTenderAssign() {
   };
 
   const confirmDelete = () => {
+    // web: use window.confirm for synchronous confirmation
+    if (Platform.OS === "web") {
+      const ok = confirm("Yakin ingin menghapus penugasan ini?");
+      if (!ok) return;
+      (async () => {
+        try {
+          showSuccess("Menghapus...");
+          setDeleting(true);
+          console.warn("Deleting tender_assign", id);
+          const res = await deleteAssignment(id);
+          setDeleting(false);
+          if (res.success) {
+            showSuccess("Penugasan dihapus");
+            router.replace(`/menus/tender/assignment?refresh=${Date.now()}`);
+          } else {
+            const msg = res.error || "Gagal menghapus penugasan";
+            setError(msg);
+            showError(msg);
+          }
+        } catch (e: any) {
+          setDeleting(false);
+          const msg = e?.message || "Gagal menghapus penugasan";
+          setError(msg);
+          showError(msg);
+        }
+      })();
+      return;
+    }
+
     Alert.alert("Hapus Penugasan", "Yakin ingin menghapus penugasan ini?", [
       { text: "Batal", style: "cancel" },
       {
@@ -166,7 +195,9 @@ export default function EditTenderAssign() {
         style: "destructive",
         onPress: async () => {
           try {
+            showSuccess("Menghapus...");
             setDeleting(true);
+            console.warn("Deleting tender_assign", id);
             const res = await deleteAssignment(id);
             setDeleting(false);
             if (res.success) {
