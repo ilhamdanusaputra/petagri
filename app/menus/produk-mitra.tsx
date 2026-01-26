@@ -5,6 +5,7 @@ import { useThemeColor } from "@/hooks/use-theme-color";
 import { Href, useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import ProdukTokoRoleMiddleware from "./produk-mitra/_middleware";
 
 export default function ProdukMenu() {
 	const router = useRouter();
@@ -13,44 +14,47 @@ export default function ProdukMenu() {
 	const textColor = useThemeColor({ light: "#1F2937", dark: "#F3F4F6" }, "text");
 	const iconTint = useThemeColor({}, "tint");
 	return (
-		<ThemedView style={styles.container}>
-			<ThemedText type="title">PRODUK & TOKO</ThemedText>
-			<ThemedText>Halaman manajemen produk dan toko.</ThemedText>
+		<ProdukTokoRoleMiddleware>
+			<ThemedView style={styles.container}>
+				<ThemedText type="title">PRODUK & TOKO</ThemedText>
+				<ThemedText>Halaman manajemen produk dan toko.</ThemedText>
 
-			<View style={{ height: 12 }} />
+				<View style={{ height: 12 }} />
 
-			<Pressable
-				onPress={() => router.push("/menus/produk-mitra/mitra" as Href)}
-				style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
-				<View style={[styles.iconWrap, { backgroundColor: iconTint + "22" }]}>
-					<IconSymbol name="person.fill" size={22} color={iconTint} />
-				</View>
-				<View style={styles.cardBody}>
-					<ThemedText type="subtitle" style={[styles.cardTitle, { color: textColor }]}>
-						Kelola Mitra/Toko
-					</ThemedText>
-					<ThemedText style={[styles.cardDesc, { color: textColor }]}>
-						Manajemen data mitra, toko, dan distributor. Tambah, edit, dan kelola status mitra/toko.
-					</ThemedText>
-				</View>
-			</Pressable>
+				<Pressable
+					onPress={() => router.push("/menus/produk-mitra/mitra" as Href)}
+					style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+					<View style={[styles.iconWrap, { backgroundColor: iconTint + "22" }]}>
+						<IconSymbol name="person.fill" size={22} color={iconTint} />
+					</View>
+					<View style={styles.cardBody}>
+						<ThemedText type="subtitle" style={[styles.cardTitle, { color: textColor }]}>
+							Kelola Mitra/Toko
+						</ThemedText>
+						<ThemedText style={[styles.cardDesc, { color: textColor }]}>
+							Manajemen data mitra, toko, dan distributor. Tambah, edit, dan kelola status
+							mitra/toko.
+						</ThemedText>
+					</View>
+				</Pressable>
 
-			<Pressable
-				onPress={() => router.push("/menus/produk-mitra/produk" as Href)}
-				style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
-				<View style={[styles.iconWrap, { backgroundColor: iconTint + "22" }]}>
-					<IconSymbol name="bag.fill" size={22} color={iconTint} />
-				</View>
-				<View style={styles.cardBody}>
-					<ThemedText type="subtitle" style={[styles.cardTitle, { color: textColor }]}>
-						Kelola Produk
-					</ThemedText>
-					<ThemedText style={[styles.cardDesc, { color: textColor }]}>
-						Manajemen data produk, stok, dan harga. Tambah, edit, dan kelola produk yang dijual.
-					</ThemedText>
-				</View>
-			</Pressable>
-		</ThemedView>
+				<Pressable
+					onPress={() => router.push("/menus/produk-mitra/produk" as Href)}
+					style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+					<View style={[styles.iconWrap, { backgroundColor: iconTint + "22" }]}>
+						<IconSymbol name="bag.fill" size={22} color={iconTint} />
+					</View>
+					<View style={styles.cardBody}>
+						<ThemedText type="subtitle" style={[styles.cardTitle, { color: textColor }]}>
+							Kelola Produk
+						</ThemedText>
+						<ThemedText style={[styles.cardDesc, { color: textColor }]}>
+							Manajemen data produk, stok, dan harga. Tambah, edit, dan kelola produk yang dijual.
+						</ThemedText>
+					</View>
+				</Pressable>
+			</ThemedView>
+		</ProdukTokoRoleMiddleware>
 	);
 }
 

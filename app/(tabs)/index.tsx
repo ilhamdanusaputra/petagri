@@ -46,12 +46,13 @@ export default function HomeScreen() {
 				icon: "leaf.fill",
 				onPress: () => router.push("/menus/konsultasi"),
 			},
-		{
-			key: "produk",
-			label: "PRODUK & TOKO",
-			icon: "bag.fill",
-			onPress: () => router.push("./menus/produk-mitra"),
-		},
+		profile &&
+			["owner_platform", "developer", "admin_platform", "mitra_toko"].includes(profile?.roles) && {
+				key: "produk",
+				label: "PRODUK & TOKO",
+				icon: "bag.fill",
+				onPress: () => router.push("/menus/produk-mitra"),
+			},
 		{
 			key: "tender",
 			label: "TENDER & PENAWARAN",
