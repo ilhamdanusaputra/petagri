@@ -42,6 +42,8 @@ const MAPPING = {
   checkmark: "check",
   xmark: "close",
   "doc.text.fill": "description",
+  trash: "delete",
+  "trash.fill": "delete",
 } as const satisfies Partial<
   Record<SymbolViewProps["name"], ComponentProps<typeof MaterialIcons>["name"]>
 >;

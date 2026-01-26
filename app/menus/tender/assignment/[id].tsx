@@ -92,6 +92,28 @@ export default function TenderAssignmentDetail() {
     ]);
   };
 
+  const removeProduct = (index: number) => {
+    setProducts((p) => p.filter((_, i) => i !== index));
+  };
+
+  const resetProducts = () => {
+    const recs = detail?.recommendations || [];
+    setProducts((current) => {
+      const existing = new Set(
+        current.map((p) => (p.product_name || "").toLowerCase()),
+      );
+      const recProducts = recs
+        .map((r: any) => ({
+          product_name: r.product_name || "",
+          dosage: r.dosage || "",
+          qty: 1,
+          price: null,
+        }))
+        .filter((rp) => !existing.has((rp.product_name || "").toLowerCase()));
+      return [...current, ...recProducts];
+    });
+  };
+
   const handleCreate = async () => {
     const filtered = products.map((p) => ({ ...p, price: p.price || null }));
     const res = await createAssignment(
@@ -269,13 +291,32 @@ export default function TenderAssignmentDetail() {
                       updateProduct(index, { price: t ? Number(t) : null })
                     }
                   />
+                  <Pressable
+                    onPress={() => removeProduct(index)}
+                    style={styles.deleteBtn}
+                  >
+                    <IconSymbol name="trash" size={14} color="#B91C1C" />
+                  </Pressable>
                 </View>
               )}
             />
 
-            <Pressable style={styles.addBtn} onPress={addProduct}>
-              <ThemedText style={styles.addBtnText}>Tambah Produk</ThemedText>
-            </Pressable>
+            <View style={{ flexDirection: "column", marginTop: 8 }}>
+              <Pressable
+                style={[styles.addBtn, { width: "100%", marginTop: 8 }]}
+                onPress={addProduct}
+              >
+                <ThemedText style={styles.addBtnText}>Tambah Produk</ThemedText>
+              </Pressable>
+              <Pressable
+                style={[styles.addBtn, { width: "100%" }]}
+                onPress={resetProducts}
+              >
+                <ThemedText style={styles.addBtnText}>
+                  Kembalikan Produk Rekomendasi Konsultan
+                </ThemedText>
+              </Pressable>
+            </View>
           </View>
 
           <View style={{ marginTop: 20 }}>
@@ -381,8 +422,27 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
     alignItems: "center",
     backgroundColor: "#fff",
+    width: "100%",
   },
   addBtnText: { color: "#065F46", fontWeight: "600" },
+  deleteBtn: {
+    marginLeft: 8,
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: "#FEF2F2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  restoreBtn: {
+    marginTop: 8,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  restoreBtnText: { color: "#0C4A6E", fontWeight: "600" },
   smallInput: {
     width: 80,
     borderWidth: 1,
