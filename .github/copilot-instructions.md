@@ -1,47 +1,46 @@
-Purpose
-This file gives concise, repository-specific guidance for AI coding agents working on Petagri (an Expo + React Native app using Expo Router and Supabase).
+# Copilot / AI Agent Instructions — Petagri
 
-Quick Architecture Summary
+Quick orientation for AI coding agents working on this repository.
 
-- App type: Expo app with `expo-router` (file-based routing) and web support via `react-native-web`.
-- Entry: `package.json` main is `expo-router/entry` — dev workflows use `npx expo start` (or `npm run android|ios|web`).
-- Routing: route files live in the `app/` directory. Grouped folders like `(tabs)` and files like `[id].tsx` implement dynamic routes. Route middleware files use `_middleware.tsx`.
-- Backend: Supabase is the primary backend. The Supabase client is created in `utils/supabase.ts` and relies on env vars `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_KEY`.
+- **Big picture:** This is an Expo-based universal React app using `expo-router` (file-based routing) inside the `app/` directory. The project targets native (iOS/Android) and web; platform differences are handled at runtime (see `utils/supabase.ts` storage selection).
+- **Primary services & data:** Supabase is the backend (client in `utils/supabase.ts`), serverless functions live under `supabase/functions/`, and SQL migrations are in `supabase/migrations/`.
 
-Key Patterns & Conventions
+- **Where to look first:**
+  - App entry & routes: [app/\_layout.tsx](app/_layout.tsx)
+  - Auth middleware: [app/\_middleware.tsx](app/_middleware.tsx)
+  - Supabase client: [utils/supabase.ts](utils/supabase.ts)
+  - Domain hooks: `hooks/` (e.g., [hooks/use-auth.ts](hooks/use-auth.ts), `use-kebun.ts`, `use-konsultan.ts`)
+  - UI primitives: `components/` and `components/ui/`
 
-- File-based routing: add pages under `app/`. Nested folders mirror route paths. Example: `app/(tabs)/profile.tsx` renders `/profile` inside the tabs layout.
-- Dynamic routing: use `[id].tsx` and nested `[...]` folders for dynamic segments.
-- Middleware: place authorization or route-guarding logic in `_middleware.tsx` inside route folders.
-- Hooks for data: reusable data and auth logic live in `hooks/` (e.g., `use-auth.ts`, `use-kebun.ts`, `use-visit.ts`). Prefer creating/updating hooks for shared data flows rather than scattering fetch logic across components.
-- Supabase usage: import `supabase` from `utils/supabase.ts`. That file chooses storage per platform (AsyncStorage for native, localStorage for web) and registers auth listeners — follow the same pattern for new auth-aware code.
-- UI & styling: uses `nativewind` and `tailwind.config.js`. Themed primitives are in `components/themed-*` and `components/ui/`.
+- **Core conventions & patterns** (do not invent alternatives):
+  - Routing follows `expo-router` file-based rules in `app/`. Pages and nested folders map directly to routes.
+  - Authentication state is canonicalized via `use-auth.ts` and enforced in `app/_middleware.tsx`. Use these hooks for login/logout/session behavior rather than re-implementing auth checks.
+  - Use the provided `supabase` client from `utils/supabase.ts` for all DB and auth interactions. It configures platform-specific storage (AsyncStorage on native, localStorage on web) and sets `EXPO_PUBLIC_SUPABASE_*` env vars.
+  - Domain logic lives in small hooks under `hooks/` (prefer reusing `use-` hooks). UI components are lightweight and composed in `components/`.
+  - Styling uses `nativewind` (Tailwind-like classes) and `tailwind.config.js` — prefer existing utility classes.
 
-Developer Workflows (explicit commands)
+- **Environment & developer workflows**
+  - Start dev server: `npm start` (runs `expo start`). Platform targets: `npm run android`, `npm run ios`, `npm run web`.
+  - Regenerate DB types (project uses generated TS types in repo root):
 
-- Install: `npm install`
-- Start dev server: `npx expo start` or `npm run start`
-- Platform targets: `npm run android`, `npm run ios`, `npm run web`
-- Lint: `npm run lint` (uses Expo ESLint preset)
-- Reset starter app: `npm run reset-project` (moves starter to `app-example`)
+```bash
+npx supabase gen types typescript --project-id <PROJECT_ID> --schema public > database.types.ts
+```
 
-Important Integration Notes
+- Supabase functions are declared in `supabase/config.toml` and placed under `supabase/functions/` (example: `create-konsultan`). Use the Supabase CLI / dashboard to deploy or test functions.
+- To reset starter content: `npm run reset-project` (moves starter app to `app-example` and creates a blank `app`).
 
-- Environment: code expects `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_KEY` available to Expo on runtime. Changes to auth/session logic should consider `utils/supabase.ts` storage choice and `detectSessionInUrl` (web only).
-- Native modules: avoid adding or changing native modules without testing via a dev build; this project relies on Expo-managed workflow.
-- Maps & WebView: packages such as `react-native-leaflet-map` and `react-native-webview` are present; prefer using existing wrappers in `components/`.
+- **Integration notes & gotchas**
+  - Environment variables: the client reads `process.env.EXPO_PUBLIC_SUPABASE_URL` and `process.env.EXPO_PUBLIC_SUPABASE_KEY`. For local development, set them in your Expo environment (or use `.env` and your preferred loader).
+  - Auth state persistence: `utils/supabase.ts` chooses `window.localStorage` on web and `AsyncStorage` on native; tests or agents emulating web/native should mock storage accordingly.
+  - Routing + redirects: pages rely on `router.replace(...)` in hooks/middleware. Respect this behavior when changing auth flow or route structure.
 
-Code Change Guidance (practical rules for an AI agent)
+- **Where to update when changing DB or auth surface**
+  - Add DB changes to `supabase/migrations/` and regenerate types into `database.types.ts`.
+  - If you add serverless endpoints, add them to `supabase/functions/` and update `supabase/config.toml`.
 
-- Prefer edits under `app/`, `components/`, `hooks/`, and `utils/` for UI/data work.
-- When adding new pages, follow the naming and folder conventions in `app/` and create matching `_middleware.tsx` when route-level auth is required.
-- For backend calls, reuse or extend hooks (e.g., `use-konsultan.ts`) — avoid ad-hoc fetches inside presentational components.
-- Run `npm run lint` before creating a PR and test the change with `npx expo start --web` where possible.
+- **Examples to copy/paste**
+  - Check session: `const { data } = await supabase.auth.getSession();` (used in `app/_middleware.tsx`).
+  - Listen to auth state: `supabase.auth.onAuthStateChange(...)` (used in `hooks/use-auth.ts`).
 
-References (examples to inspect)
-
-- Supabase client and env usage: `utils/supabase.ts`
-- Auth hook pattern: `hooks/use-auth.ts`
-- Routing examples: `app/(tabs)/index.tsx`, `app/menus/konsultasi/konsultan/[id].tsx`
-
-If anything here is unclear or you want this expanded (e.g., CI, testing, or PR checklist), ask and I'll iterate.
+If any section is unclear or you want more depth on routing patterns, state-management choices, or deployment steps (Supabase functions / CLI), tell me which area to expand.
