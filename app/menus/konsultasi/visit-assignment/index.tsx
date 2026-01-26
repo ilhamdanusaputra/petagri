@@ -8,16 +8,17 @@ import { useVisit } from "@/hooks/use-visit";
 import { supabase } from "@/utils/supabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    Modal,
-    Platform,
-    Pressable,
-    StyleSheet,
-    View,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  FlatList,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
 } from "react-native";
 
 export default function VisitManager() {
@@ -77,6 +78,13 @@ export default function VisitManager() {
     }
     setModalVisible(true);
   };
+
+  const [menuModalVisible, setMenuModalVisible] = useState(false);
+  const [menuModalPos, setMenuModalPos] = useState({ x: 0, y: 0 });
+  const [menuModalItem, setMenuModalItem] = useState<any | null>(null);
+  const menuActionRef = useRef(false);
+
+  const windowWidth = Dimensions.get("window").width;
 
   const handleSave = async () => {
     if (!farmId || !consultantId || !scheduledDate) {
@@ -143,9 +151,13 @@ export default function VisitManager() {
   const renderItem = ({ item }: { item: any }) => (
     <Pressable
       style={[styles.card, { backgroundColor: cardBg, borderColor: border }]}
-      onPress={() =>
-        router.push(`/menus/konsultasi/visit-assignment/edit/${item.id}`)
-      }
+      onPress={() => {
+        if (menuActionRef.current) {
+          menuActionRef.current = false;
+          return;
+        }
+        router.push(`/menus/konsultasi/visit-assignment/edit/${item.id}`);
+      }}
       onLongPress={() =>
         Alert.alert(item.farm_name || "Kunjungan", undefined, [
           { text: "Batal", style: "cancel" },
@@ -165,6 +177,26 @@ export default function VisitManager() {
         ])
       }
     >
+      <View style={styles.cardStatus}>
+        <IconSymbol
+          name={
+            item.status === "scheduled"
+              ? "calendar"
+              : item.status === "completed"
+                ? "checkmark"
+                : "xmark"
+          }
+          size={18}
+          color={
+            item.status === "scheduled"
+              ? tint
+              : item.status === "completed"
+                ? "#16A34A"
+                : "#EF4444"
+          }
+        />
+      </View>
+
       <View style={styles.cardLeft}>
         <ThemedText style={[styles.cardTitle]}>{item.farm_name}</ThemedText>
         <ThemedText style={{ color: muted, fontSize: 13 }}>
@@ -175,17 +207,19 @@ export default function VisitManager() {
         </ThemedText>
       </View>
       <View style={styles.cardRight}>
-        <IconSymbol
-          name={
-            item.status === "scheduled"
-              ? "calendar"
-              : item.status === "completed"
-                ? "checkmark"
-                : "xmark"
-          }
-          size={18}
-          color={muted}
-        />
+        <Pressable
+          style={[styles.menuButton, { backgroundColor: cardBg }]}
+          onPressIn={(e) => {
+            // prevent parent onPress navigation
+            menuActionRef.current = true;
+            const { pageX, pageY } = e.nativeEvent;
+            setMenuModalPos({ x: pageX, y: pageY });
+            setMenuModalItem(item);
+            setMenuModalVisible(true);
+          }}
+        >
+          <IconSymbol name="list.bullet" size={18} color={muted} />
+        </Pressable>
       </View>
     </Pressable>
   );
@@ -245,6 +279,111 @@ export default function VisitManager() {
           renderItem={renderItem}
         />
       )}
+
+      {/* Dropdown modal to avoid clipping by card/list */}
+      <Modal
+        visible={menuModalVisible}
+        transparent
+        animationType="none"
+        onRequestClose={() => setMenuModalVisible(false)}
+      >
+        <Pressable
+          style={{ flex: 1 }}
+          onPress={() => setMenuModalVisible(false)}
+        >
+          {menuModalItem && (
+            <View
+              style={[
+                styles.menuDropdown,
+                {
+                  backgroundColor: cardBg,
+                  borderColor: border,
+                  left: Math.min(
+                    Math.max(8, menuModalPos.x - 160 + 24),
+                    windowWidth - 160 - 8,
+                  ),
+                  top: menuModalPos.y + 8,
+                  position: "absolute",
+                },
+              ]}
+            >
+              <Pressable
+                style={styles.menuItem}
+                onPress={async () => {
+                  try {
+                    await updateVisitStatus(menuModalItem.id, "scheduled");
+                    await fetchVisits();
+                  } catch (err: any) {
+                    Alert.alert(
+                      "Error",
+                      err.message || "Gagal mengubah status",
+                    );
+                  } finally {
+                    setMenuModalVisible(false);
+                  }
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <IconSymbol name="calendar" size={16} color={muted} />
+                  <ThemedText style={{ marginLeft: 8 }}>Scheduled</ThemedText>
+                </View>
+              </Pressable>
+              <Pressable
+                style={styles.menuItem}
+                onPress={async () => {
+                  try {
+                    await updateVisitStatus(menuModalItem.id, "completed");
+                    await fetchVisits();
+                  } catch (err: any) {
+                    Alert.alert(
+                      "Error",
+                      err.message || "Gagal mengubah status",
+                    );
+                  } finally {
+                    setMenuModalVisible(false);
+                  }
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <IconSymbol
+                    name="checkmark.circle.fill"
+                    size={16}
+                    color="#16A34A"
+                  />
+                  <ThemedText style={{ marginLeft: 8 }}>Completed</ThemedText>
+                </View>
+              </Pressable>
+              <Pressable
+                style={styles.menuItem}
+                onPress={async () => {
+                  try {
+                    await updateVisitStatus(menuModalItem.id, "cancelled");
+                    await fetchVisits();
+                  } catch (err: any) {
+                    Alert.alert(
+                      "Error",
+                      err.message || "Gagal mengubah status",
+                    );
+                  } finally {
+                    setMenuModalVisible(false);
+                  }
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <IconSymbol
+                    name="xmark.circle.fill"
+                    size={16}
+                    color="#EF4444"
+                  />
+                  <ThemedText style={{ marginLeft: 8, color: "#EF4444" }}>
+                    Cancelled
+                  </ThemedText>
+                </View>
+              </Pressable>
+            </View>
+          )}
+        </Pressable>
+      </Modal>
 
       <Modal
         visible={modalVisible}
@@ -461,13 +600,25 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
+    position: "relative",
+    overflow: "visible",
     padding: 12,
     borderRadius: 10,
     borderWidth: 1,
     marginBottom: 10,
   },
   cardLeft: { flex: 1 },
-  cardRight: { alignItems: "center", justifyContent: "center" },
+  cardStatus: {
+    width: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  cardRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   cardTitle: { fontSize: 16, fontWeight: "600" },
   input: { borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 6 },
   saveButton: {
@@ -481,5 +632,39 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     paddingHorizontal: 12,
+  },
+  menuButton: {
+    marginLeft: 8,
+    padding: 6,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 2,
+  },
+  menuDropdown: {
+    position: "absolute",
+    right: 8,
+    top: 42,
+    borderWidth: 1,
+    borderRadius: 8,
+    minWidth: 140,
+    zIndex: 9999,
+    overflow: "visible",
+    elevation: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+  },
+  menuItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.06)",
+    backgroundColor: "transparent",
   },
 });
