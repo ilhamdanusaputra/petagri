@@ -192,15 +192,20 @@ export default function TenderAssignmentDetail() {
                 </ThemedText>
               </View>
 
-              <View style={[styles.row, { alignItems: "flex-start" }]}>
-                <IconSymbol name="doc.text.fill" size={16} color="#6B7280" />
-                <ThemedText style={styles.label}>
-                  Masalah / Catatan Lapangan
-                </ThemedText>
+              <View style={styles.problemsBox}>
+                <View style={styles.problemsHeader}>
+                  <IconSymbol name="doc.text.fill" size={16} color="#6B7280" />
+                  <ThemedText style={styles.problemsLabel}>
+                    Masalah / Catatan Lapangan
+                  </ThemedText>
+                </View>
+                <View style={styles.problemsHeader}>
+                  <View style={{ width: 16, height: 16 }} />
+                  <ThemedText style={styles.problemsLabel}>
+                    {detail.report?.problems || "-"}
+                  </ThemedText>
+                </View>
               </View>
-              <ThemedText style={styles.problems}>
-                {detail.report?.problems || "-"}
-              </ThemedText>
             </View>
           </View>
 
@@ -309,6 +314,30 @@ const styles = StyleSheet.create({
   label: { marginLeft: 6, flex: 0.6, color: "#374151", fontSize: 13 },
   value: { flex: 0.4, textAlign: "right", color: "#111827", fontWeight: "600" },
   problems: { marginTop: 6, color: "#374151" },
+  problemsBox: {
+    marginTop: 6,
+    backgroundColor: "#FFFBEB",
+    borderRadius: 8,
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingRight: 10,
+    paddingLeft: 6,
+    borderLeftWidth: 4,
+    borderLeftColor: "#F59E0B",
+  },
+  problemsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 6,
+  },
+  problemsLabel: {
+    marginLeft: 6,
+    color: "#374151",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  problemsText: { color: "#92400E", lineHeight: 20, marginLeft: 0 },
   productRow: {
     flexDirection: "row",
     alignItems: "center",
