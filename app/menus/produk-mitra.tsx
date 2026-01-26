@@ -36,7 +36,7 @@ export default function ProdukMenu() {
 			</Pressable>
 
 			<Pressable
-				onPress={() => router.push("/menus/konsultasi/konsultan")}
+				onPress={() => router.push("/menus/produk-mitra/produk" as Href)}
 				style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
 				<View style={[styles.iconWrap, { backgroundColor: iconTint + "22" }]}>
 					<IconSymbol name="bag.fill" size={22} color={iconTint} />

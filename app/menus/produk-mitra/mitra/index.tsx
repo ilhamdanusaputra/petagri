@@ -26,7 +26,7 @@ export default function MitraPage() {
 
 	const handleOpenEdit = (item: any) => {
 		router.push({
-			pathname: "/menus/produk-mitra/mitra/[id]",
+			pathname: "/menus/produk-mitra/mitra/edit/[id]",
 			params: { id: item.id },
 		});
 	};
