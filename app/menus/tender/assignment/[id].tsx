@@ -6,6 +6,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useTenderAssignment } from "@/hooks/use-tender-assignment";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { supabase } from "@/utils/supabase";
+import { showError, showSuccess } from "@/utils/toast";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -132,10 +133,12 @@ export default function TenderAssignmentDetail() {
       filtered,
     );
     if (res.success) {
-      router.back();
+      showSuccess("Tender berhasil dibuat");
+      router.replace(`/menus/tender/assignment?refresh=${Date.now()}`);
     } else {
       const msg = res.error || "Gagal membuat tender";
       setCreateError(msg);
+      showError(msg);
       console.warn(msg);
     }
   };

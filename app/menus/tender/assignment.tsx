@@ -3,7 +3,7 @@ import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { supabase } from "@/utils/supabase";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
@@ -77,9 +77,11 @@ export default function TenderAssignment() {
     }
   };
 
+  const params = useLocalSearchParams();
+
   useEffect(() => {
     fetchReports();
-  }, []);
+  }, [params?.refresh]);
 
   const renderItem = ({ item }: { item: any }) => (
     <Pressable

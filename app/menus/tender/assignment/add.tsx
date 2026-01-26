@@ -2,6 +2,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useTenderAssignment } from "@/hooks/use-tender-assignment";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import { showError, showSuccess } from "@/utils/toast";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -35,7 +36,13 @@ export default function TenderAssignmentAdd() {
       { visit_id: visitId, deadline: deadline || null },
       products,
     );
-    if (res.success) router.back();
+    if (res.success) {
+      showSuccess("Penugasan berhasil dibuat");
+      router.replace(`/menus/tender/assignment?refresh=${Date.now()}`);
+    } else {
+      const msg = res.error || "Gagal membuat penugasan";
+      showError(msg);
+    }
   };
 
   return (

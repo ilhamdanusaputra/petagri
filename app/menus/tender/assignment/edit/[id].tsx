@@ -6,10 +6,12 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useTenderAssignment } from "@/hooks/use-tender-assignment";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { supabase } from "@/utils/supabase";
+import { showError, showSuccess } from "@/utils/toast";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
+    Alert,
     FlatList,
     Image,
     KeyboardAvoidingView,
@@ -25,7 +27,7 @@ export default function EditTenderAssign() {
   const params = useLocalSearchParams();
   const id = params?.id as string;
   const router = useRouter();
-  const { getAssignmentById, updateAssignment, loading } =
+  const { getAssignmentById, updateAssignment, deleteAssignment, loading } =
     useTenderAssignment();
   const tint = useThemeColor({}, "tint");
 
@@ -37,6 +39,7 @@ export default function EditTenderAssign() {
   const [detail, setDetail] = useState<any | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -146,10 +149,43 @@ export default function EditTenderAssign() {
       }));
       const res = await updateAssignment(id, patch, prodPayload);
       if (!res.success) throw new Error(res.error || "Gagal menyimpan");
-      router.back();
+      showSuccess("Perubahan tersimpan");
+      router.replace(`/menus/tender/assignment?refresh=${Date.now()}`);
     } catch (e: any) {
-      setError(e?.message || "Gagal menyimpan perubahan");
+      const msg = e?.message || "Gagal menyimpan perubahan";
+      setError(msg);
+      showError(msg);
     }
+  };
+
+  const confirmDelete = () => {
+    Alert.alert("Hapus Penugasan", "Yakin ingin menghapus penugasan ini?", [
+      { text: "Batal", style: "cancel" },
+      {
+        text: "Hapus",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            setDeleting(true);
+            const res = await deleteAssignment(id);
+            setDeleting(false);
+            if (res.success) {
+              showSuccess("Penugasan dihapus");
+              router.replace(`/menus/tender/assignment?refresh=${Date.now()}`);
+            } else {
+              const msg = res.error || "Gagal menghapus penugasan";
+              setError(msg);
+              showError(msg);
+            }
+          } catch (e: any) {
+            setDeleting(false);
+            const msg = e?.message || "Gagal menghapus penugasan";
+            setError(msg);
+            showError(msg);
+          }
+        },
+      },
+    ]);
   };
 
   if (loadingData) {
@@ -388,7 +424,29 @@ export default function EditTenderAssign() {
               </ThemedText>
             ) : null}
           </View>
-          <View style={{ marginTop: 20 }}>
+
+          <View style={{ marginTop: 12 }}>
+            <Pressable
+              style={[
+                styles.restoreBtn,
+                { backgroundColor: "#FEF2F2", borderColor: "#FCA5A5" },
+              ]}
+              onPress={confirmDelete}
+              disabled={loading || deleting}
+            >
+              <ThemedText
+                style={{
+                  color: "#B91C1C",
+                  textAlign: "center",
+                  fontWeight: "600",
+                }}
+              >
+                {deleting ? "Menghapus..." : "Hapus Penugasan"}
+              </ThemedText>
+            </Pressable>
+          </View>
+
+          <View style={{ marginTop: 12 }}>
             <Pressable
               style={[styles.actionBtn, { backgroundColor: tint }]}
               onPress={handleSave}
