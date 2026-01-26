@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
@@ -24,10 +25,16 @@ const ITEMS = [
   },
 ];
 
-function Card({ item }: { item: (typeof ITEMS)[number] }) {
+function Card({
+  item,
+  onPress,
+}: {
+  item: (typeof ITEMS)[number];
+  onPress: () => void;
+}) {
   return (
     <Pressable
-      onPress={() => console.log("Tapped", item.id)}
+      onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
     >
       <View style={styles.iconWrap}>
@@ -43,6 +50,7 @@ function Card({ item }: { item: (typeof ITEMS)[number] }) {
 }
 
 export default function TenderMenu() {
+  const router = useRouter();
   return (
     <ThemedView style={styles.container}>
       <ThemedText type="title">TENDER & PENAWARAN</ThemedText>
@@ -50,7 +58,11 @@ export default function TenderMenu() {
 
       <View style={styles.list}>
         {ITEMS.map((it) => (
-          <Card key={it.id} item={it} />
+          <Card
+            key={it.id}
+            item={it}
+            onPress={() => router.push(`/menus/tender/${it.id}`)}
+          />
         ))}
       </View>
     </ThemedView>
