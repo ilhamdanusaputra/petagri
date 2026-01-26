@@ -50,7 +50,7 @@ export default function HomeScreen() {
 			key: "produk",
 			label: "PRODUK & TOKO",
 			icon: "bag.fill",
-			onPress: () => router.push("/menus/produk"),
+			onPress: () => router.push("./menus/produk-mitra"),
 		},
 		{
 			key: "tender",
