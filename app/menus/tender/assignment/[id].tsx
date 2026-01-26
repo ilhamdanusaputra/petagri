@@ -2,6 +2,7 @@ import ConsultantOverview from "@/components/consultant-overview";
 import FarmOverview from "@/components/farm-overview";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useTenderAssignment } from "@/hooks/use-tender-assignment";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { supabase } from "@/utils/supabase";
@@ -10,6 +11,7 @@ import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     FlatList,
+    Image,
     KeyboardAvoidingView,
     Platform,
     Pressable,
@@ -151,9 +153,56 @@ export default function TenderAssignmentDetail() {
             />
           </View>
 
-          <ThemedText style={{ marginTop: 8 }}>
-            {detail.report?.problems || "-"}
-          </ThemedText>
+          <View style={styles.reportCard}>
+            {detail.report?.field_photo_url ? (
+              <Image
+                source={{ uri: detail.report.field_photo_url }}
+                style={styles.photoTop}
+              />
+            ) : (
+              <View style={styles.photoTopPlaceholder}>
+                <IconSymbol name="leaf.fill" size={28} color="#fff" />
+              </View>
+            )}
+
+            <View style={styles.reportContent}>
+              <View style={styles.row}>
+                <IconSymbol name="leaf.fill" size={16} color="#34A853" />
+                <ThemedText style={styles.label}>Jenis Tanaman</ThemedText>
+                <ThemedText style={styles.value}>
+                  {detail.report?.plant_type || "-"}
+                </ThemedText>
+              </View>
+
+              <View style={styles.row}>
+                <IconSymbol name="calendar" size={16} color="#1E88E5" />
+                <ThemedText style={styles.label}>Umur Tanaman</ThemedText>
+                <ThemedText style={styles.value}>
+                  {detail.report?.plant_age || "-"}
+                </ThemedText>
+              </View>
+
+              <View style={styles.row}>
+                <IconSymbol name="chart.bar.fill" size={16} color="#F59E0B" />
+                <ThemedText style={styles.label}>Luas Lahan</ThemedText>
+                <ThemedText style={styles.value}>
+                  {detail.report?.land_area
+                    ? `${detail.report.land_area} ha`
+                    : "-"}
+                </ThemedText>
+              </View>
+
+              <View style={[styles.row, { alignItems: "flex-start" }]}>
+                <IconSymbol name="doc.text.fill" size={16} color="#6B7280" />
+                <ThemedText style={styles.label}>
+                  Masalah / Catatan Lapangan
+                </ThemedText>
+              </View>
+              <ThemedText style={styles.problems}>
+                {detail.report?.problems || "-"}
+              </ThemedText>
+            </View>
+          </View>
 
           <View style={{ marginTop: 12 }}>
             <ThemedText style={{ fontWeight: "600" }}>Deadline</ThemedText>
@@ -236,6 +285,30 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 6,
   },
+  reportCard: {
+    flexDirection: "column",
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#fff",
+    marginTop: 8,
+  },
+  photoTop: { width: "100%", height: 160, borderRadius: 8, marginBottom: 12 },
+  photoTopPlaceholder: {
+    width: "100%",
+    height: 160,
+    borderRadius: 8,
+    marginBottom: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#D1FAE5",
+  },
+  reportContent: { flex: 1 },
+  row: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 },
+  label: { marginLeft: 6, flex: 0.6, color: "#374151", fontSize: 13 },
+  value: { flex: 0.4, textAlign: "right", color: "#111827", fontWeight: "600" },
+  problems: { marginTop: 6, color: "#374151" },
   productRow: {
     flexDirection: "row",
     alignItems: "center",
