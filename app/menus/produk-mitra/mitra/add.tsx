@@ -73,6 +73,13 @@ export default function AddMitraPage() {
 				}}
 			/>
 			<ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
+				{/* Badge warning */}
+				<View style={styles.badgeWarning}>
+					<ThemedText style={{ color: "#B45309", fontWeight: "600" }}>
+						Membuat mitra/toko akan otomatis membuat user baru. Silakan isi email, password, dan
+						phone untuk akun mitra/toko.
+					</ThemedText>
+				</View>
 				{/* Email */}
 				<View style={styles.fieldGroup}>
 					<ThemedText style={styles.label}>Email *</ThemedText>
@@ -211,6 +218,14 @@ export default function AddMitraPage() {
 }
 
 const styles = StyleSheet.create({
+	badgeWarning: {
+		backgroundColor: "#FEF3C7",
+		borderRadius: 8,
+		padding: 10,
+		marginBottom: 16,
+		borderWidth: 1,
+		borderColor: "#F59E42",
+	},
 	container: { flex: 1 },
 	form: { flex: 1, paddingHorizontal: 16, paddingTop: 16 },
 	fieldGroup: { marginBottom: 20 },
