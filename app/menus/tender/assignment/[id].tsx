@@ -85,6 +85,13 @@ export default function TenderAssignmentDetail() {
     );
   };
 
+  const addProduct = () => {
+    setProducts((p) => [
+      ...p,
+      { product_name: "", dosage: "", qty: 1, price: null },
+    ]);
+  };
+
   const handleCreate = async () => {
     const filtered = products.map((p) => ({ ...p, price: p.price || null }));
     const res = await createAssignment(
@@ -230,12 +237,20 @@ export default function TenderAssignmentDetail() {
               renderItem={({ item, index }) => (
                 <View style={styles.productRow}>
                   <View style={{ flex: 1 }}>
-                    <ThemedText style={{ fontWeight: "600" }}>
-                      {item.product_name}
-                    </ThemedText>
-                    <ThemedText style={{ color: "#6B7280", fontSize: 12 }}>
-                      {item.dosage || "-"}
-                    </ThemedText>
+                    <TextInput
+                      placeholder="Nama produk"
+                      value={item.product_name || ""}
+                      onChangeText={(t) =>
+                        updateProduct(index, { product_name: t })
+                      }
+                      style={styles.productNameInput}
+                    />
+                    <TextInput
+                      placeholder="Dosis"
+                      value={item.dosage || ""}
+                      onChangeText={(t) => updateProduct(index, { dosage: t })}
+                      style={styles.productDosageInput}
+                    />
                   </View>
                   <TextInput
                     style={[styles.smallInput]}
@@ -257,6 +272,10 @@ export default function TenderAssignmentDetail() {
                 </View>
               )}
             />
+
+            <Pressable style={styles.addBtn} onPress={addProduct}>
+              <ThemedText style={styles.addBtnText}>Tambah Produk</ThemedText>
+            </Pressable>
           </View>
 
           <View style={{ marginTop: 20 }}>
@@ -347,6 +366,23 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
     marginBottom: 8,
   },
+  productNameInput: { fontWeight: "600", padding: 0 },
+  productDosageInput: {
+    color: "#6B7280",
+    fontSize: 12,
+    padding: 0,
+    marginTop: 4,
+  },
+  addBtn: {
+    marginTop: 8,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  addBtnText: { color: "#065F46", fontWeight: "600" },
   smallInput: {
     width: 80,
     borderWidth: 1,
