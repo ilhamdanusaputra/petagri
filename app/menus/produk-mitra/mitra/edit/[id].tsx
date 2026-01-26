@@ -31,6 +31,7 @@ export default function MitraDetailPage() {
 		city: "",
 		province: "",
 		status: "Aktif",
+		handphone: "",
 	});
 
 	const [loading, setLoading] = useState(true);
@@ -46,6 +47,7 @@ export default function MitraDetailPage() {
 				city: mitra.city,
 				province: mitra.province,
 				status: mitra.status,
+				handphone: mitra.handphone || "",
 			});
 		}
 		setLoading(false);
@@ -167,6 +169,18 @@ export default function MitraDetailPage() {
 							<Picker.Item label="Nonaktif" value="Nonaktif" />
 						</Picker>
 					</View>
+				</View>
+				{/* Handphone */}
+				<View style={styles.fieldGroup}>
+					<ThemedText style={styles.label}>Handphone</ThemedText>
+					<TextInput
+						style={[styles.input, { backgroundColor: inputBg, color: text, borderColor: border }]}
+						placeholder="Contoh: 081234567890"
+						placeholderTextColor={placeholderColor}
+						value={form.handphone}
+						onChangeText={(val) => setForm((f) => ({ ...f, handphone: val }))}
+						keyboardType="phone-pad"
+					/>
 				</View>
 				{/* Validation Error */}
 				{errorMsg && (

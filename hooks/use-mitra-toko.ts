@@ -13,6 +13,7 @@ export type MitraToko = {
 	user_id: string;
 	email?: string;
 	phone?: string;
+	handphone?: string;
 };
 
 export function useMitraToko() {
@@ -54,6 +55,7 @@ export function useMitraToko() {
 		email: string;
 		password: string;
 		phone: string;
+		handphone?: string;
 		name: string;
 		owner_name: string;
 		address: string;
@@ -90,6 +92,8 @@ export function useMitraToko() {
 			province: form.province,
 			status: form.status,
 			user_id: userId,
+			phone: form.phone,
+			handphone: form.handphone,
 		});
 		if (insertError) {
 			return { success: false, error: insertError.message };

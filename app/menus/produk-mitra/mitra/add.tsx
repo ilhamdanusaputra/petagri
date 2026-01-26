@@ -22,6 +22,7 @@ export default function AddMitraPage() {
 		name: "",
 		owner_name: "",
 		phone: "",
+		handphone: "",
 		address: "",
 		city: "",
 		province: "",
@@ -135,10 +136,22 @@ export default function AddMitraPage() {
 					<ThemedText style={styles.label}>Telepon</ThemedText>
 					<TextInput
 						style={[styles.input, { backgroundColor: inputBg, color: text, borderColor: border }]}
-						placeholder="Contoh: 081234567890"
+						placeholder="Contoh: 0211234567"
 						placeholderTextColor={placeholderColor}
 						value={form.phone}
 						onChangeText={(val) => setForm((f) => ({ ...f, phone: val }))}
+						keyboardType="phone-pad"
+					/>
+				</View>
+				{/* Handphone */}
+				<View style={styles.fieldGroup}>
+					<ThemedText style={styles.label}>Handphone</ThemedText>
+					<TextInput
+						style={[styles.input, { backgroundColor: inputBg, color: text, borderColor: border }]}
+						placeholder="Contoh: 081234567890"
+						placeholderTextColor={placeholderColor}
+						value={form.handphone}
+						onChangeText={(val) => setForm((f) => ({ ...f, handphone: val }))}
 						keyboardType="phone-pad"
 					/>
 				</View>

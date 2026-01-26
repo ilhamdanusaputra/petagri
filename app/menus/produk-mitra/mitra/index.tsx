@@ -85,6 +85,9 @@ export default function MitraPage() {
 									Pemilik: {item.owner_name}
 								</ThemedText>
 								<ThemedText style={[styles.cardDesc, { color: muted }]}>
+									Handphone: {item.handphone || "-"}
+								</ThemedText>
+								<ThemedText style={[styles.cardDesc, { color: muted }]}>
 									Alamat: {item.address}
 								</ThemedText>
 								<ThemedText style={[styles.cardDesc, { color: muted }]}>
