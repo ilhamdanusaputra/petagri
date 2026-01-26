@@ -491,25 +491,23 @@ export default function EditTenderAssign() {
           <View style={{ marginTop: 12 }}>
             <Pressable
               style={[
-                styles.restoreBtn,
-                { backgroundColor: "#FEF2F2", borderColor: "#FCA5A5" },
+                styles.actionBtn,
+                { backgroundColor: tint, marginBottom: 8 },
               ]}
-              onPress={confirmDelete}
-              disabled={loading || deleting}
+              onPress={handleSave}
+              disabled={loading}
             >
               <ThemedText
                 style={{
-                  color: "#B91C1C",
+                  color: "white",
                   textAlign: "center",
                   fontWeight: "600",
                 }}
               >
-                {deleting ? "Menghapus..." : "Hapus Penugasan"}
+                Simpan Perubahan
               </ThemedText>
             </Pressable>
-          </View>
 
-          <View style={{ marginTop: 12 }}>
             <Pressable
               style={[
                 styles.actionBtn,
@@ -528,6 +526,7 @@ export default function EditTenderAssign() {
                 Simpan Draft
               </ThemedText>
             </Pressable>
+
             <Pressable
               style={[
                 styles.actionBtn,
@@ -546,6 +545,7 @@ export default function EditTenderAssign() {
                 Buka Tender
               </ThemedText>
             </Pressable>
+
             <Pressable
               style={[
                 styles.actionBtn,
@@ -564,19 +564,27 @@ export default function EditTenderAssign() {
                 Tutup Tender
               </ThemedText>
             </Pressable>
+
             <Pressable
-              style={[styles.actionBtn, { backgroundColor: tint }]}
-              onPress={handleSave}
-              disabled={loading}
+              style={[
+                styles.restoreBtn,
+                {
+                  backgroundColor: "#FEF2F2",
+                  borderColor: "#FCA5A5",
+                  marginTop: 8,
+                },
+              ]}
+              onPress={confirmDelete}
+              disabled={loading || deleting}
             >
               <ThemedText
                 style={{
-                  color: "white",
+                  color: "#B91C1C",
                   textAlign: "center",
                   fontWeight: "600",
                 }}
               >
-                Simpan Perubahan
+                {deleting ? "Menghapus..." : "Hapus Penugasan"}
               </ThemedText>
             </Pressable>
           </View>
