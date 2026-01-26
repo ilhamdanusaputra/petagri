@@ -17,6 +17,7 @@ export default function TenderAssignment() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [reports, setReports] = useState<any[]>([]);
+  const [assignments, setAssignments] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const cardBg = useThemeColor({}, "card");
@@ -28,14 +29,24 @@ export default function TenderAssignment() {
     setLoading(true);
     setError(null);
     try {
-      const { data, error } = await supabase
-        .from("visit_reports")
-        .select(`*, visits (*, farms (name), profiles (full_name))`)
-        .order("created_at", { ascending: false });
+      const [
+        { data: reportsData, error: reportsErr },
+        { data: assignsData, error: assignsErr },
+      ] = await Promise.all([
+        supabase
+          .from("visit_reports")
+          .select(`*, visits (*, farms (name), profiles (full_name))`)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("tender_assigns")
+          .select(`*, visits (*, farms (name))`)
+          .order("created_at", { ascending: false }),
+      ]);
 
-      if (error) throw error;
+      if (reportsErr) throw reportsErr;
+      if (assignsErr) throw assignsErr;
 
-      const mapped = (data || []).map((r: any) => ({
+      const mappedReports = (reportsData || []).map((r: any) => ({
         ...r,
         farm_name: r.visits?.farms?.name || "-",
         consultant_name: r.visits?.profiles?.full_name || "-",
@@ -43,9 +54,24 @@ export default function TenderAssignment() {
         visit_id: r.visit_id,
       }));
 
-      setReports(mapped);
+      const mappedAssigns = (assignsData || []).map((a: any) => ({
+        ...a,
+        farm_name: a.visits?.farms?.name || "-",
+        created_at: a.created_at,
+      }));
+
+      // find visit_reports that don't have a tender (by visit_id)
+      const assignedVisitIds = new Set(
+        (mappedAssigns || []).map((x: any) => x.visit_id),
+      );
+      const reportsNoTender = mappedReports.filter(
+        (r: any) => !assignedVisitIds.has(r.visit_id),
+      );
+
+      setReports(reportsNoTender);
+      setAssignments(mappedAssigns);
     } catch (err: any) {
-      setError(err.message || "Gagal memuat laporan kunjungan");
+      setError(err.message || "Gagal memuat data tender");
     } finally {
       setLoading(false);
     }
@@ -67,6 +93,24 @@ export default function TenderAssignment() {
         </ThemedText>
         <ThemedText style={{ color: muted, fontSize: 13 }}>
           {new Date(item.scheduled_date).toLocaleString()}
+        </ThemedText>
+      </View>
+      <IconSymbol name="chevron.right" size={20} color={muted} />
+    </Pressable>
+  );
+
+  const renderAssignment = ({ item }: { item: any }) => (
+    <Pressable
+      style={[styles.card, { backgroundColor: cardBg, borderColor: border }]}
+      onPress={() => router.push(`/menus/tender/assignment/edit/${item.id}`)}
+    >
+      <View style={{ flex: 1 }}>
+        <ThemedText style={{ fontWeight: "600" }}>{item.farm_name}</ThemedText>
+        <ThemedText style={{ color: muted, fontSize: 13 }}>
+          {item.status || "-"}
+        </ThemedText>
+        <ThemedText style={{ color: muted, fontSize: 13 }}>
+          {item.created_at ? new Date(item.created_at).toLocaleString() : "-"}
         </ThemedText>
       </View>
       <IconSymbol name="chevron.right" size={20} color={muted} />
@@ -96,21 +140,39 @@ export default function TenderAssignment() {
         </View>
       ) : error ? (
         <ThemedText style={{ color: "#EF4444" }}>Error: {error}</ThemedText>
-      ) : reports.length === 0 ? (
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
-          <IconSymbol name="doc.text.fill" size={48} color={muted} />
-          <ThemedText style={{ marginTop: 12, color: muted }}>
-            Belum ada laporan kunjungan
-          </ThemedText>
-        </View>
       ) : (
-        <FlatList
-          data={reports}
-          keyExtractor={(i: any) => i.id}
-          renderItem={renderItem}
-        />
+        <>
+          <ThemedText type="subtitle" style={{ marginTop: 8, marginBottom: 6 }}>
+            Laporan Kunjungan (Belum dibuat Tender)
+          </ThemedText>
+          {reports.length === 0 ? (
+            <ThemedText style={{ color: muted, marginBottom: 12 }}>
+              Tidak ada laporan belum ditugaskan
+            </ThemedText>
+          ) : (
+            <FlatList
+              data={reports}
+              keyExtractor={(i: any) => i.id}
+              renderItem={renderItem}
+              style={{ marginBottom: 12 }}
+            />
+          )}
+
+          <ThemedText type="subtitle" style={{ marginTop: 8, marginBottom: 6 }}>
+            Penugasan Tender (Sudah dibuat)
+          </ThemedText>
+          {assignments.length === 0 ? (
+            <ThemedText style={{ color: muted }}>
+              Belum ada penugasan tender
+            </ThemedText>
+          ) : (
+            <FlatList
+              data={assignments}
+              keyExtractor={(i: any) => i.id}
+              renderItem={renderAssignment}
+            />
+          )}
+        </>
       )}
     </ThemedView>
   );

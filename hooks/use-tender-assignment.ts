@@ -71,18 +71,53 @@ export function useTenderAssignment() {
     setLoading(true);
     setError(null);
     try {
-      const { data, error } = await supabase.from("tender_assigns").insert([input]).select().single();
-      if (error) throw error;
-
-      const tenderAssignId = data.id;
-
-      if (products && products.length > 0) {
-        const rows = products.map((p) => ({ tender_assign_id: tenderAssignId, ...p }));
-        const { error: prodErr } = await supabase.from("tender_assign_products").insert(rows);
-        if (prodErr) throw prodErr;
+      // Ensure assigned_by is set (DB requires non-null)
+      let assignedBy = input.assigned_by ?? null;
+      if (!assignedBy) {
+        try {
+          const { data: userData } = await supabase.auth.getUser();
+          assignedBy = (userData as any)?.user?.id ?? null;
+        } catch (e) {
+          assignedBy = null;
+        }
       }
 
-      return { success: true, data };
+      if (!assignedBy) {
+        throw new Error("User not authenticated: cannot set 'assigned_by'");
+      }
+
+      const insertPayload = { ...input, assigned_by: assignedBy };
+
+      const { data, error } = await supabase.from("tender_assigns").insert([insertPayload]).select();
+      if (error) throw error;
+
+      const created = Array.isArray(data) ? data[0] : data;
+      if (!created) throw new Error("Failed to retrieve created tender_assign");
+
+      const tenderAssignId = created.id;
+
+      if (products && products.length > 0) {
+        const rows = products
+          .filter((p) => (p.product_name || "").toString().trim().length > 0)
+          .map((p) => ({
+            tender_assign_id: tenderAssignId,
+            product_name: p.product_name,
+            dosage: p.dosage ?? null,
+            qty: p.qty ?? 1,
+            price: p.price ?? null,
+            note: p.note ?? null,
+          }));
+
+        if (rows.length > 0) {
+          const { data: prodData, error: prodErr } = await supabase
+            .from("tender_assign_products")
+            .insert(rows)
+            .select();
+          if (prodErr) throw prodErr;
+        }
+      }
+
+      return { success: true, data: created };
     } catch (err: any) {
       setError(err.message || "Gagal membuat penugasan");
       return { success: false, error: err.message };

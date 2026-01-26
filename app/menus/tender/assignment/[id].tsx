@@ -29,54 +29,63 @@ export default function TenderAssignmentDetail() {
 
   const [loadingData, setLoadingData] = useState(true);
   const [detail, setDetail] = useState<any | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [deadline, setDeadline] = useState<string | undefined>(undefined);
   const [message, setMessage] = useState<string | undefined>(undefined);
+  const [createError, setCreateError] = useState<string | null>(null);
   const [products, setProducts] = useState<any[]>([]);
   const tint = useThemeColor({}, "tint");
 
-  useEffect(() => {
-    const load = async () => {
-      setLoadingData(true);
-      try {
-        const { data, error } = await supabase
-          .from("visit_reports")
-          .select(
-            `*, visits (*, farms (name), profiles (full_name)), visit_recommendations(*)`,
-          )
-          .eq("id", id)
-          .single();
+  const load = async () => {
+    setLoadingData(true);
+    setFetchError(null);
+    try {
+      const { data, error } = await supabase
+        .from("visit_reports")
+        .select(
+          `*, visits (*, farms (name), profiles (full_name)), visit_recommendations(*)`,
+        )
+        .eq("id", id)
+        .single();
 
-        if (error || !data) {
-          console.warn("visit_report not found", error);
-          setDetail(null);
-          setLoadingData(false);
-          return;
-        }
-
-        const recs = data.visit_recommendations || [];
-
-        const detailObj = {
-          visit_id: data.visit_id,
-          report: data,
-          recommendations: recs,
-        };
-
-        setDetail(detailObj);
-        setProducts(
-          recs.map((r: any) => ({
-            product_name: r.product_name,
-            dosage: r.dosage || null,
-            qty: 1,
-            price: null,
-          })),
-        );
-      } catch (err: any) {
-        console.warn(err);
+      if (error || !data) {
+        const msg =
+          (error && (error.message || String(error))) ||
+          "Laporan kunjungan tidak ditemukan";
+        console.warn("visit_report not found", error);
         setDetail(null);
-      } finally {
-        setLoadingData(false);
+        setFetchError(msg);
+        return;
       }
-    };
+
+      const recs = data.visit_recommendations || [];
+
+      const detailObj = {
+        visit_id: data.visit_id,
+        report: data,
+        recommendations: recs,
+      };
+
+      setDetail(detailObj);
+      setProducts(
+        recs.map((r: any) => ({
+          product_name: r.product_name,
+          dosage: r.dosage || null,
+          qty: 1,
+          price: null,
+        })),
+      );
+    } catch (err: any) {
+      const msg = err?.message || "Gagal memuat data";
+      console.warn(err);
+      setDetail(null);
+      setFetchError(msg);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  useEffect(() => {
     load();
   }, [id]);
 
@@ -116,6 +125,7 @@ export default function TenderAssignmentDetail() {
   };
 
   const handleCreate = async () => {
+    setCreateError(null);
     const filtered = products.map((p) => ({ ...p, price: p.price || null }));
     const res = await createAssignment(
       { visit_id: detail.visit_id, deadline, message },
@@ -124,12 +134,13 @@ export default function TenderAssignmentDetail() {
     if (res.success) {
       router.back();
     } else {
-      // TODO: show error toast
-      console.warn(res.error);
+      const msg = res.error || "Gagal membuat tender";
+      setCreateError(msg);
+      console.warn(msg);
     }
   };
 
-  if (loadingData || !detail) {
+  if (loadingData) {
     return (
       <ThemedView
         style={{
@@ -140,6 +151,45 @@ export default function TenderAssignmentDetail() {
         }}
       >
         <ActivityIndicator size="large" color={tint} />
+      </ThemedView>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <ThemedView
+        style={{
+          flex: 1,
+          padding: 16,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <IconSymbol name="xmark.circle.fill" size={48} color="#EF4444" />
+        <ThemedText style={{ color: "#EF4444", marginTop: 12 }}>
+          {fetchError}
+        </ThemedText>
+        <View
+          style={{
+            flexDirection: "row",
+            marginTop: 16,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Pressable
+            style={[styles.addBtn, { width: 140, marginRight: 8 }]}
+            onPress={() => load()}
+          >
+            <ThemedText style={styles.addBtnText}>Coba Lagi</ThemedText>
+          </Pressable>
+          <Pressable
+            style={[styles.addBtn, { width: 140 }]}
+            onPress={() => router.back()}
+          >
+            <ThemedText style={styles.addBtnText}>Kembali</ThemedText>
+          </Pressable>
+        </View>
       </ThemedView>
     );
   }
@@ -330,6 +380,11 @@ export default function TenderAssignmentDetail() {
               style={[styles.input, { height: 80, textAlignVertical: "top" }]}
               multiline
             />
+            {createError ? (
+              <ThemedText style={{ color: "#EF4444", marginTop: 8 }}>
+                {createError}
+              </ThemedText>
+            ) : null}
           </View>
           <View style={{ marginTop: 20 }}>
             <Pressable
