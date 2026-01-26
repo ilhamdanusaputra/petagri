@@ -294,6 +294,7 @@ export type Database = {
           created_at: string | null
           deadline: string | null
           id: string
+          message: string | null
           status: Database["public"]["Enums"]["tender_assign_status"]
           updated_at: string | null
           visit_id: string
@@ -303,6 +304,7 @@ export type Database = {
           created_at?: string | null
           deadline?: string | null
           id?: string
+          message?: string | null
           status?: Database["public"]["Enums"]["tender_assign_status"]
           updated_at?: string | null
           visit_id: string
@@ -312,6 +314,7 @@ export type Database = {
           created_at?: string | null
           deadline?: string | null
           id?: string
+          message?: string | null
           status?: Database["public"]["Enums"]["tender_assign_status"]
           updated_at?: string | null
           visit_id?: string

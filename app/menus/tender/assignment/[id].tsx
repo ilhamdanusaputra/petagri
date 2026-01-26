@@ -30,6 +30,7 @@ export default function TenderAssignmentDetail() {
   const [loadingData, setLoadingData] = useState(true);
   const [detail, setDetail] = useState<any | null>(null);
   const [deadline, setDeadline] = useState<string | undefined>(undefined);
+  const [message, setMessage] = useState<string | undefined>(undefined);
   const [products, setProducts] = useState<any[]>([]);
   const tint = useThemeColor({}, "tint");
 
@@ -117,7 +118,7 @@ export default function TenderAssignmentDetail() {
   const handleCreate = async () => {
     const filtered = products.map((p) => ({ ...p, price: p.price || null }));
     const res = await createAssignment(
-      { visit_id: detail.visit_id, deadline },
+      { visit_id: detail.visit_id, deadline, message },
       filtered,
     );
     if (res.success) {
@@ -247,7 +248,6 @@ export default function TenderAssignmentDetail() {
               style={styles.input}
             />
           </View>
-
           <View style={{ marginTop: 12 }}>
             <ThemedText style={{ fontWeight: "600", marginBottom: 8 }}>
               Produk (Sumber rekomendasi)
@@ -319,6 +319,18 @@ export default function TenderAssignmentDetail() {
             </View>
           </View>
 
+          <View style={{ marginTop: 12 }}>
+            <ThemedText style={{ fontWeight: "600" }}>
+              Pesan Tender (Catatan untuk pembuat tender)
+            </ThemedText>
+            <TextInput
+              value={message}
+              onChangeText={setMessage}
+              placeholder="Tambahkan catatan untuk penerima tender..."
+              style={[styles.input, { height: 80, textAlignVertical: "top" }]}
+              multiline
+            />
+          </View>
           <View style={{ marginTop: 20 }}>
             <Pressable
               style={[styles.actionBtn, { backgroundColor: tint }]}

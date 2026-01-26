@@ -7,6 +7,7 @@ export type TenderAssign = {
   assigned_by?: string;
   deadline?: string | null;
   status?: string;
+  message?: string | null;
   created_at?: string;
 };
 
@@ -64,7 +65,7 @@ export function useTenderAssignment() {
   };
 
   const createAssignment = async (
-    input: { visit_id: string; deadline?: string | null; assigned_by?: string | null },
+    input: { visit_id: string; deadline?: string | null; assigned_by?: string | null; message?: string | null },
     products: TenderProductInput[] = [],
   ) => {
     setLoading(true);
