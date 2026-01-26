@@ -1,3 +1,5 @@
+import ConsultantOverview from "@/components/consultant-overview";
+import FarmOverview from "@/components/farm-overview";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useTenderAssignment } from "@/hooks/use-tender-assignment";
@@ -117,9 +119,38 @@ export default function TenderAssignmentDetail() {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={{ padding: 16 }}>
-          <ThemedText type="title">
-            Buat Tender dari Laporan Kunjungan
-          </ThemedText>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <ThemedText type="title">
+              Buat Tender dari Laporan Kunjungan
+            </ThemedText>
+          </View>
+
+          {/* Farm overview */}
+          <View style={{ marginTop: 12, marginBottom: 8 }}>
+            <FarmOverview
+              farm={{
+                id: detail.report?.visits?.farm_id || "",
+                name: detail.report?.visits?.farms?.name || "-",
+                commodity: (detail.report?.plant_type as string) || null,
+                area_ha: (detail.report?.land_area as number) || null,
+                location: undefined,
+                status: undefined,
+              }}
+            />
+          </View>
+
+          {/* Consultant overview */}
+          <View style={{ marginTop: 8, marginBottom: 8 }}>
+            <ConsultantOverview
+              consultant={{
+                id: detail.report?.visits?.consultant_id || "",
+                name: detail.report?.visits?.profiles?.full_name || "-",
+                phone: undefined,
+                role: undefined,
+              }}
+            />
+          </View>
+
           <ThemedText style={{ marginTop: 8 }}>
             {detail.report?.problems || "-"}
           </ThemedText>
