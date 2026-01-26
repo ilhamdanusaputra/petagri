@@ -24,29 +24,24 @@ export default function AllMenus() {
 		fetchProfile();
 	}, [user]);
 
-	const allowedRoles = [
-		"owner_platform",
-		"developer",
-		"admin_platform",
-		"pemilik_kebun",
-		"konsultan",
-	];
-
 	const items = [
 		{ key: "core", label: "CORE", icon: "house.fill", onPress: () => router.push("/menus/core") },
 		profile &&
-			allowedRoles.includes(profile?.roles) && {
+			["owner_platform", "developer", "admin_platform", "pemilik_kebun", "konsultan"].includes(
+				profile?.roles,
+			) && {
 				key: "konsultasi",
 				label: "KONSULTASI & KEBUN",
 				icon: "leaf.fill",
 				onPress: () => router.push("/menus/konsultasi"),
 			},
-		{
-			key: "produk",
-			label: "PRODUK & TOKO",
-			icon: "bag.fill",
-			onPress: () => router.push("/menus/produk"),
-		},
+		profile &&
+			["owner_platform", "developer", "admin_platform", "mitra_toko"].includes(profile?.roles) && {
+				key: "produk",
+				label: "PRODUK & TOKO",
+				icon: "bag.fill",
+				onPress: () => router.push("/menus/produk-mitra"),
+			},
 		{
 			key: "tender",
 			label: "TENDER & PENAWARAN",

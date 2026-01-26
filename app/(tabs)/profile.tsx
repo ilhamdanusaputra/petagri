@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { supabase } from "@/utils/supabase";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet } from "react-native";
 
 export default function ProfileScreen() {
 	const { user, isLoading, logout, isLoggedIn } = useAuth();
@@ -48,57 +48,90 @@ export default function ProfileScreen() {
 
 	return (
 		<ThemedView style={[styles.container, { backgroundColor: bgColor }]}>
-			<ThemedText type="title" style={[styles.title, { color: primaryGreen }]}>
-				Profil Pengguna
-			</ThemedText>
-
-			{isLoggedIn && user ? (
-				<ThemedView style={[styles.profileCard, { backgroundColor: cardBg, borderColor }]}>
-					<ThemedText type="subtitle" style={{ color: textColor, marginBottom: 16 }}>
-						Informasi Akun
-					</ThemedText>
-
-					<ThemedView style={styles.infoRow}>
-						<ThemedText style={[styles.infoLabel, { color: mutedColor }]}>Email</ThemedText>
-						<ThemedText style={[styles.infoValue, { color: textColor }]}>
-							{user.email || "belum diatur"}
+			<ScrollView
+				contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
+				showsVerticalScrollIndicator={false}>
+				<ThemedText type="title" style={[styles.title, { color: primaryGreen }]}>
+					Profil Pengguna
+				</ThemedText>
+				{isLoggedIn && user ? (
+					<ThemedView style={[styles.profileCard, { backgroundColor: cardBg, borderColor }]}>
+						{/* Info Akun dengan style card dan border bawah */}
+						<ThemedView
+							style={{
+								backgroundColor: cardBg,
+								borderRadius: 10,
+								overflow: "hidden",
+								marginBottom: 8,
+							}}>
+							<ThemedView
+								style={[
+									styles.infoRow,
+									{
+										borderBottomWidth: 1,
+										borderBottomColor: borderColor,
+										paddingVertical: 14,
+										paddingHorizontal: 8,
+									},
+								]}>
+								<ThemedText style={[styles.infoLabel, { color: mutedColor }]}>Email</ThemedText>
+								<ThemedText style={[styles.infoValue, { color: textColor }]}>
+									{user.email || "belum diatur"}
+								</ThemedText>
+							</ThemedView>
+							<ThemedView
+								style={[
+									styles.infoRow,
+									{
+										borderBottomWidth: 1,
+										borderBottomColor: borderColor,
+										paddingVertical: 14,
+										paddingHorizontal: 8,
+									},
+								]}>
+								<ThemedText style={[styles.infoLabel, { color: mutedColor }]}>
+									Nama Lengkap
+								</ThemedText>
+								<ThemedText style={[styles.infoValue, { color: textColor }]}>
+									{profile?.full_name || "belum diatur"}
+								</ThemedText>
+							</ThemedView>
+							<ThemedView
+								style={[
+									styles.infoRow,
+									{
+										borderBottomWidth: 1,
+										borderBottomColor: borderColor,
+										paddingVertical: 14,
+										paddingHorizontal: 8,
+									},
+								]}>
+								<ThemedText style={[styles.infoLabel, { color: mutedColor }]}>No. HP</ThemedText>
+								<ThemedText style={[styles.infoValue, { color: textColor }]}>
+									{profile?.phone || "belum diatur"}
+								</ThemedText>
+							</ThemedView>
+							<ThemedView style={[styles.infoRow, { paddingVertical: 14, paddingHorizontal: 8 }]}>
+								<ThemedText style={[styles.infoLabel, { color: mutedColor }]}>Role</ThemedText>
+								<ThemedText style={[styles.infoValue, { color: textColor }]}>
+									{profile?.roles || "belum diatur"}
+								</ThemedText>
+							</ThemedView>
+						</ThemedView>
+						<Pressable
+							style={[styles.logoutButton, { backgroundColor: dangerColor, marginTop: 24 }]}
+							onPress={handleLogout}>
+							<ThemedText style={styles.logoutButtonText}>Logout</ThemedText>
+						</Pressable>
+					</ThemedView>
+				) : (
+					<ThemedView style={[styles.profileCard, { backgroundColor: cardBg, borderColor }]}>
+						<ThemedText style={{ color: textColor, textAlign: "center" }}>
+							Anda belum login
 						</ThemedText>
 					</ThemedView>
-
-					<ThemedView style={styles.infoRow}>
-						<ThemedText style={[styles.infoLabel, { color: mutedColor }]}>Nama Lengkap</ThemedText>
-						<ThemedText style={[styles.infoValue, { color: textColor }]}>
-							{profile?.full_name || "belum diatur"}
-						</ThemedText>
-					</ThemedView>
-
-					<ThemedView style={styles.infoRow}>
-						<ThemedText style={[styles.infoLabel, { color: mutedColor }]}>No. HP</ThemedText>
-						<ThemedText style={[styles.infoValue, { color: textColor }]}>
-							{profile?.phone || "belum diatur"}
-						</ThemedText>
-					</ThemedView>
-
-					<ThemedView style={styles.infoRow}>
-						<ThemedText style={[styles.infoLabel, { color: mutedColor }]}>Role</ThemedText>
-						<ThemedText style={[styles.infoValue, { color: textColor }]}>
-							{profile?.roles || "belum diatur"}
-						</ThemedText>
-					</ThemedView>
-
-					<Pressable
-						style={[styles.logoutButton, { backgroundColor: dangerColor, marginTop: 24 }]}
-						onPress={handleLogout}>
-						<ThemedText style={styles.logoutButtonText}>Logout</ThemedText>
-					</Pressable>
-				</ThemedView>
-			) : (
-				<ThemedView style={[styles.profileCard, { backgroundColor: cardBg, borderColor }]}>
-					<ThemedText style={{ color: textColor, textAlign: "center" }}>
-						Anda belum login
-					</ThemedText>
-				</ThemedView>
-			)}
+				)}
+			</ScrollView>
 		</ThemedView>
 	);
 }
@@ -107,14 +140,15 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		padding: 16,
-		justifyContent: "center",
+		// justifyContent: "center", // Hapus agar scroll berfungsi normal
 	},
 	title: {
 		marginBottom: 24,
 		textAlign: "center",
+		fontSize: 24,
 	},
 	profileCard: {
-		padding: 24,
+		padding: 20,
 		borderRadius: 12,
 		borderWidth: 1,
 	},

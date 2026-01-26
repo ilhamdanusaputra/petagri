@@ -1,11 +1,9 @@
 // Fallback for using MaterialIcons on Android and web.
 
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { SymbolViewProps, SymbolWeight } from "expo-symbols";
+import { SymbolWeight } from "expo-symbols";
 import { ComponentProps } from "react";
 import { OpaqueColorValue, type StyleProp, type TextStyle } from "react-native";
-
-type IconSymbolName = SymbolViewProps["name"];
 
 /**
  * Add your SF Symbols to Material Icons mappings here.
@@ -44,8 +42,10 @@ const MAPPING = {
   "doc.text.fill": "description",
   trash: "delete",
   "trash.fill": "delete",
+  pencil: "edit",
+  trash: "delete",
 } as const satisfies Partial<
-  Record<SymbolViewProps["name"], ComponentProps<typeof MaterialIcons>["name"]>
+  Record<string, ComponentProps<typeof MaterialIcons>["name"]>
 >;
 
 type IconSymbolMappedName = keyof typeof MAPPING;
