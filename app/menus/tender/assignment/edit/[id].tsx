@@ -158,6 +158,38 @@ export default function EditTenderAssign() {
     }
   };
 
+  const handleSaveWithStatus = async (status: string) => {
+    setError(null);
+    try {
+      const patch: any = {
+        deadline: deadline ?? null,
+        message: message ?? null,
+        status,
+      };
+      const prodPayload = products.map((p) => ({
+        product_name: p.product_name,
+        dosage: p.dosage ?? null,
+        qty: p.qty ?? 1,
+        price: p.price ?? null,
+        note: p.note ?? null,
+      }));
+      const res = await updateAssignment(id, patch, prodPayload);
+      if (!res.success) throw new Error(res.error || "Gagal menyimpan");
+      if (status === "open") {
+        showSuccess("Tender dibuka");
+      } else if (status === "closed") {
+        showSuccess("Tender ditutup");
+      } else {
+        showSuccess("Draft tersimpan");
+      }
+      router.replace(`/menus/tender/assignment?refresh=${Date.now()}`);
+    } catch (e: any) {
+      const msg = e?.message || "Gagal menyimpan perubahan";
+      setError(msg);
+      showError(msg);
+    }
+  };
+
   const confirmDelete = () => {
     // web: use window.confirm for synchronous confirmation
     if (Platform.OS === "web") {
@@ -478,6 +510,60 @@ export default function EditTenderAssign() {
           </View>
 
           <View style={{ marginTop: 12 }}>
+            <Pressable
+              style={[
+                styles.actionBtn,
+                { backgroundColor: tint, marginBottom: 8 },
+              ]}
+              onPress={() => handleSaveWithStatus("draft")}
+              disabled={loading}
+            >
+              <ThemedText
+                style={{
+                  color: "white",
+                  textAlign: "center",
+                  fontWeight: "600",
+                }}
+              >
+                Simpan Draft
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.actionBtn,
+                { backgroundColor: tint, marginBottom: 8 },
+              ]}
+              onPress={() => handleSaveWithStatus("open")}
+              disabled={loading}
+            >
+              <ThemedText
+                style={{
+                  color: "white",
+                  textAlign: "center",
+                  fontWeight: "600",
+                }}
+              >
+                Buka Tender
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.actionBtn,
+                { backgroundColor: "#DC2626", marginBottom: 8 },
+              ]}
+              onPress={() => handleSaveWithStatus("closed")}
+              disabled={loading}
+            >
+              <ThemedText
+                style={{
+                  color: "white",
+                  textAlign: "center",
+                  fontWeight: "600",
+                }}
+              >
+                Tutup Tender
+              </ThemedText>
+            </Pressable>
             <Pressable
               style={[styles.actionBtn, { backgroundColor: tint }]}
               onPress={handleSave}

@@ -10,16 +10,16 @@ import { showError, showSuccess } from "@/utils/toast";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
 } from "react-native";
 
 export default function TenderAssignmentDetail() {
@@ -126,14 +126,23 @@ export default function TenderAssignmentDetail() {
   };
 
   const handleCreate = async () => {
+    // keep backward-compatible simple create (open)
+    return handleCreateWithStatus("open");
+  };
+
+  const handleCreateWithStatus = async (status: string) => {
     setCreateError(null);
     const filtered = products.map((p) => ({ ...p, price: p.price || null }));
     const res = await createAssignment(
-      { visit_id: detail.visit_id, deadline, message },
+      { visit_id: detail.visit_id, deadline, message, status },
       filtered,
     );
     if (res.success) {
-      showSuccess("Tender berhasil dibuat");
+      showSuccess(
+        status === "open"
+          ? "Tender berhasil dibuka"
+          : "Tender disimpan sebagai draft",
+      );
       router.replace(`/menus/tender/assignment?refresh=${Date.now()}`);
     } else {
       const msg = res.error || "Gagal membuat tender";
@@ -389,10 +398,13 @@ export default function TenderAssignmentDetail() {
               </ThemedText>
             ) : null}
           </View>
-          <View style={{ marginTop: 20 }}>
+          <View style={{ marginTop: 12 }}>
             <Pressable
-              style={[styles.actionBtn, { backgroundColor: tint }]}
-              onPress={handleCreate}
+              style={[
+                styles.actionBtn,
+                { backgroundColor: tint, marginBottom: 8 },
+              ]}
+              onPress={() => handleCreateWithStatus("draft")}
               disabled={loading}
             >
               <ThemedText
@@ -402,7 +414,22 @@ export default function TenderAssignmentDetail() {
                   fontWeight: "600",
                 }}
               >
-                Buat Tender
+                Simpan Draft
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              style={[styles.actionBtn, { backgroundColor: tint }]}
+              onPress={() => handleCreateWithStatus("open")}
+              disabled={loading}
+            >
+              <ThemedText
+                style={{
+                  color: "white",
+                  textAlign: "center",
+                  fontWeight: "600",
+                }}
+              >
+                Buka Tender
               </ThemedText>
             </Pressable>
           </View>
