@@ -83,7 +83,7 @@ export default function DashboardStats() {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { flex: 1 }]}>
       <StatCard icon={"person.fill"} label="Jumlah User" value={counts.users} />
       <StatCard icon={"leaf.fill"} label="Jumlah Kebun" value={counts.farms} />
       <StatCard

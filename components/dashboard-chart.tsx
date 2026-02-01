@@ -46,6 +46,7 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
     backgroundColor: "#FFFFFF",
     marginBottom: 8,
+    flex: 1,
   },
   title: { fontWeight: "700", marginBottom: 8 },
 });

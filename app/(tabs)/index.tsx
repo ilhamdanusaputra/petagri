@@ -4,6 +4,8 @@ import { StyleSheet } from "react-native";
 import DashboardActivity from "@/components/dashboard-activity";
 import DashboardCards from "@/components/dashboard-cards";
 import DashboardChart from "@/components/dashboard-chart";
+import DashboardLineChart from "@/components/dashboard-line-chart";
+import DashboardPieChart from "@/components/dashboard-pie-chart";
 import DashboardShipping from "@/components/dashboard-shipping";
 import DashboardStats from "@/components/dashboard-stats";
 import { HelloWave } from "@/components/hello-wave";
@@ -152,13 +154,23 @@ export default function HomeScreen() {
         <DashboardStats />
       </ThemedView>
       <ThemedView style={{ marginTop: 8, marginBottom: 12 }}>
-        <DashboardChart />
-      </ThemedView>
-      <ThemedView style={{ marginTop: 8, marginBottom: 12 }}>
-        <DashboardShipping />
-      </ThemedView>
-      <ThemedView style={{ marginTop: 8, marginBottom: 12 }}>
-        <DashboardActivity />
+        <ThemedView style={styles.chartsContainer}>
+          <ThemedView style={styles.chartItem}>
+            <DashboardChart />
+          </ThemedView>
+          <ThemedView style={styles.chartItem}>
+            <DashboardLineChart />
+          </ThemedView>
+          <ThemedView style={styles.chartItem}>
+            <DashboardPieChart />
+          </ThemedView>
+          <ThemedView style={styles.chartItem}>
+            <DashboardShipping />
+          </ThemedView>
+          <ThemedView style={styles.chartItem}>
+            <DashboardActivity />
+          </ThemedView>
+        </ThemedView>
       </ThemedView>
       <ThemedView style={{ marginTop: 8, marginBottom: 12 }}>
         <ThemedText type="subtitle">Perhatian</ThemedText>
@@ -185,4 +197,10 @@ const styles = StyleSheet.create({
     left: 0,
     position: "absolute",
   },
+  chartsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  chartItem: { width: "48%", minHeight: 180, marginBottom: 8 },
 });
