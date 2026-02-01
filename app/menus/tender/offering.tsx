@@ -24,10 +24,10 @@ export default function TenderOffering() {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [offeringsMap, setOfferingsMap] = useState<Record<string, any>>({});
   const [offeredFilter, setOfferedFilter] = useState<"all" | "open" | "closed">(
-    "all",
+    "open",
   );
   const [noOfferFilter, setNoOfferFilter] = useState<"all" | "open" | "closed">(
-    "all",
+    "open",
   );
   const cardBg = useThemeColor({}, "card");
   const border = useThemeColor({}, "cardBorder");
