@@ -1,3 +1,5 @@
+import { OfferCard } from "@/components/tender/OfferCard";
+import { SectionHeader } from "@/components/tender/SectionHeader";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -21,6 +23,12 @@ export default function TenderOffering() {
   const [error, setError] = useState<string | null>(null);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [offeringsMap, setOfferingsMap] = useState<Record<string, any>>({});
+  const [offeredFilter, setOfferedFilter] = useState<"all" | "open" | "closed">(
+    "all",
+  );
+  const [noOfferFilter, setNoOfferFilter] = useState<"all" | "open" | "closed">(
+    "all",
+  );
   const cardBg = useThemeColor({}, "card");
   const border = useThemeColor({}, "cardBorder");
 
@@ -69,6 +77,13 @@ export default function TenderOffering() {
 
   const assignedNoOffer = assignments.filter((a) => !offeringsMap[a.id]);
   const assignedWithOffer = assignments.filter((a) => !!offeringsMap[a.id]);
+
+  const assignedNoOfferFiltered = assignedNoOffer.filter(
+    (a) => noOfferFilter === "all" || a.status === noOfferFilter,
+  );
+  const assignedWithOfferFiltered = assignedWithOffer.filter(
+    (a) => offeredFilter === "all" || a.status === offeredFilter,
+  );
 
   const renderAssign = ({ item }: { item: any }) => {
     const dateStr = item.created_at
@@ -203,33 +218,60 @@ export default function TenderOffering() {
     <ThemedView style={styles.container}>
       <ThemedText type="title">Tender Offering</ThemedText>
 
-      <ThemedText style={{ marginTop: 12, fontWeight: "600" }}>
-        Assigned — Belum Ajukan Penawaran
-      </ThemedText>
-      {assignedNoOffer.length === 0 ? (
-        <ThemedText style={{ color: "#6B7280", marginTop: 8 }}>
-          Tidak ada penugasan yang perlu diajukan.
-        </ThemedText>
-      ) : (
-        <FlatList
-          data={assignedNoOffer}
-          keyExtractor={(i: any) => i.id}
-          renderItem={renderAssign}
-        />
-      )}
+      <SectionHeader
+        title="Assigned — Sudah Mengajukan Penawaran"
+        count={assignedWithOffer.length}
+        filter={offeredFilter}
+        setFilter={(v) => setOfferedFilter(v)}
+      />
 
-      <ThemedText style={{ marginTop: 12, fontWeight: "600" }}>
-        Assigned — Sudah Mengajukan Penawaran
-      </ThemedText>
-      {assignedWithOffer.length === 0 ? (
+      {assignedWithOfferFiltered.length === 0 ? (
         <ThemedText style={{ color: "#6B7280", marginTop: 8 }}>
           Belum ada penawaran yang diajukan.
         </ThemedText>
       ) : (
         <FlatList
-          data={assignedWithOffer}
+          data={assignedWithOfferFiltered}
           keyExtractor={(i: any) => i.id}
-          renderItem={renderOffered}
+          renderItem={({ item }) => (
+            <OfferCard
+              assign={item}
+              offering={offeringsMap[item.id]}
+              onPress={() =>
+                router.push(
+                  `/menus/tender/offering/${offeringsMap[item.id]?.id}`,
+                )
+              }
+            />
+          )}
+        />
+      )}
+
+      <SectionHeader
+        title="Assigned — Belum Ajukan Penawaran"
+        count={assignedNoOffer.length}
+        filter={noOfferFilter}
+        setFilter={(v) => setNoOfferFilter(v)}
+      />
+
+      {assignedNoOfferFiltered.length === 0 ? (
+        <ThemedText style={{ color: "#6B7280", marginTop: 8 }}>
+          Tidak ada penugasan yang perlu diajukan.
+        </ThemedText>
+      ) : (
+        <FlatList
+          data={assignedNoOfferFiltered}
+          keyExtractor={(i: any) => i.id}
+          renderItem={({ item }) => (
+            <OfferCard
+              assign={item}
+              onPress={() =>
+                router.push(
+                  `/menus/tender/offering/add?tender_assign_id=${item.id}`,
+                )
+              }
+            />
+          )}
         />
       )}
     </ThemedView>
@@ -245,5 +287,20 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     marginBottom: 10,
+  },
+  filterBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    marginLeft: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+  },
+  filterBtnActive: {
+    backgroundColor: "#065F46",
+    borderColor: "#065F46",
   },
 });

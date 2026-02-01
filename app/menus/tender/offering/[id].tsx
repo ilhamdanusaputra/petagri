@@ -7,6 +7,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+    Alert,
     FlatList,
     Pressable,
     ScrollView,
@@ -15,35 +16,40 @@ import {
     View,
 } from "react-native";
 
-export default function TenderOfferingAdd() {
+export default function TenderOfferingEdit() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const tint = useThemeColor({}, "tint");
 
-  const tenderAssignId = (params.tender_assign_id as string) || null;
+  const offeringId = (params.id as string) || null;
 
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [products, setProducts] = useState<any[]>([
-    { product_name: "", dosage: "", qty: 1, price: null, note: "" },
-  ]);
-  const [assignProducts, setAssignProducts] = useState<any[]>([]);
+  const [offering, setOffering] = useState<any | null>(null);
+  const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    const loadAssignProducts = async () => {
-      if (!tenderAssignId) return;
+    const load = async () => {
+      if (!offeringId) return;
+      setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from("tender_assign_products")
-          .select("*")
-          .eq("tender_assign_id", tenderAssignId);
-        if (error) throw error;
-        setAssignProducts(data || []);
+        const { data: offData, error: offErr } = await supabase
+          .from("tender_offerings")
+          .select("*, tender_offerings_products(*)")
+          .eq("id", offeringId)
+          .single();
+        if (offErr) throw offErr;
+
+        setOffering(offData as any);
+        setProducts((offData?.tender_offerings_products ?? []) as any[]);
       } catch (err: any) {
-        // ignore silently for now
+        showError(err.message || "Gagal memuat penawaran");
+      } finally {
+        setLoading(false);
       }
     };
-    loadAssignProducts();
-  }, [tenderAssignId]);
+    load();
+  }, [offeringId]);
 
   const updateProduct = (index: number, patch: any) =>
     setProducts((p) =>
@@ -57,17 +63,13 @@ export default function TenderOfferingAdd() {
   const removeProduct = (index: number) =>
     setProducts((p) => p.filter((_, i) => i !== index));
 
-  const handleSubmit = async () => {
-    if (!tenderAssignId) {
-      showError("Missing tender assignment id");
-      return;
-    }
-
+  const handleSave = async () => {
+    if (!offeringId) return;
     const validProducts = products
       .map((p) => ({
         product_name: (p.product_name || "").toString().trim(),
-        dosage: p.dosage || null,
-        qty: p.qty || 1,
+        dosage: p.dosage ?? null,
+        qty: p.qty ?? 1,
         price: p.price ?? null,
         note: p.note ?? null,
       }))
@@ -80,26 +82,13 @@ export default function TenderOfferingAdd() {
 
     setSaving(true);
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = (userData as any)?.user?.id;
-      if (!userId) throw new Error("User not authenticated");
-
-      const { data, error } = await supabase
-        .from("tender_offerings")
-        .insert([
-          {
-            tender_assign_id: tenderAssignId,
-            offered_by: userId,
-          },
-        ])
-        .select();
-
-      if (error) throw error;
-      const created = Array.isArray(data) ? data[0] : data;
-      if (!created) throw new Error("Failed to create offering");
-
+      // replace products: delete existing then insert
+      await supabase
+        .from("tender_offerings_products")
+        .delete()
+        .eq("tender_offering_id", offeringId);
       const rows = validProducts.map((p) => ({
-        tender_offering_id: created.id,
+        tender_offering_id: offeringId,
         ...p,
       }));
       if (rows.length > 0) {
@@ -109,48 +98,72 @@ export default function TenderOfferingAdd() {
         if (prodErr) throw prodErr;
       }
 
-      showSuccess("Penawaran berhasil diajukan");
-      router.replace(`/menus/tender/offering/${created.id}`);
+      showSuccess("Perubahan disimpan");
+      // reload
+      router.replace(
+        `/menus/tender/offering/${offeringId}?refresh=${Date.now()}`,
+      );
     } catch (err: any) {
-      showError(err.message || "Gagal mengajukan penawaran");
+      showError(err.message || "Gagal menyimpan perubahan");
     } finally {
       setSaving(false);
     }
   };
 
+  const handleDelete = () => {
+    if (!offeringId) return;
+    Alert.alert("Hapus", "Yakin ingin menghapus penawaran ini?", [
+      { text: "Batal", style: "cancel" },
+      {
+        text: "Hapus",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await supabase
+              .from("tender_offerings_products")
+              .delete()
+              .eq("tender_offering_id", offeringId);
+            const { error } = await supabase
+              .from("tender_offerings")
+              .delete()
+              .eq("id", offeringId);
+            if (error) throw error;
+            showSuccess("Penawaran dihapus");
+            router.replace(`/menus/tender/offering?refresh=${Date.now()}`);
+          } catch (err: any) {
+            showError(err.message || "Gagal menghapus penawaran");
+          }
+        },
+      },
+    ]);
+  };
+
+  if (loading) {
+    return (
+      <ThemedView style={{ flex: 1, padding: 16 }}>
+        <ThemedText>Loading...</ThemedText>
+      </ThemedView>
+    );
+  }
+
+  if (!offering) {
+    return (
+      <ThemedView style={{ flex: 1, padding: 16 }}>
+        <ThemedText style={{ color: "#EF4444" }}>
+          Penawaran tidak ditemukan.
+        </ThemedText>
+      </ThemedView>
+    );
+  }
+
   return (
     <ThemedView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <ThemedText type="title">Ajukan Penawaran</ThemedText>
-        </View>
+        <ThemedText type="title">Edit Penawaran</ThemedText>
 
         <View style={{ marginTop: 12 }}>
           <ThemedText style={{ fontWeight: "600", marginBottom: 8 }}>
-            Produk Dibutuhkan
-          </ThemedText>
-
-          {assignProducts.length === 0 ? (
-            <ThemedText style={{ color: "#6B7280", marginBottom: 8 }}>
-              Tidak ada daftar produk yang dibutuhkan.
-            </ThemedText>
-          ) : (
-            <View style={{ marginBottom: 8 }}>
-              {assignProducts.map((p: any) => (
-                <ThemedText
-                  key={p.id}
-                  style={{ color: "#374151", marginBottom: 4 }}
-                >
-                  - {p.product_name}
-                  {p.dosage ? ` (dosage: ${p.dosage})` : ""}
-                  {p.qty ? ` (qty: ${p.qty})` : ""}
-                </ThemedText>
-              ))}
-            </View>
-          )}
-
-          <ThemedText style={{ fontWeight: "600", marginBottom: 8 }}>
-            Produk (Ajukan)
+            Produk Penawaran
           </ThemedText>
 
           <FlatList
@@ -203,7 +216,7 @@ export default function TenderOfferingAdd() {
 
           <View style={{ flexDirection: "column", marginTop: 8 }}>
             <Pressable
-              style={[styles.addBtn, { width: "100%", marginTop: 8 }]}
+              style={[styles.addBtn, { width: "100%" }]}
               onPress={addProduct}
             >
               <ThemedText style={styles.addBtnText}>Tambah Produk</ThemedText>
@@ -213,14 +226,31 @@ export default function TenderOfferingAdd() {
 
         <View style={{ marginTop: 12 }}>
           <Pressable
-            style={[styles.actionBtn, { backgroundColor: tint }]}
-            onPress={handleSubmit}
+            style={[
+              styles.actionBtn,
+              { backgroundColor: tint, marginBottom: 8 },
+            ]}
+            onPress={handleSave}
             disabled={saving}
           >
             <ThemedText
               style={{ color: "white", textAlign: "center", fontWeight: "600" }}
             >
-              Ajukan Penawaran
+              Simpan Perubahan
+            </ThemedText>
+          </Pressable>
+          <Pressable
+            style={[styles.actionBtn, { backgroundColor: "#FEF2F2" }]}
+            onPress={handleDelete}
+          >
+            <ThemedText
+              style={{
+                color: "#B91C1C",
+                textAlign: "center",
+                fontWeight: "600",
+              }}
+            >
+              Hapus Penawaran
             </ThemedText>
           </Pressable>
         </View>
