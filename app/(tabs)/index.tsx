@@ -1,7 +1,10 @@
 import { Image } from "expo-image";
 import { StyleSheet } from "react-native";
 
+import DashboardActivity from "@/components/dashboard-activity";
 import DashboardCards from "@/components/dashboard-cards";
+import DashboardChart from "@/components/dashboard-chart";
+import DashboardShipping from "@/components/dashboard-shipping";
 import DashboardStats from "@/components/dashboard-stats";
 import { HelloWave } from "@/components/hello-wave";
 import { MenuGrid } from "@/components/menu-grid";
@@ -147,6 +150,15 @@ export default function HomeScreen() {
       </ThemedView>
       <ThemedView style={{ marginTop: 8, marginBottom: 12 }}>
         <DashboardStats />
+      </ThemedView>
+      <ThemedView style={{ marginTop: 8, marginBottom: 12 }}>
+        <DashboardChart />
+      </ThemedView>
+      <ThemedView style={{ marginTop: 8, marginBottom: 12 }}>
+        <DashboardShipping />
+      </ThemedView>
+      <ThemedView style={{ marginTop: 8, marginBottom: 12 }}>
+        <DashboardActivity />
       </ThemedView>
       <ThemedView style={{ marginTop: 8, marginBottom: 12 }}>
         <ThemedText type="subtitle">Perhatian</ThemedText>
