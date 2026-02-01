@@ -1,5 +1,5 @@
-import { OfferCard } from "@/components/tender/OfferCard";
-import { SectionHeader } from "@/components/tender/SectionHeader";
+import { ApprovalCard } from "@/components/tender/ApprovalCard";
+import { ApprovalSectionHeader } from "@/components/tender/ApprovalSectionHeader";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { supabase } from "@/utils/supabase";
@@ -83,11 +83,9 @@ export default function TenderApproval() {
     <ThemedView style={styles.container}>
       <ThemedText type="title">Tender Approval</ThemedText>
 
-      <SectionHeader
+      <ApprovalSectionHeader
         title="Assigned — Belum Ada Pemenang"
         count={withoutWinner.length}
-        filter="all"
-        setFilter={() => {}}
       />
       {withoutWinner.length === 0 ? (
         <ThemedText style={{ color: "#6B7280", marginTop: 8 }}>
@@ -98,7 +96,7 @@ export default function TenderApproval() {
           data={withoutWinner}
           keyExtractor={(i: any) => i.id}
           renderItem={({ item }) => (
-            <OfferCard
+            <ApprovalCard
               assign={item}
               onPress={() =>
                 router.push(`/menus/tender/approval/assign/${item.id}`)
@@ -108,11 +106,9 @@ export default function TenderApproval() {
         />
       )}
 
-      <SectionHeader
+      <ApprovalSectionHeader
         title="Assigned — Sudah Ada Pemenang"
         count={withWinner.length}
-        filter="all"
-        setFilter={() => {}}
       />
       {withWinner.length === 0 ? (
         <ThemedText style={{ color: "#6B7280", marginTop: 8 }}>
@@ -123,9 +119,9 @@ export default function TenderApproval() {
           data={withWinner}
           keyExtractor={(i: any) => i.id}
           renderItem={({ item }) => (
-            <OfferCard
+            <ApprovalCard
               assign={item}
-              offering={{ id: winnerMap[item.id] }}
+              winningOfferingId={winnerMap[item.id]}
               onPress={() =>
                 router.push(`/menus/tender/approval/assign/${item.id}`)
               }
