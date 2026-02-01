@@ -24,7 +24,6 @@ export function OfferCard({ assign, offering, onPress }: Props) {
     .join(", ")
     .slice(0, 80);
   const status = assign.status || "-";
-  const farmName = assign.visits?.farms?.name || "-";
 
   const statusColor = status === "open" ? "#065F46" : "#6B7280";
 
@@ -38,7 +37,6 @@ export function OfferCard({ assign, offering, onPress }: Props) {
       </View>
 
       <View style={{ flex: 1 }}>
-        <ThemedText style={{ fontWeight: "600" }}>{farmName}</ThemedText>
         <View
           style={{
             flexDirection: "row",
@@ -46,16 +44,18 @@ export function OfferCard({ assign, offering, onPress }: Props) {
             justifyContent: "space-between",
           }}
         >
-          <ThemedText>{title}</ThemedText>
-          {assign.deadline ? (
-            <ThemedText
-              style={{ color: "#B91C1C", marginLeft: 8, fontSize: 12 }}
-            >
-              {assign.deadline}
-            </ThemedText>
-          ) : null}
+          <ThemedText style={{ fontWeight: "600" }}>
+            {title}
+            {assign.deadline ? (
+              <ThemedText
+                style={{ color: "#B91C1C", marginLeft: 8, fontSize: 12 }}
+              >
+                {` DL: ${assign.deadline}`}
+              </ThemedText>
+            ) : null}
+          </ThemedText>
         </View>
-        <ThemedText style={{ color: "#6B7280", marginTop: 4 }}>
+        <ThemedText style={{ color: "#6B7280", marginTop: 6 }}>
           {productNames || "-"}
         </ThemedText>
       </View>
