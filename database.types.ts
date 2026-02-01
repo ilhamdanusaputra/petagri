@@ -69,6 +69,7 @@ export type Database = {
           address: string | null
           city: string | null
           created_at: string | null
+          handphone: string | null
           id: string
           name: string
           owner_name: string | null
@@ -81,6 +82,7 @@ export type Database = {
           address?: string | null
           city?: string | null
           created_at?: string | null
+          handphone?: string | null
           id?: string
           name: string
           owner_name?: string | null
@@ -93,6 +95,7 @@ export type Database = {
           address?: string | null
           city?: string | null
           created_at?: string | null
+          handphone?: string | null
           id?: string
           name?: string
           owner_name?: string | null
@@ -107,6 +110,59 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "v_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          base_price: number | null
+          brand: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          dosage: string | null
+          id: string
+          mitra_id: string
+          name: string
+          note: string | null
+          unit: string
+          updated_at: string | null
+        }
+        Insert: {
+          base_price?: number | null
+          brand?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          dosage?: string | null
+          id?: string
+          mitra_id: string
+          name: string
+          note?: string | null
+          unit: string
+          updated_at?: string | null
+        }
+        Update: {
+          base_price?: number | null
+          brand?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          dosage?: string | null
+          id?: string
+          mitra_id?: string
+          name?: string
+          note?: string | null
+          unit?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_products_mitra"
+            columns: ["mitra_id"]
+            isOneToOne: false
+            referencedRelation: "mitra_toko"
             referencedColumns: ["id"]
           },
         ]
@@ -297,7 +353,7 @@ export type Database = {
           message: string | null
           status: Database["public"]["Enums"]["tender_assign_status"]
           updated_at: string | null
-          visit_id: string
+          visit_id: string | null
         }
         Insert: {
           assigned_by: string
@@ -307,7 +363,7 @@ export type Database = {
           message?: string | null
           status?: Database["public"]["Enums"]["tender_assign_status"]
           updated_at?: string | null
-          visit_id: string
+          visit_id?: string | null
         }
         Update: {
           assigned_by?: string
@@ -317,7 +373,7 @@ export type Database = {
           message?: string | null
           status?: Database["public"]["Enums"]["tender_assign_status"]
           updated_at?: string | null
-          visit_id?: string
+          visit_id?: string | null
         }
         Relationships: [
           {
@@ -620,7 +676,7 @@ export type Database = {
     }
     Enums: {
       bid_status: "draft" | "submitted" | "withdrawn" | "accepted" | "rejected"
-      tender_assign_status: "open" | "closed"
+      tender_assign_status: "open" | "closed" | "draft"
       tender_status:
         | "draft"
         | "open"
@@ -756,7 +812,7 @@ export const Constants = {
   public: {
     Enums: {
       bid_status: ["draft", "submitted", "withdrawn", "accepted", "rejected"],
-      tender_assign_status: ["open", "closed"],
+      tender_assign_status: ["open", "closed", "draft"],
       tender_status: [
         "draft",
         "open",

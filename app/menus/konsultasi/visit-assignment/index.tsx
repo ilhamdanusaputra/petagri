@@ -1,6 +1,7 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { VisitStatusIcon } from "@/components/visit-status-icon";
 import { useKebun } from "@/hooks/use-kebun";
 import { useKonsultan } from "@/hooks/use-konsultan";
 import { useThemeColor } from "@/hooks/use-theme-color";
@@ -10,15 +11,15 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  FlatList,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  View,
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    FlatList,
+    Modal,
+    Platform,
+    Pressable,
+    StyleSheet,
+    View,
 } from "react-native";
 
 export default function VisitManager() {
@@ -178,23 +179,7 @@ export default function VisitManager() {
       }
     >
       <View style={styles.cardStatus}>
-        <IconSymbol
-          name={
-            item.status === "scheduled"
-              ? "calendar"
-              : item.status === "completed"
-                ? "checkmark"
-                : "xmark"
-          }
-          size={18}
-          color={
-            item.status === "scheduled"
-              ? tint
-              : item.status === "completed"
-                ? "#16A34A"
-                : "#EF4444"
-          }
-        />
+        <VisitStatusIcon status={item.status} />
       </View>
 
       <View style={styles.cardLeft}>

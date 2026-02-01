@@ -1,16 +1,17 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { VisitStatusIcon } from "@/components/visit-status-icon";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useVisit } from "@/hooks/use-visit";
 import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Pressable,
-    StyleSheet,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  View,
 } from "react-native";
 
 export default function VisitResults() {
@@ -30,6 +31,10 @@ export default function VisitResults() {
       style={[styles.card, { backgroundColor: cardBg, borderColor: border }]}
       onPress={() => router.push(`/menus/konsultasi/visit-results/${item.id}`)}
     >
+      <View style={styles.cardStatus as any}>
+        <VisitStatusIcon status={item.status} />
+      </View>
+
       <View style={{ flex: 1 }}>
         <ThemedText style={{ fontWeight: "600" }}>{item.farm_name}</ThemedText>
         <ThemedText style={{ color: muted, fontSize: 13 }}>
@@ -39,6 +44,7 @@ export default function VisitResults() {
           {new Date(item.scheduled_date).toLocaleString()}
         </ThemedText>
       </View>
+
       <IconSymbol name="chevron.right" size={20} color={muted} />
     </Pressable>
   );
@@ -108,5 +114,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     marginBottom: 10,
+  },
+  cardStatus: {
+    width: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
   },
 });
