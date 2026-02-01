@@ -1,4 +1,3 @@
-import { ThemedText } from "@/components/themed-text";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
@@ -14,23 +13,19 @@ export function FilterPills({ value, onChange }: Props) {
         onPress={() => onChange("all")}
         style={[styles.pill, value === "all" && styles.active]}
       >
-        <ThemedText>All</ThemedText>
+        <View style={styles.iconOutline} />
       </Pressable>
       <Pressable
         onPress={() => onChange("open")}
         style={[styles.pill, value === "open" && styles.active]}
       >
-        <ThemedText style={{ color: value === "open" ? "white" : "#065F46" }}>
-          OPEN
-        </ThemedText>
+        <View style={styles.iconOpen} />
       </Pressable>
       <Pressable
         onPress={() => onChange("closed")}
         style={[styles.pill, value === "closed" && styles.active]}
       >
-        <ThemedText style={{ color: value === "closed" ? "white" : "#6B7280" }}>
-          CLOSED
-        </ThemedText>
+        <View style={styles.iconClosed} />
       </Pressable>
     </View>
   );
@@ -51,5 +46,24 @@ const styles = StyleSheet.create({
   active: {
     backgroundColor: "#065F46",
     borderColor: "#065F46",
+  },
+  iconOutline: {
+    width: 14,
+    height: 14,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: "#6B7280",
+  },
+  iconOpen: {
+    width: 14,
+    height: 14,
+    borderRadius: 8,
+    backgroundColor: "#16A34A",
+  },
+  iconClosed: {
+    width: 14,
+    height: 14,
+    borderRadius: 8,
+    backgroundColor: "#B91C1C",
   },
 });
