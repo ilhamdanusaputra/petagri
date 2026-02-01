@@ -42,12 +42,13 @@ export default function AllMenus() {
 				icon: "bag.fill",
 				onPress: () => router.push("/menus/produk-mitra"),
 			},
-		{
-			key: "tender",
-			label: "TENDER & PENAWARAN",
-			icon: "gavel",
-			onPress: () => router.push("/menus/tender"),
-		},
+		profile &&
+			["owner_platform", "developer", "admin_platform", "mitra_toko"].includes(profile?.roles) && {
+				key: "tender",
+				label: "TENDER & PENAWARAN",
+				icon: "gavel",
+				onPress: () => router.push("/menus/tender"),
+			},
 		{
 			key: "penjualan",
 			label: "PENJUALAN",
