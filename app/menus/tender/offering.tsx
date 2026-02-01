@@ -32,10 +32,15 @@ export default function TenderOffering() {
         const { data: sessionData } = await supabase.auth.getUser();
         const userId = (sessionData as any)?.user?.id;
 
-        const res = await listAssignments();
-        if (!res.success)
-          throw new Error(res.error || "Failed to load assignments");
-        const assigns: any[] = res.data || [];
+        // load tender_assigns including products and only open/closed
+        const { data: assignsData, error: assignsErr } = await supabase
+          .from("tender_assigns")
+          .select(`*, visits(*, farms (name)), tender_assign_products(*)`)
+          .in("status", ["open", "closed"])
+          .order("created_at", { ascending: false });
+        if (assignsErr) throw assignsErr;
+
+        const assigns: any[] = assignsData || [];
 
         // fetch offerings by current user
         let offerings: any[] = [];
@@ -65,43 +70,84 @@ export default function TenderOffering() {
   const assignedNoOffer = assignments.filter((a) => !offeringsMap[a.id]);
   const assignedWithOffer = assignments.filter((a) => !!offeringsMap[a.id]);
 
-  const renderAssign = ({ item }: { item: any }) => (
-    <Pressable
-      style={[styles.card, { backgroundColor: cardBg, borderColor: border }]}
-      onPress={() =>
-        router.push(`/menus/tender/offering/add?tender_assign_id=${item.id}`)
-      }
-    >
-      <View style={{ flex: 1 }}>
-        <ThemedText style={{ fontWeight: "600" }}>
-          {item.visits?.farms?.name || "-"}
-        </ThemedText>
-        <ThemedText style={{ color: "#6B7280", fontSize: 13 }}>
-          {item.deadline || "No deadline"}
-        </ThemedText>
-      </View>
-      <IconSymbol name="chevron.right" size={20} color="#6B7280" />
-    </Pressable>
-  );
+  const renderAssign = ({ item }: { item: any }) => {
+    const dateStr = item.created_at
+      ? new Date(item.created_at).toISOString().split("T")[0]
+      : "-";
+    const title = `Tender_${dateStr}`;
+    const productNames = (item.tender_assign_products || [])
+      .map((p: any) => p.product_name)
+      .filter(Boolean)
+      .join(", ");
+    const status = item.status || "-";
 
-  const renderOffered = ({ item }: { item: any }) => (
-    <Pressable
-      style={[styles.card, { backgroundColor: cardBg, borderColor: border }]}
-      onPress={() =>
-        router.push(`/menus/tender/offering/${offeringsMap[item.id]?.id}`)
-      }
-    >
-      <View style={{ flex: 1 }}>
-        <ThemedText style={{ fontWeight: "600" }}>
-          {item.visits?.farms?.name || "-"}
-        </ThemedText>
-        <ThemedText style={{ color: "#6B7280", fontSize: 13 }}>
-          {item.deadline || "No deadline"}
-        </ThemedText>
-      </View>
-      <IconSymbol name="chevron.right" size={20} color="#6B7280" />
-    </Pressable>
-  );
+    return (
+      <Pressable
+        style={[styles.card, { backgroundColor: cardBg, borderColor: border }]}
+        onPress={() =>
+          router.push(`/menus/tender/offering/add?tender_assign_id=${item.id}`)
+        }
+      >
+        <View style={{ flex: 1 }}>
+          <ThemedText style={{ fontWeight: "600" }}>{title}</ThemedText>
+          <ThemedText style={{ color: "#6B7280", fontSize: 13 }}>
+            {productNames || "-"}
+          </ThemedText>
+        </View>
+        <View style={{ alignItems: "flex-end" }}>
+          <ThemedText
+            style={{
+              fontSize: 12,
+              fontWeight: "600",
+              color: status === "open" ? "#065F46" : "#6B7280",
+            }}
+          >
+            {status.toUpperCase()}
+          </ThemedText>
+          <IconSymbol name="chevron.right" size={20} color="#6B7280" />
+        </View>
+      </Pressable>
+    );
+  };
+
+  const renderOffered = ({ item }: { item: any }) => {
+    const dateStr = item.created_at
+      ? new Date(item.created_at).toISOString().split("T")[0]
+      : "-";
+    const title = `Tender_${dateStr}`;
+    const productNames = (item.tender_assign_products || [])
+      .map((p: any) => p.product_name)
+      .filter(Boolean)
+      .join(", ");
+    const status = item.status || "-";
+    const offeringId = offeringsMap[item.id]?.id;
+
+    return (
+      <Pressable
+        style={[styles.card, { backgroundColor: cardBg, borderColor: border }]}
+        onPress={() => router.push(`/menus/tender/offering/${offeringId}`)}
+      >
+        <View style={{ flex: 1 }}>
+          <ThemedText style={{ fontWeight: "600" }}>{title}</ThemedText>
+          <ThemedText style={{ color: "#6B7280", fontSize: 13 }}>
+            {productNames || "-"}
+          </ThemedText>
+        </View>
+        <View style={{ alignItems: "flex-end" }}>
+          <ThemedText
+            style={{
+              fontSize: 12,
+              fontWeight: "600",
+              color: status === "open" ? "#065F46" : "#6B7280",
+            }}
+          >
+            {status.toUpperCase()}
+          </ThemedText>
+          <IconSymbol name="chevron.right" size={20} color="#6B7280" />
+        </View>
+      </Pressable>
+    );
+  };
 
   if (loading) {
     return (
