@@ -2,6 +2,7 @@ import { Image } from "expo-image";
 import { StyleSheet } from "react-native";
 
 import DashboardCards from "@/components/dashboard-cards";
+import DashboardStats from "@/components/dashboard-stats";
 import { HelloWave } from "@/components/hello-wave";
 import { MenuGrid } from "@/components/menu-grid";
 import ParallaxScrollView from "@/components/parallax-scroll-view";
@@ -143,6 +144,9 @@ export default function HomeScreen() {
 
       <ThemedView style={{ marginTop: 12, marginBottom: 12 }}>
         <MenuGrid items={menuItems} />
+      </ThemedView>
+      <ThemedView style={{ marginTop: 8, marginBottom: 12 }}>
+        <DashboardStats />
       </ThemedView>
       <ThemedView style={{ marginTop: 8, marginBottom: 12 }}>
         <ThemedText type="subtitle">Perhatian</ThemedText>
