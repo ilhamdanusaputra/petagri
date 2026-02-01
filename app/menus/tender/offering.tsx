@@ -89,23 +89,40 @@ export default function TenderOffering() {
         }
       >
         <View style={{ flex: 1 }}>
-          <ThemedText style={{ fontWeight: "600" }}>{title}</ThemedText>
-          <ThemedText style={{ color: "#6B7280", fontSize: 13 }}>
-            {productNames || "-"}
-          </ThemedText>
-        </View>
-        <View style={{ alignItems: "flex-end" }}>
-          <ThemedText
+          <View
             style={{
-              fontSize: 12,
-              fontWeight: "600",
-              color: status === "open" ? "#065F46" : "#6B7280",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
             }}
           >
-            {status.toUpperCase()}
-          </ThemedText>
-          <IconSymbol name="chevron.right" size={20} color="#6B7280" />
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <ThemedText style={{ fontWeight: "600" }}>{title}</ThemedText>
+              {item.deadline ? (
+                <ThemedText
+                  style={{ color: "#B91C1C", marginLeft: 8, fontSize: 13 }}
+                >
+                  {item.deadline}
+                </ThemedText>
+              ) : null}
+            </View>
+            <ThemedText
+              style={{
+                fontSize: 12,
+                fontWeight: "600",
+                color: status === "open" ? "#065F46" : "#6B7280",
+              }}
+            >
+              {status.toUpperCase()}
+            </ThemedText>
+          </View>
+          <View style={{ marginTop: 4 }}>
+            <ThemedText style={{ color: "#6B7280", fontSize: 13 }}>
+              {productNames || "-"}
+            </ThemedText>
+          </View>
         </View>
+        <IconSymbol name="chevron.right" size={20} color="#6B7280" />
       </Pressable>
     );
   };
@@ -128,23 +145,40 @@ export default function TenderOffering() {
         onPress={() => router.push(`/menus/tender/offering/${offeringId}`)}
       >
         <View style={{ flex: 1 }}>
-          <ThemedText style={{ fontWeight: "600" }}>{title}</ThemedText>
-          <ThemedText style={{ color: "#6B7280", fontSize: 13 }}>
-            {productNames || "-"}
-          </ThemedText>
-        </View>
-        <View style={{ alignItems: "flex-end" }}>
-          <ThemedText
+          <View
             style={{
-              fontSize: 12,
-              fontWeight: "600",
-              color: status === "open" ? "#065F46" : "#6B7280",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
             }}
           >
-            {status.toUpperCase()}
-          </ThemedText>
-          <IconSymbol name="chevron.right" size={20} color="#6B7280" />
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <ThemedText style={{ fontWeight: "600" }}>{title}</ThemedText>
+              {item.deadline ? (
+                <ThemedText
+                  style={{ color: "#B91C1C", marginLeft: 8, fontSize: 13 }}
+                >
+                  {item.deadline}
+                </ThemedText>
+              ) : null}
+            </View>
+            <ThemedText
+              style={{
+                fontSize: 12,
+                fontWeight: "600",
+                color: status === "open" ? "#065F46" : "#6B7280",
+              }}
+            >
+              {status.toUpperCase()}
+            </ThemedText>
+          </View>
+          <View style={{ marginTop: 4 }}>
+            <ThemedText style={{ color: "#6B7280", fontSize: 13 }}>
+              {productNames || "-"}
+            </ThemedText>
+          </View>
         </View>
+        <IconSymbol name="chevron.right" size={20} color="#6B7280" />
       </Pressable>
     );
   };
