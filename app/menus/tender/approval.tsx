@@ -22,7 +22,7 @@ export default function TenderApproval() {
         // load assignments (open/closed)
         const { data: assignsData, error: assignsErr } = await supabase
           .from("tender_assigns")
-          .select("*, tender_assign_products(*)")
+          .select(`*, visits(*, farms (name)), tender_assign_products(*)`)
           .in("status", ["open", "closed"])
           .order("created_at", { ascending: false });
         if (assignsErr) throw assignsErr;
@@ -98,6 +98,7 @@ export default function TenderApproval() {
           renderItem={({ item }) => (
             <ApprovalCard
               assign={item}
+              showDeadline={true}
               onPress={() =>
                 router.push(`/menus/tender/approval/assign/${item.id}`)
               }
@@ -122,6 +123,7 @@ export default function TenderApproval() {
             <ApprovalCard
               assign={item}
               winningOfferingId={winnerMap[item.id]}
+              showDeadline={false}
               onPress={() =>
                 router.push(`/menus/tender/approval/assign/${item.id}`)
               }

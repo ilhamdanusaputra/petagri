@@ -7,10 +7,16 @@ import { Pressable, StyleSheet, View } from "react-native";
 type Props = {
   assign: any;
   winningOfferingId?: string | null;
+  showDeadline?: boolean;
   onPress?: () => void;
 };
 
-export function ApprovalCard({ assign, winningOfferingId, onPress }: Props) {
+export function ApprovalCard({
+  assign,
+  winningOfferingId,
+  showDeadline = true,
+  onPress,
+}: Props) {
   const cardBg = useThemeColor({}, "card");
   const border = useThemeColor({}, "cardBorder");
 
@@ -50,7 +56,7 @@ export function ApprovalCard({ assign, winningOfferingId, onPress }: Props) {
           <ThemedText style={{ color: "#374151", fontSize: 13 }}>
             {title}
           </ThemedText>
-          {assign.deadline ? (
+          {showDeadline && assign.deadline ? (
             <ThemedText
               style={{ color: "#B91C1C", marginLeft: 8, fontSize: 12 }}
             >
