@@ -219,7 +219,7 @@ export default function TenderOffering() {
       <ThemedText type="title">Tender Offering</ThemedText>
 
       <SectionHeader
-        title="Assigned — Sudah Mengajukan Penawaran"
+        title="Daftar Penawaran Diajukan"
         count={assignedWithOffer.length}
         filter={offeredFilter}
         setFilter={(v) => setOfferedFilter(v)}
@@ -248,7 +248,7 @@ export default function TenderOffering() {
       )}
 
       <SectionHeader
-        title="Assigned — Belum Ajukan Penawaran"
+        title="Tender yang Tersedia"
         count={assignedNoOffer.length}
         filter={noOfferFilter}
         setFilter={(v) => setNoOfferFilter(v)}
