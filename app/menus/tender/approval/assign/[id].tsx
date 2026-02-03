@@ -6,12 +6,12 @@ import { showError, showSuccess } from "@/utils/toast";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-	ActivityIndicator,
-	FlatList,
-	Pressable,
-	ScrollView,
-	StyleSheet,
-	View,
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
 } from "react-native";
 
 export default function ApprovalAssignDetail() {
@@ -100,7 +100,7 @@ export default function ApprovalAssignDetail() {
         // update existing
         const { error: updErr } = await supabase
           .from("tender_approves")
-          .update({ tender_offering_id: offeringId })
+          .update({ id: assignId, tender_offering_id: offeringId })
           .eq("tender_assign_id", assignId);
         if (updErr) throw updErr;
         setWinnerId(offeringId);
@@ -109,6 +109,7 @@ export default function ApprovalAssignDetail() {
           .from("tender_approves")
           .insert([
             {
+              id: assignId,
               tender_offering_id: offeringId,
             },
           ]);
