@@ -10,7 +10,6 @@ export type MitraToko = {
 	city: string;
 	province: string;
 	status: string;
-	user_id: string;
 	email?: string;
 	phone?: string;
 	handphone?: string;
@@ -44,7 +43,7 @@ export function useMitraToko() {
 			({ data, error } = await supabase
 				.from("mitra_toko")
 				.select("*")
-				.eq("user_id", user?.id || ""));
+				.eq("id", user?.id || ""));
 		}
 		if (error) setError(error.message);
 		setMitraList((data as MitraToko[]) || []);
@@ -84,13 +83,13 @@ export function useMitraToko() {
 		}
 		// 2. Insert ke mitra_toko
 		const { error: insertError } = await supabase.from("mitra_toko").insert({
+			id: userId,
 			name: form.name,
 			owner_name: form.owner_name,
 			address: form.address,
 			city: form.city,
 			province: form.province,
 			status: form.status,
-			user_id: userId,
 			handphone: form.handphone,
 		});
 		if (insertError) {
@@ -102,14 +101,21 @@ export function useMitraToko() {
 
 	const updateMitra = async (id: string, updates: Partial<MitraToko>) => {
 		const { error } = await supabase.from("mitra_toko").update(updates).eq("id", id);
+		const { error: updateProfileError } = await supabase
+			.from("profiles")
+			.update({ full_name: updates.name })
+			.eq("id", id);
 		if (error) return { success: false, error: error.message };
+		if (updateProfileError) return { success: false, error: updateProfileError.message };
 		await fetchMitra();
 		return { success: true };
 	};
 
 	const deleteMitra = async (id: string) => {
 		const { error } = await supabase.from("mitra_toko").delete().eq("id", id);
+		const { error: deleteProfileError } = await supabase.from("profiles").delete().eq("id", id);
 		if (error) return { success: false, error: error.message };
+		if (deleteProfileError) return { success: false, error: deleteProfileError.message };
 		await fetchMitra();
 		return { success: true };
 	};
