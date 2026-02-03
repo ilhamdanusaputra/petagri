@@ -31,7 +31,15 @@ export default function TenderAssignmentDetail() {
   const [loadingData, setLoadingData] = useState(true);
   const [detail, setDetail] = useState<any | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [deadline, setDeadline] = useState<string | undefined>(undefined);
+  const defaultDeadline = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  })();
+  const [deadline, setDeadline] = useState<string | undefined>(defaultDeadline);
   const [message, setMessage] = useState<string | undefined>(undefined);
   const [createError, setCreateError] = useState<string | null>(null);
   const [products, setProducts] = useState<any[]>([]);
