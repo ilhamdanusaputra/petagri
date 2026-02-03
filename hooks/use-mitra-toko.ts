@@ -54,7 +54,6 @@ export function useMitraToko() {
 	const addMitra = async (form: {
 		email: string;
 		password: string;
-		phone: string;
 		handphone?: string;
 		name: string;
 		owner_name: string;
@@ -92,7 +91,6 @@ export function useMitraToko() {
 			province: form.province,
 			status: form.status,
 			user_id: userId,
-			phone: form.phone,
 			handphone: form.handphone,
 		});
 		if (insertError) {
