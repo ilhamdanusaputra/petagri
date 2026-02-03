@@ -3,7 +3,17 @@ import { ThemedView } from "@/components/themed-view";
 import { supabase } from "@/utils/supabase";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+
+type Driver = {
+	id: string;
+	name: string;
+	phone: string | null;
+	driver_code: string;
+	status: string;
+	vehicle_plate_number: string | null;
+	vehicle_type: string | null;
+};
 
 export default function SuratJalanAssignDetail() {
 	const router = useRouter();
@@ -15,6 +25,11 @@ export default function SuratJalanAssignDetail() {
 	const [winnerOffering, setWinnerOffering] = useState<any | null>(null);
 	const [winnerProfile, setWinnerProfile] = useState<any | null>(null);
 	const [winnerMitra, setWinnerMitra] = useState<any | null>(null);
+
+	// Driver states
+	const [drivers, setDrivers] = useState<Driver[]>([]);
+	const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
+	const [creatingDelivery, setCreatingDelivery] = useState(false);
 
 	useEffect(() => {
 		const load = async () => {
@@ -28,6 +43,15 @@ export default function SuratJalanAssignDetail() {
 					.maybeSingle();
 				if (aErr) throw aErr;
 				setAssign(aData as any);
+
+				// Fetch drivers
+				const { data: driversData, error: driversErr } = await supabase
+					.from("drivers")
+					.select("*")
+					.eq("status", "active");
+				if (!driversErr && driversData) {
+					setDrivers(driversData as Driver[]);
+				}
 
 				// find approve -> offering (try both approaches)
 				let offerId: string | null = null;
@@ -262,6 +286,106 @@ export default function SuratJalanAssignDetail() {
 								Belum ada pemenang untuk tender ini.
 							</ThemedText>
 						)}
+
+						{/* Pilih Driver */}
+						<View style={{ marginTop: 24 }}>
+							<ThemedText style={{ fontWeight: "600", marginBottom: 12 }}>Pilih Driver</ThemedText>
+							{drivers.length > 0 ? (
+								<View style={{ gap: 8 }}>
+									{drivers.map((driver) => (
+										<Pressable
+											key={driver.id}
+											onPress={() => setSelectedDriverId(driver.id)}
+											style={[
+												styles.driverOption,
+												selectedDriverId === driver.id && styles.driverOptionSelected,
+											]}>
+											<View style={{ flex: 1 }}>
+												<ThemedText
+													style={[
+														styles.driverName,
+														selectedDriverId === driver.id && { color: "#fff" },
+													]}>
+													{driver.name}
+												</ThemedText>
+												<ThemedText
+													style={[
+														styles.driverInfo,
+														selectedDriverId === driver.id && { color: "#D1FAE5" },
+													]}>
+													{driver.driver_code} • {driver.phone || "-"}
+												</ThemedText>
+												{driver.vehicle_plate_number && (
+													<ThemedText
+														style={[
+															styles.driverInfo,
+															selectedDriverId === driver.id && { color: "#D1FAE5" },
+														]}>
+														{driver.vehicle_type === "motorcycle"
+															? "Motor"
+															: driver.vehicle_type === "car"
+																? "Mobil"
+																: driver.vehicle_type === "van"
+																	? "Van"
+																	: driver.vehicle_type === "truck"
+																		? "Truk"
+																		: driver.vehicle_type || "Kendaraan"}{" "}
+														- {driver.vehicle_plate_number}
+													</ThemedText>
+												)}
+											</View>
+											{selectedDriverId === driver.id && (
+												<ThemedText style={{ color: "#fff", fontSize: 20 }}>✓</ThemedText>
+											)}
+										</Pressable>
+									))}
+								</View>
+							) : (
+								<ThemedText style={{ color: "#6B7280" }}>
+									Tidak ada driver aktif tersedia.
+								</ThemedText>
+							)}
+						</View>
+
+						{/* Tombol Buat Surat Jalan */}
+						<Pressable
+							style={[
+								styles.createButton,
+								(!selectedDriverId || creatingDelivery) && styles.createButtonDisabled,
+							]}
+							onPress={async () => {
+								if (!selectedDriverId || !assignId) return;
+								setCreatingDelivery(true);
+								try {
+									// TODO: Implement create delivery/surat jalan logic
+									const { error } = await supabase.from("delivery").insert({
+										tender_assign_id: assignId,
+										driver_id: selectedDriverId,
+										mitra_toko_id: winnerMitra?.id || winnerOffering?.offered_by || null,
+										status: "pending",
+									});
+
+									if (error) {
+										Alert.alert("Error", error.message);
+									} else {
+										Alert.alert("Sukses", "Surat jalan berhasil dibuat!", [
+											{
+												text: "OK",
+												onPress: () => router.back(),
+											},
+										]);
+									}
+								} catch (err: any) {
+									Alert.alert("Error", err.message || "Gagal membuat surat jalan");
+								} finally {
+									setCreatingDelivery(false);
+								}
+							}}
+							disabled={!selectedDriverId || creatingDelivery}>
+							<ThemedText style={styles.createButtonText}>
+								{creatingDelivery ? "Membuat..." : "Buat Surat Jalan"}
+							</ThemedText>
+						</Pressable>
 					</View>
 				) : (
 					<ThemedText style={{ color: "#6B7280", marginTop: 8 }}>
@@ -273,4 +397,45 @@ export default function SuratJalanAssignDetail() {
 	);
 }
 
-const styles = StyleSheet.create({ container: { flex: 1, padding: 16 } });
+const styles = StyleSheet.create({
+	container: { flex: 1, padding: 16 },
+	driverOption: {
+		flexDirection: "row",
+		alignItems: "center",
+		padding: 12,
+		borderRadius: 8,
+		borderWidth: 1,
+		borderColor: "#E5E7EB",
+		backgroundColor: "#F9FAFB",
+	},
+	driverOptionSelected: {
+		backgroundColor: "#065F46",
+		borderColor: "#065F46",
+	},
+	driverName: {
+		fontWeight: "600",
+		fontSize: 15,
+		color: "#1F2937",
+	},
+	driverInfo: {
+		fontSize: 13,
+		color: "#6B7280",
+		marginTop: 2,
+	},
+	createButton: {
+		marginTop: 24,
+		marginBottom: 32,
+		backgroundColor: "#065F46",
+		paddingVertical: 14,
+		borderRadius: 8,
+		alignItems: "center",
+	},
+	createButtonDisabled: {
+		backgroundColor: "#9CA3AF",
+	},
+	createButtonText: {
+		color: "#fff",
+		fontWeight: "600",
+		fontSize: 16,
+	},
+});
