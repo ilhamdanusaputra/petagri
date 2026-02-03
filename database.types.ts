@@ -76,20 +76,18 @@ export type Database = {
           province: string | null
           status: string
           updated_at: string | null
-          user_id: string
         }
         Insert: {
           address?: string | null
           city?: string | null
           created_at?: string | null
           handphone?: string | null
-          id?: string
+          id: string
           name: string
           owner_name?: string | null
           province?: string | null
           status?: string
           updated_at?: string | null
-          user_id: string
         }
         Update: {
           address?: string | null
@@ -102,13 +100,19 @@ export type Database = {
           province?: string | null
           status?: string
           updated_at?: string | null
-          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "fk_mitra_user"
-            columns: ["user_id"]
-            isOneToOne: false
+            foreignKeyName: "mitra_toko_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "v_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mitra_toko_id_fkey1"
+            columns: ["id"]
+            isOneToOne: true
             referencedRelation: "v_profiles"
             referencedColumns: ["id"]
           },
@@ -159,7 +163,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_products_mitra"
+            foreignKeyName: "products_mitra_id_fkey"
             columns: ["mitra_id"]
             isOneToOne: false
             referencedRelation: "mitra_toko"
@@ -276,25 +280,22 @@ export type Database = {
           created_at: string | null
           id: string
           updated_at: string | null
-          winning_tender_offering_id: string
         }
         Insert: {
           created_at?: string | null
           id?: string
           updated_at?: string | null
-          winning_tender_offering_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
           updated_at?: string | null
-          winning_tender_offering_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "fk_tender_approve_offering"
-            columns: ["winning_tender_offering_id"]
-            isOneToOne: false
+            foreignKeyName: "tender_approves_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
             referencedRelation: "tender_offerings"
             referencedColumns: ["id"]
           },
