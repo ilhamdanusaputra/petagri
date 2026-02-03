@@ -52,14 +52,14 @@ export default function DistribusiMenu() {
         ]}
       >
         <View style={[styles.iconWrap, { backgroundColor: iconTint + "22" }]}>
-          <IconSymbol name="doc.plaintext" size={22} color={iconTint} />
+          <IconSymbol name="doc.text.fill" size={22} color={iconTint} />
         </View>
         <View style={styles.cardBody}>
           <ThemedText
             type="subtitle"
             style={[styles.cardTitle, { color: textColor }]}
           >
-            Surat Jalan
+            Kelola Surat Jalan
           </ThemedText>
           <ThemedText style={[styles.cardDesc, { color: textColor }]}>
             Kelola surat jalan untuk pengiriman barang. Lihat daftar tender yang
@@ -115,6 +115,10 @@ const styles = StyleSheet.create({
   },
   cardBody: {
     flex: 1,
+  },
+  chevronWrap: {
+    alignSelf: "center",
+    marginLeft: 8,
   },
   cardTitle: {
     fontSize: 16,

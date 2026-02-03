@@ -1,5 +1,4 @@
 import { ApprovalCard } from "@/components/tender/ApprovalCard";
-import { ApprovalSectionHeader } from "@/components/tender/ApprovalSectionHeader";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { supabase } from "@/utils/supabase";
@@ -61,7 +60,6 @@ export default function SuratJalanPage() {
   }, []);
 
   const withWinner = assigns.filter((a) => !!winnerMap[a.id]);
-  const withoutWinner = assigns.filter((a) => !winnerMap[a.id]);
 
   if (loading)
     return (
@@ -81,10 +79,10 @@ export default function SuratJalanPage() {
     <ThemedView style={styles.container}>
       <ThemedText type="title">Surat Jalan</ThemedText>
 
-      <ApprovalSectionHeader
+      {/* <ApprovalSectionHeader
         title="Tender — Sudah Ada Pemenang"
         count={withWinner.length}
-      />
+      /> */}
       {withWinner.length === 0 ? (
         <ThemedText style={{ color: "#6B7280", marginTop: 8 }}>
           Belum ada tender dengan pemenang.
@@ -106,29 +104,7 @@ export default function SuratJalanPage() {
         />
       )}
 
-      <ApprovalSectionHeader
-        title="Tender — Belum Ada Pemenang"
-        count={withoutWinner.length}
-      />
-      {withoutWinner.length === 0 ? (
-        <ThemedText style={{ color: "#6B7280", marginTop: 8 }}>
-          Semua tender sudah memiliki pemenang.
-        </ThemedText>
-      ) : (
-        <FlatList
-          data={withoutWinner}
-          keyExtractor={(i: any) => i.id}
-          renderItem={({ item }) => (
-            <ApprovalCard
-              assign={item}
-              showDeadline={true}
-              onPress={() =>
-                router.push(`/menus/distribusi/surat-jalan/assign/${item.id}`)
-              }
-            />
-          )}
-        />
-      )}
+      {/* Removed list of assigns without winners — only show assigns with winners */}
     </ThemedView>
   );
 }
