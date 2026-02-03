@@ -561,6 +561,7 @@ export type Database = {
           created_at: string | null
           dosage: string | null
           id: string
+          indent_date: string | null
           note: string | null
           price: number
           product_name: string
@@ -572,6 +573,7 @@ export type Database = {
           created_at?: string | null
           dosage?: string | null
           id?: string
+          indent_date?: string | null
           note?: string | null
           price: number
           product_name: string
@@ -583,6 +585,7 @@ export type Database = {
           created_at?: string | null
           dosage?: string | null
           id?: string
+          indent_date?: string | null
           note?: string | null
           price?: number
           product_name?: string
@@ -656,6 +659,7 @@ export type Database = {
           id: string
           product_name: string
           urgency: string
+          urgency_date: string | null
           visit_report_id: string | null
         }
         Insert: {
@@ -667,6 +671,7 @@ export type Database = {
           id?: string
           product_name: string
           urgency: string
+          urgency_date?: string | null
           visit_report_id?: string | null
         }
         Update: {
@@ -678,6 +683,7 @@ export type Database = {
           id?: string
           product_name?: string
           urgency?: string
+          urgency_date?: string | null
           visit_report_id?: string | null
         }
         Relationships: [

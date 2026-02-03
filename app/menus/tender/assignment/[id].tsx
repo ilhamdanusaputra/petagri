@@ -7,6 +7,7 @@ import { useTenderAssignment } from "@/hooks/use-tender-assignment";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { supabase } from "@/utils/supabase";
 import { showError, showSuccess } from "@/utils/toast";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -40,6 +41,7 @@ export default function TenderAssignmentDetail() {
     return `${yyyy}-${mm}-${dd}`;
   })();
   const [deadline, setDeadline] = useState<string | undefined>(defaultDeadline);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [message, setMessage] = useState<string | undefined>(undefined);
   const [createError, setCreateError] = useState<string | null>(null);
   const [products, setProducts] = useState<any[]>([]);
@@ -311,12 +313,42 @@ export default function TenderAssignmentDetail() {
 
           <View style={{ marginTop: 12 }}>
             <ThemedText style={{ fontWeight: "600" }}>Deadline</ThemedText>
-            <TextInput
-              value={deadline}
-              onChangeText={setDeadline}
-              placeholder="YYYY-MM-DD"
-              style={styles.input}
-            />
+            {Platform.OS === "web" ? (
+              <input
+                type="date"
+                value={deadline || ""}
+                onChange={(e: any) => {
+                  const v = e?.target?.value;
+                  if (v && v.length === 10) setDeadline(v);
+                }}
+                style={Object.assign({}, styles.input as any)}
+              />
+            ) : (
+              <>
+                <Pressable
+                  style={[styles.input, { justifyContent: "center" }]}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <ThemedText>{deadline || "YYYY-MM-DD"}</ThemedText>
+                </Pressable>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={deadline ? new Date(deadline) : new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={(_, d) => {
+                      setShowDatePicker(false);
+                      if (d) {
+                        const yyyy = d.getFullYear();
+                        const mm = String(d.getMonth() + 1).padStart(2, "0");
+                        const dd = String(d.getDate()).padStart(2, "0");
+                        setDeadline(`${yyyy}-${mm}-${dd}`);
+                      }
+                    }}
+                  />
+                )}
+              </>
+            )}
           </View>
           <View style={{ marginTop: 12 }}>
             <ThemedText style={{ fontWeight: "600", marginBottom: 8 }}>
