@@ -26,18 +26,24 @@ export default function EditDriver() {
 	const placeholderColor = useThemeColor({ light: "#9CA3AF", dark: "#6B7280" }, "icon");
 
 	const [formData, setFormData] = useState({
-		full_name: "",
+		name: "",
 		phone: "",
-		email: "",
+		driver_code: "",
+		status: "active" as "active" | "nonactive",
+		vehicle_plate_number: "",
+		vehicle_type: "" as "" | "motorcycle" | "car" | "van" | "truck",
 	});
 
 	useEffect(() => {
 		const driver = drivers.find((d) => d.id === id);
 		if (driver) {
 			setFormData({
-				full_name: driver.full_name,
+				name: driver.name,
 				phone: driver.phone,
-				email: driver.email || "",
+				driver_code: driver.driver_code || "",
+				status: driver.status || "active",
+				vehicle_plate_number: driver.vehicle_plate_number || "",
+				vehicle_type: driver.vehicle_type || "",
 			});
 		}
 		setLoading(false);
@@ -48,7 +54,7 @@ export default function EditDriver() {
 		setValidationError(null);
 
 		// Validasi
-		if (!formData.full_name.trim()) {
+		if (!formData.name.trim()) {
 			setValidationError("Nama driver harus diisi");
 			return;
 		}
@@ -60,8 +66,12 @@ export default function EditDriver() {
 		// Simpan ke database
 		setSaving(true);
 		const result = await updateDriver(id as string, {
-			full_name: formData.full_name,
+			name: formData.name,
 			phone: formData.phone,
+			driver_code: formData.driver_code,
+			status: formData.status,
+			vehicle_plate_number: formData.vehicle_plate_number,
+			vehicle_type: formData.vehicle_type || undefined,
 		});
 		setSaving(false);
 
@@ -98,21 +108,6 @@ export default function EditDriver() {
 				}}
 			/>
 			<ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
-				{/* Email */}
-				<View style={styles.fieldGroup}>
-					<ThemedText style={styles.label}>Email</ThemedText>
-					<TextInput
-						style={[styles.input, { backgroundColor: inputBg, color: text, borderColor: border }]}
-						placeholder="Masukkan email (opsional)"
-						placeholderTextColor={placeholderColor}
-						value={formData.email}
-						onChangeText={(val) => setFormData({ ...formData, email: val })}
-						keyboardType="email-address"
-						autoCapitalize="none"
-						editable={false}
-					/>
-				</View>
-
 				{/* Nama Driver */}
 				<View style={styles.fieldGroup}>
 					<ThemedText style={styles.label}>Nama Driver *</ThemedText>
@@ -120,8 +115,8 @@ export default function EditDriver() {
 						style={[styles.input, { backgroundColor: inputBg, color: text, borderColor: border }]}
 						placeholder="Masukkan nama driver"
 						placeholderTextColor={placeholderColor}
-						value={formData.full_name}
-						onChangeText={(val) => setFormData({ ...formData, full_name: val })}
+						value={formData.name}
+						onChangeText={(val) => setFormData({ ...formData, name: val })}
 					/>
 				</View>
 
@@ -136,6 +131,106 @@ export default function EditDriver() {
 						onChangeText={(val) => setFormData({ ...formData, phone: val })}
 						keyboardType="phone-pad"
 					/>
+				</View>
+
+				{/* Kode Driver */}
+				<View style={styles.fieldGroup}>
+					<ThemedText style={styles.label}>Kode Driver</ThemedText>
+					<TextInput
+						style={[styles.input, { backgroundColor: inputBg, color: text, borderColor: border }]}
+						placeholder="Contoh: DRV001"
+						placeholderTextColor={placeholderColor}
+						value={formData.driver_code}
+						onChangeText={(val) => setFormData({ ...formData, driver_code: val })}
+					/>
+				</View>
+
+				{/* Status */}
+				<View style={styles.fieldGroup}>
+					<ThemedText style={styles.label}>Status</ThemedText>
+					<View style={styles.statusRow}>
+						<Pressable
+							style={[
+								styles.statusButton,
+								{ borderColor: border },
+								formData.status === "active" && {
+									backgroundColor: "#1B5E20",
+									borderColor: "#1B5E20",
+								},
+							]}
+							onPress={() => setFormData({ ...formData, status: "active" })}>
+							<ThemedText
+								style={[styles.statusText, formData.status === "active" && { color: "#fff" }]}>
+								Aktif
+							</ThemedText>
+						</Pressable>
+						<Pressable
+							style={[
+								styles.statusButton,
+								{ borderColor: border },
+								formData.status === "nonactive" && {
+									backgroundColor: "#DC2626",
+									borderColor: "#DC2626",
+								},
+							]}
+							onPress={() => setFormData({ ...formData, status: "nonactive" })}>
+							<ThemedText
+								style={[styles.statusText, formData.status === "nonactive" && { color: "#fff" }]}>
+								Nonaktif
+							</ThemedText>
+						</Pressable>
+					</View>
+				</View>
+
+				{/* Nomor Plat */}
+				<View style={styles.fieldGroup}>
+					<ThemedText style={styles.label}>Nomor Plat Kendaraan</ThemedText>
+					<TextInput
+						style={[styles.input, { backgroundColor: inputBg, color: text, borderColor: border }]}
+						placeholder="Contoh: B 1234 XYZ"
+						placeholderTextColor={placeholderColor}
+						value={formData.vehicle_plate_number}
+						onChangeText={(val) => setFormData({ ...formData, vehicle_plate_number: val })}
+						autoCapitalize="characters"
+					/>
+				</View>
+
+				{/* Jenis Kendaraan */}
+				<View style={styles.fieldGroup}>
+					<ThemedText style={styles.label}>Jenis Kendaraan</ThemedText>
+					<View style={styles.vehicleRow}>
+						{[
+							{ label: "Motor", value: "motorcycle" },
+							{ label: "Mobil", value: "car" },
+							{ label: "Van", value: "van" },
+							{ label: "Truk", value: "truck" },
+						].map((type) => (
+							<Pressable
+								key={type.value}
+								style={[
+									styles.vehicleButton,
+									{ borderColor: border },
+									formData.vehicle_type === type.value && {
+										backgroundColor: "#1B5E20",
+										borderColor: "#1B5E20",
+									},
+								]}
+								onPress={() =>
+									setFormData({
+										...formData,
+										vehicle_type: type.value as "motorcycle" | "car" | "van" | "truck",
+									})
+								}>
+								<ThemedText
+									style={[
+										styles.vehicleText,
+										formData.vehicle_type === type.value && { color: "#fff" },
+									]}>
+									{type.label}
+								</ThemedText>
+							</Pressable>
+						))}
+					</View>
 				</View>
 
 				{/* Validation Error */}
@@ -188,6 +283,15 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 	},
 	statusText: { fontSize: 15, fontWeight: "500" },
+	vehicleRow: { flexDirection: "row", gap: 8 },
+	vehicleButton: {
+		flex: 1,
+		paddingVertical: 12,
+		borderRadius: 8,
+		borderWidth: 1,
+		alignItems: "center",
+	},
+	vehicleText: { fontSize: 14, fontWeight: "500" },
 	buttonRow: { flexDirection: "row", gap: 12, marginTop: 12, marginBottom: 32 },
 	button: { flex: 1, paddingVertical: 14, borderRadius: 8, alignItems: "center" },
 	cancelButton: { borderWidth: 1, backgroundColor: "transparent" },
