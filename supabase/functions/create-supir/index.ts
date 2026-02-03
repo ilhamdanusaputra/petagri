@@ -68,7 +68,7 @@ serve(async (req) => {
 			});
 		}
 
-		return new Response(JSON.stringify({ success: true, user: userData.user }), {
+		return new Response(JSON.stringify({ success: true, user_id: userData.user.id }), {
 			status: 200,
 			headers: corsHeaders,
 		});

@@ -16,6 +16,12 @@ export default function DriverPage() {
 	const muted = useThemeColor({ light: "#6B7280", dark: "#9CA3AF" }, "icon");
 
 	const { drivers, loading, fetchDrivers } = useDriver();
+	const vehicleTypeLabel: Record<string, string> = {
+		car: "Mobil",
+		motorcycle: "Motor",
+		truck: "Truck",
+		van: "Van",
+	};
 
 	const handleAdd = () => {
 		router.push("/menus/distribusi/driver/add");
@@ -53,13 +59,22 @@ export default function DriverPage() {
 						</View>
 						<View style={styles.cardBody}>
 							<ThemedText type="subtitle" style={[styles.cardTitle, { color: textColor }]}>
-								{item.full_name ?? "-"}
+								{item.name ?? "-"}
 							</ThemedText>
 							<ThemedText style={[styles.cardDesc, { color: muted }]}>
-								Email: {item.email ?? "-"}
+								Kode Driver: {item.driver_code ?? "-"}
 							</ThemedText>
 							<ThemedText style={[styles.cardDesc, { color: muted }]}>
 								No. HP: {item.phone ?? "-"}
+							</ThemedText>
+							<ThemedText style={[styles.cardDesc, { color: muted }]}>
+								Status: {item.status ?? "-"}
+							</ThemedText>
+							<ThemedText style={[styles.cardDesc, { color: muted }]}>
+								Plat Nomor: {item.vehicle_plate_number ?? "-"}
+							</ThemedText>
+							<ThemedText style={[styles.cardDesc, { color: muted }]}>
+								Tipe Kendaraan: {item.vehicle_type ? vehicleTypeLabel[item.vehicle_type] ?? "-" : "-"}
 							</ThemedText>
 							<View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
 								<TouchableOpacity onPress={() => handleEdit(item)} style={styles.actionBtn}>
