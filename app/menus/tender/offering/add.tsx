@@ -74,6 +74,20 @@ export default function TenderOfferingAdd() {
   const removeProduct = (index: number) =>
     setProducts((p) => p.filter((_, i) => i !== index));
 
+  const addProductFromAssign = (p: any) =>
+    setProducts((prev) => [
+      ...prev,
+      {
+        product_name: p.product_name || "",
+        dosage: p.dosage || "",
+        qty: p.qty || 1,
+        price: null,
+        note: "",
+        indent: false,
+        indent_date: null,
+      },
+    ]);
+
   const [showIndentPickerIndex, setShowIndentPickerIndex] = useState<
     number | null
   >(null);
@@ -167,14 +181,18 @@ export default function TenderOfferingAdd() {
           ) : (
             <View style={{ marginBottom: 8 }}>
               {assignProducts.map((p: any) => (
-                <ThemedText
+                <Pressable
                   key={p.id}
-                  style={{ color: "#374151", marginBottom: 4 }}
+                  onPress={() => addProductFromAssign(p)}
+                  style={styles.assignRow}
                 >
-                  - {p.product_name}
-                  {p.dosage ? ` (dosage: ${p.dosage})` : ""}
-                  {p.qty ? ` (qty: ${p.qty})` : ""}
-                </ThemedText>
+                  <IconSymbol name="plus" size={18} color="#065F46" />
+                  <ThemedText style={{ color: "#374151", marginLeft: 8 }}>
+                    {p.product_name}
+                    {p.dosage ? ` (dosage: ${p.dosage})` : ""}
+                    {p.qty ? ` (qty: ${p.qty})` : ""}
+                  </ThemedText>
+                </Pressable>
               ))}
             </View>
           )}
@@ -428,6 +446,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E5E7EB",
     borderRadius: 8,
+  },
+  assignRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 6,
   },
   productDosageInput: {
     color: "#374151",
