@@ -119,6 +119,9 @@ export default function ApprovalAssignDetail() {
       }
 
       showSuccess("Pemenang berhasil dipilih");
+      router.replace(
+        `/menus/tender/approval/assign/${assignId}?refresh=${Date.now()}`,
+      );
     } catch (err: any) {
       showError(err.message || "Gagal memilih pemenang");
     } finally {

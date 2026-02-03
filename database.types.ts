@@ -14,6 +14,76 @@ export type Database = {
   }
   public: {
     Tables: {
+      delivery: {
+        Row: {
+          catatan: string | null
+          created_at: string | null
+          driver_id: string | null
+          farm_id: string | null
+          id: number
+          mitra_toko_id: string | null
+          nomor_surat: string | null
+          status_perjalanan:
+            | Database["public"]["Enums"]["status_perjalanan_enum"]
+            | null
+          tanggal: string | null
+          waktu_berangkat: string | null
+          waktu_sampai: string | null
+        }
+        Insert: {
+          catatan?: string | null
+          created_at?: string | null
+          driver_id?: string | null
+          farm_id?: string | null
+          id?: number
+          mitra_toko_id?: string | null
+          nomor_surat?: string | null
+          status_perjalanan?:
+            | Database["public"]["Enums"]["status_perjalanan_enum"]
+            | null
+          tanggal?: string | null
+          waktu_berangkat?: string | null
+          waktu_sampai?: string | null
+        }
+        Update: {
+          catatan?: string | null
+          created_at?: string | null
+          driver_id?: string | null
+          farm_id?: string | null
+          id?: number
+          mitra_toko_id?: string | null
+          nomor_surat?: string | null
+          status_perjalanan?:
+            | Database["public"]["Enums"]["status_perjalanan_enum"]
+            | null
+          tanggal?: string | null
+          waktu_berangkat?: string | null
+          waktu_sampai?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_mitra_toko_id_fkey"
+            columns: ["mitra_toko_id"]
+            isOneToOne: false
+            referencedRelation: "mitra_toko"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_delivery_drivers"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drivers: {
         Row: {
           created_at: string | null
@@ -731,6 +801,11 @@ export type Database = {
     }
     Enums: {
       bid_status: "draft" | "submitted" | "withdrawn" | "accepted" | "rejected"
+      status_perjalanan_enum:
+        | "diproses"
+        | "dalam_perjalanan"
+        | "terkirim"
+        | "gagal"
       tender_assign_status: "open" | "closed" | "draft"
       tender_status:
         | "draft"
@@ -867,6 +942,12 @@ export const Constants = {
   public: {
     Enums: {
       bid_status: ["draft", "submitted", "withdrawn", "accepted", "rejected"],
+      status_perjalanan_enum: [
+        "diproses",
+        "dalam_perjalanan",
+        "terkirim",
+        "gagal",
+      ],
       tender_assign_status: ["open", "closed", "draft"],
       tender_status: [
         "draft",
