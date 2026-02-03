@@ -223,12 +223,38 @@ export default function SuratJalanAssignDetail() {
 									Produk Ditawarkan:
 								</ThemedText>
 								{winnerOffering.tender_offerings_products?.map((p: any) => (
-									<ThemedText key={p.id} style={{ color: "#6B7280", marginTop: 4 }}>
-										- {p.product_name}{" "}
-										{p.price != null
-											? `— Rp ${new Intl.NumberFormat("id-ID").format(p.price)}`
-											: ""}
-									</ThemedText>
+									<View
+										key={p.id}
+										style={{
+											marginTop: 8,
+											padding: 8,
+											backgroundColor: "#F9FAFB",
+											borderRadius: 6,
+										}}>
+										<ThemedText style={{ color: "#065F46", fontWeight: "600" }}>
+											{p.product_name}
+										</ThemedText>
+										{p.price != null && (
+											<ThemedText style={{ color: "#6B7280", marginTop: 2 }}>
+												Harga: Rp {new Intl.NumberFormat("id-ID").format(p.price)}
+											</ThemedText>
+										)}
+										{p.qty != null && (
+											<ThemedText style={{ color: "#6B7280", marginTop: 2 }}>
+												Qty: {p.qty}
+											</ThemedText>
+										)}
+										{p.dosage && (
+											<ThemedText style={{ color: "#6B7280", marginTop: 2 }}>
+												Dosage: {p.dosage}
+											</ThemedText>
+										)}
+										{p.note && (
+											<ThemedText style={{ color: "#6B7280", marginTop: 2 }}>
+												Catatan: {p.note}
+											</ThemedText>
+										)}
+									</View>
 								))}
 							</View>
 						) : (
