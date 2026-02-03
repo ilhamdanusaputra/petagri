@@ -33,11 +33,12 @@ export default function ApprovalAssignDetail() {
         // load offerings for this assignment with their products
         const { data: offData, error: offErr } = await supabase
           .from("tender_offerings")
-          .select("*, tender_offerings_products(*)")
+          .select("*, tender_offerings_products(*), tender_approves(*)")
           .eq("tender_assign_id", assignId)
           .order("created_at", { ascending: false });
         if (offErr) throw offErr;
 
+        console.log("offData", offData);
         const offersList = (offData as any[]) || [];
         setOffers(offersList);
 
@@ -90,7 +91,7 @@ export default function ApprovalAssignDetail() {
       const { data: existsData, error: existsErr } = await supabase
         .from("tender_approves")
         .select("id")
-        .eq("tender_assign_id", assignId)
+        .eq("id", assignId)
         .single();
       if (existsErr && (existsErr as any).code !== "PGRST116") {
         // PGRST116 = no rows (PostgREST), ignore
@@ -100,8 +101,8 @@ export default function ApprovalAssignDetail() {
         // update existing
         const { error: updErr } = await supabase
           .from("tender_approves")
-          .update({ id: assignId, tender_offering_id: offeringId })
-          .eq("tender_assign_id", assignId);
+          .update({ tender_offering_id: offeringId })
+          .eq("id", assignId);
         if (updErr) throw updErr;
         setWinnerId(offeringId);
       } else {
@@ -118,7 +119,6 @@ export default function ApprovalAssignDetail() {
       }
 
       showSuccess("Pemenang berhasil dipilih");
-      router.replace(`/menus/tender/approval?refresh=${Date.now()}`);
     } catch (err: any) {
       showError(err.message || "Gagal memilih pemenang");
     } finally {
@@ -150,7 +150,8 @@ export default function ApprovalAssignDetail() {
             renderItem={({ item }) => {
               const profile = profilesMap[item.offered_by];
               const name = profile?.full_name || item.offered_by;
-              const isWinner = item.id === winnerId;
+              const isWinner =
+                item.id === item.tender_approves?.[0]?.tender_offering_id;
 
               return (
                 <View

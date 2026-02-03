@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      drivers: {
+        Row: {
+          created_at: string | null
+          driver_code: string
+          id: string
+          name: string
+          phone: string | null
+          status: string
+          updated_at: string | null
+          vehicle_plate_number: string | null
+          vehicle_type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          driver_code: string
+          id: string
+          name: string
+          phone?: string | null
+          status?: string
+          updated_at?: string | null
+          vehicle_plate_number?: string | null
+          vehicle_type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          driver_code?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string | null
+          vehicle_plate_number?: string | null
+          vehicle_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drivers_user_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "v_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farms: {
         Row: {
           area_ha: number
@@ -279,16 +323,19 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          tender_offering_id: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
+          tender_offering_id?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
+          tender_offering_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -296,6 +343,13 @@ export type Database = {
             foreignKeyName: "tender_approves_id_fkey"
             columns: ["id"]
             isOneToOne: true
+            referencedRelation: "tender_assigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tender_approves_tender_offering_id_fkey"
+            columns: ["tender_offering_id"]
+            isOneToOne: false
             referencedRelation: "tender_offerings"
             referencedColumns: ["id"]
           },
