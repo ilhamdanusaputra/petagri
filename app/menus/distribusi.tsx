@@ -45,6 +45,30 @@ export default function DistribusiMenu() {
       </Pressable>
 
       <Pressable
+        onPress={() => router.push("/menus/distribusi/surat-jalan" as Href)}
+        style={[
+          styles.card,
+          { backgroundColor: cardBg, borderColor, marginTop: 12 },
+        ]}
+      >
+        <View style={[styles.iconWrap, { backgroundColor: iconTint + "22" }]}>
+          <IconSymbol name="doc.plaintext" size={22} color={iconTint} />
+        </View>
+        <View style={styles.cardBody}>
+          <ThemedText
+            type="subtitle"
+            style={[styles.cardTitle, { color: textColor }]}
+          >
+            Surat Jalan
+          </ThemedText>
+          <ThemedText style={[styles.cardDesc, { color: textColor }]}>
+            Kelola surat jalan untuk pengiriman barang. Lihat daftar tender yang
+            sudah memiliki pemenang dan buat/lihat surat jalan.
+          </ThemedText>
+        </View>
+      </Pressable>
+
+      <Pressable
         onPress={() => router.push("/menus/distribusi/pengiriman" as Href)}
         style={[
           styles.card,
