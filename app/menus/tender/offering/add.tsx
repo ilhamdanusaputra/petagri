@@ -8,6 +8,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
 	FlatList,
+	Platform,
 	Pressable,
 	ScrollView,
 	StyleSheet,
@@ -24,7 +25,15 @@ export default function TenderOfferingAdd() {
 
   const [saving, setSaving] = useState(false);
   const [products, setProducts] = useState<any[]>([
-    { product_name: "", dosage: "", qty: 1, price: null, note: "" },
+    {
+      product_name: "",
+      dosage: "",
+      qty: 1,
+      price: null,
+      note: "",
+      indent: false,
+      indent_date: null,
+    },
   ]);
   const [assignProducts, setAssignProducts] = useState<any[]>([]);
 
@@ -52,10 +61,22 @@ export default function TenderOfferingAdd() {
   const addProduct = () =>
     setProducts((p) => [
       ...p,
-      { product_name: "", dosage: "", qty: 1, price: null, note: "" },
+      {
+        product_name: "",
+        dosage: "",
+        qty: 1,
+        price: null,
+        note: "",
+        indent: false,
+        indent_date: null,
+      },
     ]);
   const removeProduct = (index: number) =>
     setProducts((p) => p.filter((_, i) => i !== index));
+
+  const [showIndentPickerIndex, setShowIndentPickerIndex] = useState<
+    number | null
+  >(null);
 
   const handleSubmit = async () => {
     if (!tenderAssignId) {
@@ -70,6 +91,8 @@ export default function TenderOfferingAdd() {
         qty: p.qty || 1,
         price: p.price ?? null,
         note: p.note ?? null,
+        indent: !!p.indent,
+        indent_date: p.indent_date || null,
       }))
       .filter((p) => p.product_name.length > 0);
 
@@ -102,7 +125,12 @@ export default function TenderOfferingAdd() {
 
       const rows = validProducts.map((p) => ({
         tender_offering_id: created.id,
-        ...p,
+        product_name: p.product_name,
+        dosage: p.dosage,
+        qty: p.qty,
+        price: p.price,
+        note: p.note,
+        indent_date: p.indent ? p.indent_date : null,
       }));
       if (rows.length > 0) {
         const { error: prodErr } = await supabase
@@ -159,46 +187,140 @@ export default function TenderOfferingAdd() {
             data={products}
             keyExtractor={(_, idx) => `${idx}`}
             renderItem={({ item, index }) => (
-              <View style={styles.productRow}>
-                <View style={{ flex: 1 }}>
-                  <TextInput
-                    placeholder="Nama produk"
-                    value={item.product_name || ""}
-                    onChangeText={(t) =>
-                      updateProduct(index, { product_name: t })
-                    }
-                    style={styles.productNameInput}
-                  />
-                  <TextInput
-                    placeholder="Dosis"
-                    value={item.dosage || ""}
-                    onChangeText={(t) => updateProduct(index, { dosage: t })}
-                    style={styles.productDosageInput}
-                  />
+              <View style={styles.productBlock}>
+                <View style={styles.productRow}>
+                  <View style={{ flex: 1 }}>
+                    <ThemedText style={styles.fieldLabel}>
+                      Nama produk
+                    </ThemedText>
+                    <TextInput
+                      placeholder="Contoh: Pupuk NPK 16-16-16"
+                      placeholderTextColor="#9CA3AF"
+                      value={item.product_name || ""}
+                      onChangeText={(t) =>
+                        updateProduct(index, { product_name: t })
+                      }
+                      style={styles.productNameInput}
+                    />
+
+                    <ThemedText style={styles.fieldLabel}>Dosis</ThemedText>
+                    <TextInput
+                      placeholder="Contoh: 1 kg / hektar"
+                      placeholderTextColor="#9CA3AF"
+                      value={item.dosage || ""}
+                      onChangeText={(t) => updateProduct(index, { dosage: t })}
+                      style={styles.productDosageInput}
+                    />
+
+                    {/* Indent controls moved here, under Dosis */}
+                    <View style={styles.indentRowInline}>
+                      <Pressable
+                        onPress={() =>
+                          updateProduct(index, {
+                            indent: !item.indent,
+                            indent_date: item.indent ? null : item.indent_date,
+                          })
+                        }
+                        style={styles.indentCheckbox}
+                      >
+                        <ThemedText>{item.indent ? "✓" : ""}</ThemedText>
+                      </Pressable>
+                      <ThemedText style={{ marginLeft: 8, marginRight: 12 }}>
+                        Indent
+                      </ThemedText>
+
+                      {Platform.OS === "web" ? (
+                        item.indent ? (
+                          // @ts-ignore - using native input on web for date
+                          <input
+                            type="date"
+                            value={item.indent_date || ""}
+                            onChange={(e: any) =>
+                              updateProduct(index, {
+                                indent_date: e.target.value,
+                              })
+                            }
+                          />
+                        ) : null
+                      ) : (
+                        <>
+                          <Pressable
+                            onPress={() =>
+                              setShowIndentPickerIndex(
+                                showIndentPickerIndex === index ? null : index,
+                              )
+                            }
+                            style={{ padding: 6 }}
+                          >
+                            <ThemedText
+                              style={
+                                item.indent_date
+                                  ? styles.indentDateValue
+                                  : styles.indentDatePlaceholder
+                              }
+                            >
+                              {item.indent_date || "Pilih tanggal indent"}
+                            </ThemedText>
+                          </Pressable>
+                          {showIndentPickerIndex === index && (
+                            <DateTimePicker
+                              value={
+                                item.indent_date
+                                  ? new Date(item.indent_date)
+                                  : new Date()
+                              }
+                              mode="date"
+                              display="default"
+                              onChange={(_, d) => {
+                                setShowIndentPickerIndex(null);
+                                if (d) {
+                                  const iso = d.toISOString().slice(0, 10);
+                                  updateProduct(index, { indent_date: iso });
+                                }
+                              }}
+                            />
+                          )}
+                        </>
+                      )}
+                    </View>
+                    {/* Qty & Harga moved below */}
+                    <View style={styles.qtyPriceRow}>
+                      <View style={styles.qtyWrap}>
+                        <ThemedText style={styles.smallLabel}>Qty</ThemedText>
+                        <TextInput
+                          style={[styles.smallInput, { width: "100%" }]}
+                          placeholderTextColor="#9CA3AF"
+                          keyboardType="numeric"
+                          value={String(item.qty)}
+                          onChangeText={(t) =>
+                            updateProduct(index, { qty: Number(t || 0) })
+                          }
+                        />
+                      </View>
+                      <View style={styles.priceWrap}>
+                        <ThemedText style={styles.smallLabel}>Harga</ThemedText>
+                        <TextInput
+                          style={[styles.smallInput, { width: "100%" }]}
+                          placeholderTextColor="#9CA3AF"
+                          keyboardType="numeric"
+                          placeholder="Rp"
+                          value={item.price ? String(item.price) : ""}
+                          onChangeText={(t) =>
+                            updateProduct(index, {
+                              price: t ? Number(t) : null,
+                            })
+                          }
+                        />
+                      </View>
+                    </View>
+                  </View>
+                  <Pressable
+                    onPress={() => removeProduct(index)}
+                    style={styles.deleteBtn}
+                  >
+                    <IconSymbol name="trash" size={16} color="#B91C1C" />
+                  </Pressable>
                 </View>
-                <TextInput
-                  style={[styles.smallInput]}
-                  keyboardType="numeric"
-                  value={String(item.qty)}
-                  onChangeText={(t) =>
-                    updateProduct(index, { qty: Number(t || 0) })
-                  }
-                />
-                <TextInput
-                  style={[styles.smallInput, { marginLeft: 8 }]}
-                  keyboardType="numeric"
-                  placeholder="Harga"
-                  value={item.price ? String(item.price) : ""}
-                  onChangeText={(t) =>
-                    updateProduct(index, { price: t ? Number(t) : null })
-                  }
-                />
-                <Pressable
-                  onPress={() => removeProduct(index)}
-                  style={styles.deleteBtn}
-                >
-                  <IconSymbol name="trash" size={14} color="#B91C1C" />
-                </Pressable>
               </View>
             )}
           />
@@ -234,19 +356,88 @@ export default function TenderOfferingAdd() {
 const styles = StyleSheet.create({
   productRow: {
     flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
+    alignItems: "flex-start",
+    paddingVertical: 14,
+    paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#E5E7EB",
     marginBottom: 8,
   },
-  productNameInput: { fontWeight: "600", padding: 0 },
-  productDosageInput: {
-    color: "#6B7280",
+  productBlock: {
+    marginBottom: 8,
+  },
+  indentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderColor: "#F3F4F6",
+  },
+  indentRowInline: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+  },
+  qtyPriceRow: {
+    flexDirection: "row",
+    marginTop: 10,
+    alignItems: "center",
+    width: "100%",
+  },
+  qtyWrap: { flex: 1 },
+  priceWrap: { flex: 1, marginLeft: 12 },
+  fieldLabel: {
     fontSize: 12,
-    padding: 0,
-    marginTop: 4,
+    color: "#374151",
+    marginBottom: 4,
+    fontWeight: "600",
+  },
+  smallLabel: {
+    fontSize: 11,
+    color: "#6B7280",
+    marginBottom: 4,
+    fontWeight: "600",
+  },
+  indentCheckbox: {
+    width: 26,
+    height: 26,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  deleteBtn: {
+    position: "absolute",
+    right: 10,
+    top: 10,
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: "#FEF2F2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  productNameInput: {
+    fontWeight: "600",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 8,
+  },
+  productDosageInput: {
+    color: "#374151",
+    fontSize: 13,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 8,
   },
   addBtn: {
     marginTop: 8,
@@ -259,21 +450,23 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   addBtnText: { color: "#065F46", fontWeight: "600" },
-  deleteBtn: {
-    marginLeft: 8,
-    padding: 6,
-    borderRadius: 6,
-    backgroundColor: "#FEF2F2",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  /* removed duplicate deleteBtn */
   smallInput: {
-    width: 80,
+    width: 90,
     borderWidth: 1,
     borderColor: "#E5E7EB",
-    padding: 6,
-    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    borderRadius: 8,
     textAlign: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  indentDatePlaceholder: {
+    color: "#6B7280",
+  },
+  indentDateValue: {
+    color: "#065F46",
+    fontWeight: "600",
   },
   actionBtn: { padding: 12, borderRadius: 10 },
 });
