@@ -13,6 +13,7 @@ export default function SuratJalanAssignDetail() {
   const [loading, setLoading] = useState(true);
   const [assign, setAssign] = useState<any | null>(null);
   const [winnerOffering, setWinnerOffering] = useState<any | null>(null);
+  const [winnerProfile, setWinnerProfile] = useState<any | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -40,7 +41,24 @@ export default function SuratJalanAssignDetail() {
             .select("*, tender_offerings_products(*)")
             .eq("id", offerId)
             .maybeSingle();
-          if (!offErr) setWinnerOffering(offData as any);
+          if (!offErr) {
+            setWinnerOffering(offData as any);
+            // fetch profile for offered_by
+            try {
+              const offeredById = (offData as any)?.offered_by;
+              if (offeredById) {
+                const { data: profileData, error: profileErr } = await supabase
+                  .from("v_profiles")
+                  .select("id, full_name, phone, email")
+                  .eq("id", offeredById)
+                  .maybeSingle();
+                if (!profileErr && profileData)
+                  setWinnerProfile(profileData as any);
+              }
+            } catch (e) {
+              console.warn(e);
+            }
+          }
         }
       } catch (err: any) {
         console.warn(err);
@@ -86,7 +104,14 @@ export default function SuratJalanAssignDetail() {
             <ThemedText style={{ fontWeight: "600" }}>Pemenang</ThemedText>
             {winnerOffering ? (
               <View style={{ marginTop: 8 }}>
-                <ThemedText>{winnerOffering.offered_by}</ThemedText>
+                <ThemedText style={{ fontWeight: "600" }}>
+                  {winnerProfile?.full_name || winnerOffering.offered_by}
+                </ThemedText>
+                {winnerProfile?.phone ? (
+                  <ThemedText style={{ color: "#6B7280", marginTop: 4 }}>
+                    {winnerProfile.phone}
+                  </ThemedText>
+                ) : null}
                 {winnerOffering.tender_offerings_products?.map((p: any) => (
                   <ThemedText
                     key={p.id}
