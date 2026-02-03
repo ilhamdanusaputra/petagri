@@ -1,4 +1,4 @@
-import { ApprovalCard } from "@/components/tender/ApprovalCard";
+import { SuratJalanCard } from "@/components/surat-jalan/SuratJalanCard";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { supabase } from "@/utils/supabase";
@@ -92,10 +92,9 @@ export default function SuratJalanPage() {
           data={withWinner}
           keyExtractor={(i: any) => i.id}
           renderItem={({ item }) => (
-            <ApprovalCard
+            <SuratJalanCard
               assign={item}
               winningOfferingId={winnerMap[item.id]}
-              showDeadline={false}
               onPress={() =>
                 router.push(`/menus/distribusi/surat-jalan/assign/${item.id}`)
               }

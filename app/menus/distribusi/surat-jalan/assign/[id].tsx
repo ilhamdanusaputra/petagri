@@ -21,7 +21,7 @@ export default function SuratJalanAssignDetail() {
       try {
         const { data: aData, error: aErr } = await supabase
           .from("tender_assigns")
-          .select(`*, visits(*, farms (name)), tender_assign_products(*)`)
+          .select(`*, visits(*, farms (*)), tender_assign_products(*)`)
           .eq("id", assignId)
           .maybeSingle();
         if (aErr) throw aErr;
@@ -31,7 +31,7 @@ export default function SuratJalanAssignDetail() {
         const { data: approveData, error: approveErr } = await supabase
           .from("tender_approves")
           .select("tender_offering_id")
-          .eq("tender_assign_id", assignId)
+          .eq("id", assignId)
           .maybeSingle();
         if (!approveErr && approveData && approveData.tender_offering_id) {
           const offerId = approveData.tender_offering_id;
@@ -69,10 +69,16 @@ export default function SuratJalanAssignDetail() {
               Tender: {assign.title || assign.id}
             </ThemedText>
             <ThemedText style={{ color: "#6B7280", marginTop: 6 }}>
-              Kebun: {assign.visits?.[0]?.farms?.[0]?.name || "-"}
+              Kebun: {assign?.visits?.farms?.name || "-"}
             </ThemedText>
             <ThemedText style={{ color: "#6B7280", marginTop: 6 }}>
-              Tanggal dibuat: {new Date(assign.created_at).toLocaleString()}
+              Alamat: {assign?.visits?.farms?.location || "-"}
+            </ThemedText>
+            <ThemedText style={{ color: "#6B7280", marginTop: 6 }}>
+              Tanggal dibuat:{" "}
+              {assign?.created_at
+                ? new Date(assign.created_at).toLocaleString()
+                : "-"}
             </ThemedText>
 
             <View style={{ height: 12 }} />
